@@ -5,12 +5,15 @@ import './index.css';
 import Home from "./modules/Home/Home"
 import Click from "./Animations/ClickSpark/ClickSpark";
 import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider } from "./context/ThemeContext";
 
 function App() {
     return (
-        <BrowserRouter>
-            <Home />
-        </BrowserRouter>
+        <ThemeProvider>
+            <BrowserRouter>
+                <Home />
+            </BrowserRouter>
+        </ThemeProvider>
 
         //<AuthProvider>*/}
         //    <Router>*/}

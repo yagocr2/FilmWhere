@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+    darkMode: 'class',
     content: [
         "./index.html",
         "./src/**/*.{js,jsx,ts,tsx}",
@@ -39,11 +40,8 @@ export default {
                 'border-glow': 'border-glow 3s ease-in-out infinite',
                 'border-run': 'border-run 2s linear infinite',
                 'border-run-reverse': 'border-run-reverse 2s linear infinite'
-
-            }
+            },
         }
     },
     plugins: []
 }
-
-

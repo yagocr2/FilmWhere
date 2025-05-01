@@ -1,46 +1,52 @@
 // components/Home.jsx
-import { Link } from 'react-router-dom';
+import { useTheme } from "../../context/ThemeContext";
 import ScrollVelocity from "../../TextAnimations/ScrollVelocity/ScrollVelocity";
 import Liquid from "../../Backgrounds/LiquidChrome/LiquidChrome.jsx";
-import ShinyText from "../../TextAnimations/ShinyText/ShinyText";
-import StarBorder from "../../Animations/StarBorder/StarBorder"
+import Layout from "../../components/Layout";
+import GridMotion from "../../Backgrounds/GridMotion/GridMotion"
 
 const Home = () => {
+    const { theme } = useTheme(); // Accede al tema actual
+    const items = [
+        'Item 1',
+        <div key='jsx-item-1'>Custom JSX Content</div>,
+        'https://images.unsplash.com/photo-1723403804231-f4e9b515fe9d?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        'Item 2',
+        <div key='jsx-item-2'>Custom JSX Content</div>,
+        'Item 4',
+        <div key='jsx-item-2'>Custom JSX Content</div>,
+        'https://images.unsplash.com/photo-1723403804231-f4e9b515fe9d?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        'Item 5',
+        <div key='jsx-item-2'>Custom JSX Content</div>,
+        'Item 7',
+        <div key='jsx-item-2'>Custom JSX Content</div>,
+        'https://images.unsplash.com/photo-1723403804231-f4e9b515fe9d?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        'Item 8',
+        <div key='jsx-item-2'>Custom JSX Content</div>,
+        'Item 10',
+        <div key='jsx-item-3'>Custom JSX Content</div>,
+        'https://images.unsplash.com/photo-1723403804231-f4e9b515fe9d?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        'Item 11',
+        <div key='jsx-item-2'>Custom JSX Content</div>,
+        'Item 13',
+        <div key='jsx-item-4'>Custom JSX Content</div>,
+        'https://images.unsplash.com/photo-1723403804231-f4e9b515fe9d?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        'Item 14',
+        // Add more items as needed
+    ];
     return (
-        <div>
-            {/*Cabecera*/}
-            <div className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-end space-x-5 backdrop-blur-md bg-black/30 rounded-bl-lg">
-                {/* Botón de login*/}
-
-                <Link to="/login">
-                    <ShinyText
-                        className="hover:scale-105 transition-transform bg-transparent"
-                        text="Login"
-                        disabled={false}
-                        velocity={5}
-                        fontSize="1.1rem"
-                    />
-                </Link>
-                {/*Botón de registro*/}
-                <Link to="/register">
-                    <ShinyText
-                        className="hover:scale-105 transition-transform bg-transparent"
-                        text="Register"
-                        disabled={false}
-                        velocity={5}
-                        fontSize="1.1rem"
-                    />
-                </Link>
-            </div>
-            {/*Fondo*/}
+        <Layout>
             <div className="fixed inset-0 z-0">
-                <Liquid
-                    baseColor={[0.01, 0, 0.01]}
-                    amplitude={0.5}
-                    speed={0.3}
-                    interactive={false}
-                />
+                {/*<Liquid*/}
+                {/*    baseColor={theme === 'dark'? [0.01, 0, 0.01]:[0.4, 0.4, 0.4]}*/}
+                {/*    //baseColor={[0.01, 0, 0.01]}*/}
+                {/*    amplitude={0.5}*/}
+                {/*    speed={0.3}*/}
+                {/*    interactive={false}*/}
+                {/*/>*/}
+                <GridMotion items={items}/>
             </div>
+
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full">
                 <ScrollVelocity
                     texts={['Bienvenido a', 'FilmWhere']}
@@ -48,8 +54,7 @@ const Home = () => {
                     parallaxClassName="w-full"
                 />
             </div>
-        </div >
+        </Layout>
     );
 };
-
 export default Home;
