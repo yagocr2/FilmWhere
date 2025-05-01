@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "Nuevo perfil",
+    "Projects": [
+      {
+        "Path": "filmwhere.client\\filmwhere.client.esproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "FilmWhere.Server\\FilmWhere.Server.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

@@ -84,7 +84,7 @@ const Login = () => {
                                 <input
                                     type="text"
                                     name="userName"
-                                    value={formData.identifier}
+                                    value={formData.userName}
                                     onChange={handleChange}
                                     className="w-full p-2 border rounded focus:border-purple-500 focus:outline-none"
                                     required
