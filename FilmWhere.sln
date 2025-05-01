@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35818.85 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "filmwhere.client", "filmwhere.client\filmwhere.client.esproj", "{EE01F5BC-F786-36C9-C187-2A1A0AD87D66}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FilmWhere.Server", "FilmWhere.Server\FilmWhere.Server.csproj", "{C597F7F4-89FA-4506-A4D6-D2E437AD1E8B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EE01F5BC-F786-36C9-C187-2A1A0AD87D66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE01F5BC-F786-36C9-C187-2A1A0AD87D66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE01F5BC-F786-36C9-C187-2A1A0AD87D66}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{EE01F5BC-F786-36C9-C187-2A1A0AD87D66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE01F5BC-F786-36C9-C187-2A1A0AD87D66}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE01F5BC-F786-36C9-C187-2A1A0AD87D66}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{C597F7F4-89FA-4506-A4D6-D2E437AD1E8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C597F7F4-89FA-4506-A4D6-D2E437AD1E8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C597F7F4-89FA-4506-A4D6-D2E437AD1E8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C597F7F4-89FA-4506-A4D6-D2E437AD1E8B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {03FAB714-C30A-4114-9972-7CEE714477EC}
+	EndGlobalSection
+EndGlobal
