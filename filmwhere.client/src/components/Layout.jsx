@@ -14,6 +14,7 @@ export default function Layout({ children }) {
             <header className="fixed top-0 left-0 right-0 z-50 pt-1 pb-1 px-4 flex justify-between items-center backdrop-blur-md bg-black/30 ">
                 {/* Logo a la izquierda */}
                 <Link to="/" className="flex items-center space-x-3">
+
                     <img
                         src="/public/logo.png"
                         alt="Logo"
@@ -26,7 +27,7 @@ export default function Layout({ children }) {
                     {/*    fontSize="1.5rem"*/}
                     {/*/>*/}
                 </Link>
-
+                
                 {/* Controles a la derecha */}
                 <div className="flex items-center space-x-4">
 
@@ -50,13 +51,13 @@ export default function Layout({ children }) {
                     {/* Botón tema */}
                     <button
                         onClick={toggleTheme}
-                        className="p-2 hover:bg-white/10 rounded-full transition-colors duration-200"
+                        className="p-2 hover:bg-indigo-700/50 rounded-full transition-colors duration-300"
                         aria-label="Toggle theme"
                     >
                         {theme === 'dark' ? (
                             <SunIcon className="h-7 w-7 text-yellow-400" />
                         ) : (
-                            <MoonIcon className="h-7 w-7 text-gray-600" />
+                            <MoonIcon className="h-7 w-7 text-gray-400" />
                         )}
                     </button>
                 </div>

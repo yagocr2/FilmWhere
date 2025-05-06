@@ -44,7 +44,7 @@ const Home = () => {
                 {/*    speed={0.3}*/}
                 {/*    interactive={false}*/}
                 {/*/>*/}
-                <GridMotion items={items}/>
+                <GridMotion items={items} gradientColor={theme === 'dark' ? "#105901" : ""} />
             </div>
 
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full">

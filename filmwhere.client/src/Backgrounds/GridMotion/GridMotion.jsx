@@ -1,11 +1,12 @@
 /*
 	Installed from https://reactbits.dev/tailwind/
 */
-
+import { useTheme } from "../../context/ThemeContext";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 
 const GridMotion = ({ items = [], gradientColor = "black" }) => {
+  const { theme } = useTheme(); 
   const gridRef = useRef(null);
   const rowRefs = useRef([]); // Array of refs for each row
   const mouseXRef = useRef(window.innerWidth / 2);
@@ -82,7 +83,7 @@ const GridMotion = ({ items = [], gradientColor = "black" }) => {
                 const content = combinedItems[rowIndex * 7 + itemIndex];
                 return (
                   <div key={itemIndex} className="relative">
-                    <div className="relative w-full h-full overflow-hidden rounded-[10px] bg-[#111] flex items-center justify-center text-white text-[1.5rem]">
+                        <div className={`relative w-full h-full overflow-hidden rounded-[30px] ${theme === 'dark' ? "bg-[#111] " :"bg-[#999] "}flex items-center justify-center text-white text-[1.5rem]`}>
                       {typeof content === "string" &&
                       content.startsWith("http") ? (
                         <div
