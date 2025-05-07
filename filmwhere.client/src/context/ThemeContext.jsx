@@ -9,6 +9,12 @@ export const ThemeProvider = ({ children }) => {
     useEffect(() => {
         const savedTheme = localStorage.getItem('theme') || 'dark';
         setTheme(savedTheme);
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+        }
         document.documentElement.className = savedTheme;
     }, []);
 

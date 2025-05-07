@@ -1,4 +1,4 @@
-// components/Home.jsx
+﻿// components/Home.jsx
 import { useTheme } from "../../context/ThemeContext";
 import ScrollVelocity from "../../TextAnimations/ScrollVelocity/ScrollVelocity";
 import Liquid from "../../Backgrounds/LiquidChrome/LiquidChrome.jsx";
@@ -44,10 +44,10 @@ const Home = () => {
                 {/*    speed={0.3}*/}
                 {/*    interactive={false}*/}
                 {/*/>*/}
-                <GridMotion items={items} gradientColor={theme === 'dark' ? "#105901" : ""} />
+                <GridMotion items={items} gradientColor={"var(--color-primario)"} />
             </div>
 
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full">
+            <div className="-translate-x-1/2 -translate-y-1/2 absolute left-1/2 top-1/2 w-full">
                 <ScrollVelocity
                     texts={['Bienvenido a', 'FilmWhere']}
                     velocity={15}

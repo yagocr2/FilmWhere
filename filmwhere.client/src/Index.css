@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    :root {
+        /* Modo claro */
+        --color-primario: #F5F5F5; /* Ej: blanco */
+        --color-secundario: 229 229 229; /* Ej: gris claro */
+        --color-terciario: 212 212 212; /* Ej: gris medio */
+    }
+
+    .dark {
+        /* Modo oscuro */
+        --color-primario: #0F0F15; /* Ej: negro */
+        --color-secundario: #6B47AE; /* Ej: gris oscuro */
+        --color-destacado: #4ECDC4; /* Ej: gris más claro */
+        --color-social: #FF6B6B;
+        --color-texto: #E0E0E0;
+    }
+}
