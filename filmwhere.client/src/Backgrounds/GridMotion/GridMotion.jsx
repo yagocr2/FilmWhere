@@ -81,7 +81,7 @@ const GridMotion = ({ items = [], gradientColor = "black" }) => {
                 const content = combinedItems[rowIndex * 7 + itemIndex];
                 return (
                   <div key={itemIndex} className="relative">
-                        <div className={`relative w-full h-full overflow-hidden rounded-[30px] bg-primario dark:bg-primario-dark flex items-center justify-center text-white text-[1.5rem]`}>
+                        <div className={`relative w-full h-full overflow-hidden rounded-[30px] bg-primario dark:bg-primario-dark flex items-center justify-center text-texto dark:text-texto-dark text-[1.5rem]`}>
                       {typeof content === "string" &&
                       content.startsWith("http") ? (
                         <div

@@ -1,6 +1,7 @@
 
 using System.Net.Http.Headers;
 using System.Text;
+using DotNetEnv;
 using FilmWhere.Context;
 using FilmWhere.Models;
 using FilmWhere.Services;
@@ -16,6 +17,7 @@ namespace FilmWhere.Server
 		public static void Main(string[] args)
 		{
 			var builder = WebApplication.CreateBuilder(args);
+			Env.Load();
 
 			// Add services to the container.
 			builder.Services.AddControllers();

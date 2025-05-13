@@ -108,7 +108,6 @@ export const ScrollVelocity = ({
       spans.push(
         <span
               className={`flex-shrink-0 ${className}`}
-              style={{ color: "whitesmoke" }}
           key={i}
           ref={i === 0 ? copyRef : null}
         >

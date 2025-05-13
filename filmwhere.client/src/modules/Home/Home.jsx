@@ -49,6 +49,7 @@ const Home = () => {
 
             <div className="-translate-x-1/2 -translate-y-1/2 absolute left-1/2 top-1/2 w-full">
                 <ScrollVelocity
+                    className="text-5xl font-bold text-center text-texto dark:text-texto-dark"
                     texts={['Bienvenido a', 'FilmWhere']}
                     velocity={15}
                     parallaxClassName="w-full"
