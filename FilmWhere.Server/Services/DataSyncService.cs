@@ -119,6 +119,7 @@ namespace FilmWhere.Services
 					Titulo = movieDetails.Title,
 					Año = movieDetails.GetReleaseDate()?.Year,
 					IdApiTmdb = tmdbId.Value,
+					PosterUrl = movieDetails.Poster_Path
 				};
 				// Guardar o actualizar película
 				await ProcessGenerosAsync(movieDetails.Genres, pelicula);

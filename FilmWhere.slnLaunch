@@ -3,11 +3,11 @@
     "Name": "Nuevo perfil",
     "Projects": [
       {
-        "Path": "filmwhere.client\\filmwhere.client.esproj",
+        "Path": "FilmWhere.Server\\FilmWhere.Server.csproj",
         "Action": "Start"
       },
       {
-        "Path": "FilmWhere.Server\\FilmWhere.Server.csproj",
+        "Path": "filmwhere.client\\filmwhere.client.esproj",
         "Action": "Start"
       }
     ]

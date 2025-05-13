@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FilmWhere.Server.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250407190533_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250513160931_AddPosterUrlToPelicula")]
+    partial class AddPosterUrlToPelicula
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -65,6 +65,10 @@ namespace FilmWhere.Server.Migrations
 
                     b.Property<int>("IdApiTmdb")
                         .HasColumnType("integer");
+
+                    b.Property<string>("PosterUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<decimal>("Precio")
                         .HasColumnType("numeric");

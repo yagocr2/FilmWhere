@@ -9,6 +9,7 @@ namespace FilmWhere.Models
 		[MaxLength(200)]
 		public string Titulo { get; set; }
 		public int? Año { get; set; }
+		public string PosterUrl { get; set; }
 		public decimal Precio { get; set; }
 		[Required]
 		public int IdApiTmdb { get; set; }

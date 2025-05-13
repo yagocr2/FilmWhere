@@ -97,6 +97,7 @@ namespace FilmWhere.Services
 		{
 			public int Id { get; set; }
 			public string Title { get; set; } = "";
+			public string Poster_Path { get; set; } = "";
 			public string Overview { get; set; } = "";
 			public DateTime Release_Date { get; set; }
 		}
@@ -104,6 +105,7 @@ namespace FilmWhere.Services
 		{
 			public int Id { get; set; }
 			public string Title { get; set; } = "";
+			public string Poster_Path { get; set; } = ""; 
 			public string Release_Date { get; set; } = "";
 			public List<TmdbGenre> Genres { get; set; } = new();
 			public List<TmdbCastMember> Credits { get; set; } = new();

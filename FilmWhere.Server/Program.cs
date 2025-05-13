@@ -1,5 +1,6 @@
 
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text;
 using DotNetEnv;
 using FilmWhere.Context;
@@ -16,8 +17,9 @@ namespace FilmWhere.Server
 	{
 		public static void Main(string[] args)
 		{
-			var builder = WebApplication.CreateBuilder(args);
+
 			Env.Load();
+			var builder = WebApplication.CreateBuilder(args);
 
 			// Add services to the container.
 			builder.Services.AddControllers();
@@ -29,13 +31,13 @@ namespace FilmWhere.Server
 				options.UseNpgsql(builder.Configuration
 					.GetConnectionString("DefaultConnection"))
 			);
-			
+
 			// Configuración de HttpClient para servicios externos
 			ConfigureHttpClients(builder);
-			
+
 			// Servicios personalizados
 			builder.Services.AddScoped<DataSyncService>();
-			
+
 			// Identity + JWT
 			ConfigureIdentityAndJwt(builder);
 
@@ -86,28 +88,45 @@ namespace FilmWhere.Server
 				.AddEntityFrameworkStores<MyDbContext>()
 				.AddDefaultTokenProviders();
 
-			var jwtSettings = builder.Configuration.GetSection("Jwt");
-			var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]!);
+			// Get the JWT key from configuration
+			var secretKey = builder.Configuration["Jwt:Key"];
+
+			// Validate that the key exists
+			if (string.IsNullOrEmpty(secretKey))
+			{
+				throw new InvalidOperationException("JWT:Key is not configured. Check your appsettings.json or environment variables.");
+			}
+
+			// Convert the string to bytes properly
+			byte[] key;
+			try
+			{
+				key = Encoding.UTF8.GetBytes(secretKey);
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidOperationException($"Failed to convert JWT key to bytes: {ex.Message}", ex);
+			}
 
 			builder.Services.AddAuthentication(options =>
+			{
+				options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+				options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+			})
+			.AddJwtBearer(options =>
+			{
+				options.TokenValidationParameters = new TokenValidationParameters
 				{
-					options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-					options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-				})
-				.AddJwtBearer(options =>
-				{
-					options.TokenValidationParameters = new TokenValidationParameters
-					{
-						ValidateIssuerSigningKey = true,
-						IssuerSigningKey = new SymmetricSecurityKey(key),
-						ValidateIssuer = true,
-						ValidIssuer = jwtSettings["Issuer"],
-						ValidateAudience = true,
-						ValidAudience = jwtSettings["Audience"],
-						ValidateLifetime = true,
-						ClockSkew = TimeSpan.Zero
-					};
-				});
+					ValidateIssuerSigningKey = true,
+					IssuerSigningKey = new SymmetricSecurityKey(key),
+					ValidateIssuer = true,
+					ValidIssuer = builder.Configuration["Jwt:Issuer"],
+					ValidateAudience = true,
+					ValidAudience = builder.Configuration["Jwt:Audience"],
+					ValidateLifetime = true,
+					ClockSkew = TimeSpan.Zero
+				};
+			});
 		}
 		private static void ConfigureMiddleware(WebApplication app)
 		{
@@ -122,7 +141,7 @@ namespace FilmWhere.Server
 			app.UseHttpsRedirection();
 			app.UseStaticFiles();
 
-			app.UseAuthentication(); 
+			app.UseAuthentication();
 			app.UseAuthorization();
 
 			app.MapControllers();

@@ -6,8 +6,10 @@
     :root {
         /* Modo claro */
         --color-primario: #F5F5F5; /* Ej: blanco */
-        --color-secundario: 229 229 229; /* Ej: gris claro */
-        --color-terciario: 212 212 212; /* Ej: gris medio */
+        --color-secundario: '#A78BFA';
+        --color-destacado: '#2DD4BF';
+        --color-social: '#FF8E8E';
+        --color-texto: '#2D3748',
     }
 
     .dark {

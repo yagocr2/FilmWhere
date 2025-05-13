@@ -3,11 +3,13 @@
 */
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
+import { useTheme } from "../../context/ThemeContext"
 
 const GridMotion = ({ items = [], gradientColor = "black" }) => {
   const gridRef = useRef(null);
   const rowRefs = useRef([]); // Array of refs for each row
   const mouseXRef = useRef(window.innerWidth / 2);
+  const theme = useTheme();
 
   // Ensure the grid has 28 items (4 rows x 7 columns) by default
   const totalItems = 28;
@@ -64,7 +66,7 @@ const GridMotion = ({ items = [], gradientColor = "black" }) => {
       <section
         className="relative flex h-screen w-full items-center justify-center overflow-hidden"
         style={{
-          background: `radial-gradient(circle, ${gradientColor} 0%, transparent 100%)`,
+          background: `radial-gradient(circle, ${gradientColor} 0%, ${theme === 'dark' ? 'white' : 'transparent'} 100%)`,
         }}
       >
         {/* Noise overlay */}
