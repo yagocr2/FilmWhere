@@ -4,6 +4,8 @@ import ScrollVelocity from "../../TextAnimations/ScrollVelocity/ScrollVelocity";
 import Liquid from "../../Backgrounds/LiquidChrome/LiquidChrome.jsx";
 import Layout from "../../components/Layout";
 import GridMotion from "../../Backgrounds/GridMotion/GridMotion"
+import FadeContent from '../../Animations/FadeContent/FadeContent'
+
 
 const Home = () => {
     // Estado para almacenar las películas
@@ -32,24 +34,30 @@ const Home = () => {
     }, []);
     console.log(movies)
     // Mientras carga o hay error
-    if (loading) return <Layout>Loading…</Layout>;
-    if (error) return <Layout>{error}</Layout>;
-    
-    return (
-        <Layout>
-            <div className="fixed inset-0 z-0 blur-[1.8px] blur-black">
-                <GridMotion items={movies} gradientColor={"var(--color-primario)"} />
-            </div>
+    if (loading) return <FadeContent><Layout>Loading…</Layout></FadeContent>;
+    if (error) return <FadeContent><Layout>{error}</Layout></FadeContent>;
 
-            <div className="-translate-x-1/2 -translate-y-1/2 absolute left-1/2 top-1/2 w-full">
-                <ScrollVelocity
-                    className="text-shadow text-5xl font-bold text-center text-texto dark:text-texto-dark"
-                    texts={['Bienvenido a', 'FilmWhere']}
-                    velocity={15}
-                    parallaxClassName="w-full"
-                />
-            </div>
-        </Layout>
+    return (
+        <FadeContent>
+            <Layout>
+                <div className="fixed inset-0 z-0 blur-[1.8px] blur-black">
+                    <GridMotion items={movies} gradientColor={"var(--color-primario)"} />
+                </div>
+
+                <div className="-translate-x-1/2 -translate-y-1/2 absolute left-1/2 top-1/2 w-full">
+                    <ScrollVelocity
+                        className="text-shadow text-7xl font-extrabold text-center text-texto-dark"
+                        texts={['Bienvenido a', 'FilmWhere']}
+                        velocity={20}
+                        parallaxClassName="w-full"
+                        scrollerStyle={{
+                            textShadow: "0 2px 10px rgba(0,0,0,0.8), 0 2px 20px rgba(0,0,0,0.7)"
+                        }}
+                    />
+                </div>
+
+            </Layout>
+        </FadeContent>
     );
 };
 export default Home;
