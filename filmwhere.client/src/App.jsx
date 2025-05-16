@@ -1,28 +1,51 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import Login from './components/Login';
-import './index.css';
-import Home from "./modules/Home/Home"
-import Click from "./Animations/ClickSpark/ClickSpark";
-import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from "./context/ThemeContext";
+import Login from './components/Login';
+import Register from './components/Register';
+import Home from "./modules/Home/Home";
+
+// Protected route component
+const ProtectedRoute = ({ children }) => {
+    const { isAuthenticated, loading } = useAuth();
+
+    if (loading) {
+        return <div className="flex h-screen w-full items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"></div>
+        </div>;
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" />;
+    }
+
+    return children;
+};
 
 function App() {
     return (
         <ThemeProvider>
-            <BrowserRouter>
-                <Home />
-            </BrowserRouter>
-        </ThemeProvider>
+            <AuthProvider>
+                <Router>
+                    <Routes>
+                        {/* Public routes */}
+                        <Route path="/" element={<Home />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
 
-        //<AuthProvider>*/}
-        //    <Router>*/}
-        //        <Routes>*/}
-        //            <Route path="/" element={<Login />} />*/}
-        //            <Route path="*" element={<Navigate to="/" />} />*/}
-        //        </Routes>*/}
-        //    </Router>*/}
-        //</AuthProvider>*/}
+                        {/* Protected routes (example) */}
+                        {/* <Route path="/discover" element={
+              <ProtectedRoute>
+                <Discover />
+              </ProtectedRoute>
+            } /> */}
+
+                        {/* Fallback route */}
+                        <Route path="*" element={<Navigate to="/" />} />
+                    </Routes>
+                </Router>
+            </AuthProvider>
+        </ThemeProvider>
     );
 }
 

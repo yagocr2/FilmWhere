@@ -1,21 +1,23 @@
+
+// src/components/Register.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import LiquidChrome from '../Backgrounds/LiquidChrome/LiquidChrome';
 import FadeContent from '../Animations/FadeContent/FadeContent';
 import ClickSpark from '../Animations/ClickSpark/ClickSpark';
 import ScrollVelocity from '../TextAnimations/ScrollVelocity/ScrollVelocity';
 import { useTheme } from '../context/ThemeContext';
 
-const Login = () => {
+const Register = () => {
     const { theme } = useTheme();
     const navigate = useNavigate();
-    const { login } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
-        identifier: '',
-        password: ''
+        userName: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
     });
 
     const handleChange = (e) => {
@@ -30,14 +32,22 @@ const Login = () => {
         setIsLoading(true);
         setError('');
 
+        // Validaciones básicas
+        if (formData.password !== formData.confirmPassword) {
+            setError('Las contraseñas no coinciden');
+            setIsLoading(false);
+            return;
+        }
+
         try {
-            const response = await fetch('/api/Auth/login', {
+            const response = await fetch('/api/Auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    identifier: formData.identifier,
+                    userName: formData.userName,
+                    email: formData.email,
                     password: formData.password
                 })
             });
@@ -45,16 +55,18 @@ const Login = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.message || 'Error al iniciar sesión');
+                // Si hay errores específicos de la API
+                if (data.errors) {
+                    const errorMessages = Object.values(data.errors).flat().join(', ');
+                    throw new Error(errorMessages);
+                }
+                throw new Error(data.message || 'Error al registrar usuario');
             }
 
-            // Guardar el token en el contexto
-            login(data.token);
-
-            // Redireccionar a la página de inicio
-            navigate('/discover');
+            // Registro exitoso
+            navigate('/login', { state: { registrationSuccess: true } });
         } catch (err) {
-            setError(err.message || 'Error al iniciar sesión');
+            setError(err.message || 'Error al registrar usuario');
         } finally {
             setIsLoading(false);
         }
@@ -79,7 +91,7 @@ const Login = () => {
                     <div className="mb-6 text-center">
                         <ScrollVelocity
                             className="text-shadow text-4xl font-extrabold dark:text-texto-dark text-texto"
-                            texts={['FilmWhere', 'Iniciar Sesión']}
+                            texts={['FilmWhere', 'Crear Cuenta']}
                             velocity={15}
                         />
                     </div>
@@ -90,20 +102,38 @@ const Login = () => {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label htmlFor="identifier" className={`block text-sm font-medium ${textColorClass}`}>
-                                Nombre de usuario o Email
+                            <label htmlFor="userName" className={`block text-sm font-medium ${textColorClass}`}>
+                                Nombre de usuario
                             </label>
                             <input
                                 type="text"
-                                id="identifier"
-                                name="identifier"
-                                value={formData.identifier}
+                                id="userName"
+                                name="userName"
+                                value={formData.userName}
+                                onChange={handleChange}
+                                required
+                                minLength={2}
+                                maxLength={20}
+                                className={`mt-1 block w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+                                placeholder="Nombre de usuario"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="email" className={`block text-sm font-medium ${textColorClass}`}>
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                value={formData.email}
                                 onChange={handleChange}
                                 required
                                 className={`mt-1 block w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
-                                placeholder="usuario o email@ejemplo.com"
+                                placeholder="correo@ejemplo.com"
                             />
                         </div>
 
@@ -123,6 +153,22 @@ const Login = () => {
                             />
                         </div>
 
+                        <div>
+                            <label htmlFor="confirmPassword" className={`block text-sm font-medium ${textColorClass}`}>
+                                Confirmar Contraseña
+                            </label>
+                            <input
+                                type="password"
+                                id="confirmPassword"
+                                name="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                required
+                                className={`mt-1 block w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+                                placeholder="Confirmar contraseña"
+                            />
+                        </div>
+
                         <ClickSpark sparkColor={theme === 'dark' ? "#fff" : "#333"}>
                             <button
                                 type="submit"
@@ -138,7 +184,7 @@ const Login = () => {
                                         Cargando...
                                     </span>
                                 ) : (
-                                    'Iniciar Sesión'
+                                    'Registrarse'
                                 )}
                             </button>
                         </ClickSpark>
@@ -146,9 +192,9 @@ const Login = () => {
 
                     <div className="mt-6 text-center">
                         <p className={textColorClass}>
-                            ¿No tienes una cuenta?{' '}
-                            <Link to="/register" className="font-bold text-indigo-500 hover:text-indigo-600">
-                                Regístrate
+                            ¿Ya tienes una cuenta?{' '}
+                            <Link to="/login" className="font-bold text-indigo-500 hover:text-indigo-600">
+                                Iniciar Sesión
                             </Link>
                         </p>
                     </div>
@@ -164,4 +210,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default Register;
