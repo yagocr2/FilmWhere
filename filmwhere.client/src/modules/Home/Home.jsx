@@ -5,6 +5,8 @@ import Liquid from "../../Backgrounds/LiquidChrome/LiquidChrome.jsx";
 import Layout from "../../components/Layout";
 import GridMotion from "../../Backgrounds/GridMotion/GridMotion"
 import FadeContent from '../../Animations/FadeContent/FadeContent'
+import { Link } from 'react-router-dom';
+
 
 
 const Home = () => {
@@ -54,6 +56,48 @@ const Home = () => {
                             textShadow: "0 2px 10px rgba(0,0,0,0.8), 0 2px 20px rgba(0,0,0,0.7)"
                         }}
                     />
+                    <div className="flex flex-col items-center space-y-4">
+                        <div className="backdrop-blur-sm bg-black/50 px-4 py-2 rounded-lg inline-block mt-8">
+                            <p className="text-shadow text-2xl font-extrabold text-center text-texto-dark">
+                                Explora y descubre nuevas películas
+                            </p>
+                        </div>
+                        <button className="text-2xl font-extrabold py-3 px-5 rounded-lg transition-all duration-300 
+            text-texto bg-primario 
+            hover:bg-primario-dark hover:text-texto-dark 
+
+            dark:text-texto-dark dark:bg-primario-dark 
+            dark:hover:bg-primario dark:hover:text-texto 
+            hover:shadow-lg transform hover:scale-105">
+                            Entrar sin cuenta
+                        </button>
+
+                    </div>
+                    <div className="flex flex-row items-center justify-center space-x-4 mt-5">
+                        <Link to="/register">
+                            <button className="text-2xl font-extrabold p-3 rounded-lg transition-all duration-300 
+            text-texto-dark bg-primario-dark 
+            hover:bg-primario hover:text-texto hover:scale-105 
+
+            dark:text-texto dark:bg-primario 
+            dark:hover:bg-primario-dark dark:hover:text-texto-dark
+            shadow-md hover:shadow-lg">
+                                Crear Cuenta
+                            </button>
+                        </Link>
+
+                        <Link to="/login">
+                            <button className="text-2xl font-extrabold p-3 rounded-lg transition-all duration-300 
+            text-texto-dark bg-primario-dark 
+            hover:bg-primario hover:text-texto hover:scale-105
+            
+            dark:text-texto dark:bg-primario 
+            dark:hover:bg-primario-dark dark:hover:text-texto-dark
+            shadow-md hover:shadow-lg">
+                                Iniciar Sesión
+                            </button>
+                        </Link>
+                    </div>
                 </div>
 
             </Layout>

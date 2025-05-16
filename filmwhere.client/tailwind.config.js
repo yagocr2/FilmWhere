@@ -12,12 +12,12 @@ export default {
                 secundario: '#A78BFA',
                 destacado: '#2DD4BF',
                 social: '#FF8E8E',
-                texto: '#2D3748',
+                texto: '#0F0F15',
                 'primario-dark': '#0F0F15',
                 'secundario-dark': '#6B47AE',
                 'destacado-dark': '#4ECDC4',
                 'social-dark': '#FF6B6B',
-                'texto-dark': '#E0E0E0'
+                'texto-dark': '#F5F5F5'
             },
             keyframes: {
                 shine: {
