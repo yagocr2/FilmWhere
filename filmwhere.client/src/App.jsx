@@ -4,6 +4,7 @@ import { ThemeProvider } from "./context/ThemeContext";
 import Login from './components/Login';
 import Register from './components/Register';
 import Home from "./modules/Home/Home";
+import Inicio from "./modules/Inicio/Inicio";
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -32,6 +33,7 @@ function App() {
                         <Route path="/" element={<Home />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
+                        <Route path="/Inicio" element={<Inicio />} />
 
                         {/* Protected routes (example) */}
                         {/* <Route path="/discover" element={

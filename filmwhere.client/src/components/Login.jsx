@@ -1,4 +1,4 @@
-import { useState } from 'react';
+ï»¿import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import LiquidChrome from '../Backgrounds/LiquidChrome/LiquidChrome';
@@ -45,16 +45,16 @@ const Login = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.message || 'Error al iniciar sesión');
+                throw new Error(data.message || 'Error al iniciar sesiï¿½n');
             }
 
             // Guardar el token en el contexto
             login(data.token);
 
-            // Redireccionar a la página de inicio
-            navigate('/discover');
+            // Redireccionar a la pï¿½gina de inicio
+            navigate('/inicio');
         } catch (err) {
-            setError(err.message || 'Error al iniciar sesión');
+            setError(err.message || 'Error al iniciar sesiï¿½n');
         } finally {
             setIsLoading(false);
         }
@@ -78,8 +78,8 @@ const Login = () => {
                 <div className={`w-full max-w-md rounded-2xl ${primaryColorClass} p-8 shadow-2xl backdrop-blur-lg`}>
                     <div className="mb-6 text-center">
                         <ScrollVelocity
-                            className="text-shadow text-4xl font-extrabold dark:text-texto-dark text-texto"
-                            texts={['FilmWhere', 'Iniciar Sesión']}
+                            className="text-shadow text-texto text-4xl font-extrabold dark:text-texto-dark"
+                            texts={['FilmWhere', 'Iniciar Sesiï¿½n']}
                             velocity={15}
                         />
                     </div>
@@ -109,7 +109,7 @@ const Login = () => {
 
                         <div>
                             <label htmlFor="password" className={`block text-sm font-medium ${textColorClass}`}>
-                                Contraseña
+                                Contraseï¿½a
                             </label>
                             <input
                                 type="password"
@@ -119,7 +119,7 @@ const Login = () => {
                                 onChange={handleChange}
                                 required
                                 className={`mt-1 block w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
-                                placeholder="Contraseña"
+                                placeholder="Contraseï¿½a"
                             />
                         </div>
 
@@ -138,7 +138,7 @@ const Login = () => {
                                         Cargando...
                                     </span>
                                 ) : (
-                                    'Iniciar Sesión'
+                                    'Iniciar Sesiï¿½n'
                                 )}
                             </button>
                         </ClickSpark>
@@ -146,16 +146,16 @@ const Login = () => {
 
                     <div className="mt-6 text-center">
                         <p className={textColorClass}>
-                            ¿No tienes una cuenta?{' '}
+                            ï¿½No tienes una cuenta?{' '}
                             <Link to="/register" className="font-bold text-indigo-500 hover:text-indigo-600">
-                                Regístrate
+                                Regï¿½strate
                             </Link>
                         </p>
                     </div>
 
                     <div className="mt-4 text-center">
                         <Link to="/" className={`text-sm ${textColorClass} hover:underline`}>
-                            Volver a la página de inicio
+                            Volver a la pï¿½gina de inicio
                         </Link>
                     </div>
                 </div>

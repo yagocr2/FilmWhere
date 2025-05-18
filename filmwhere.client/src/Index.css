@@ -21,3 +21,7 @@
         --color-texto: #E0E0E0;
     }
 }
+div-titulo {
+    background: linear-gradient(to right, transparent 1000px, var(--color-primario)), /* Right fade */
+    linear-gradient(to left, transparent 1000px, var(--color-primario) 10px, var(--color-primario) 90%, transparent 90%); /* Left fade */
+}

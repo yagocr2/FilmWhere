@@ -1,0 +1,63 @@
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.text-shadow {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+.movie-card {
+    transition: all 0.3s ease;
+}
+
+    .movie-card:hover {
+        transform: scale(1.05);
+        z-index: 10;
+    }
+
+.movie-slider {
+    position: relative;
+    overflow: hidden;
+}
+
+    /* Efecto de desvanecimiento en los bordes del slider */
+    .movie-slider::before,
+    .movie-slider::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 50px;
+        z-index: 5;
+        pointer-events: none;
+    }
+
+    .movie-slider::before {
+        left: 0;
+        background: linear-gradient(to right, var(--bg-color) 0%, transparent 100%);
+    }
+
+    .movie-slider::after {
+        right: 0;
+        background: linear-gradient(to left, var(--bg-color) 0%, transparent 100%);
+    }
+
+/* Variables para los temas */
+:root {
+    --bg-color: #ffffff;
+}
+
+.dark {
+    --bg-color: #121212;
+}
+
+/* Animación suave para el hover de las películas */
+@keyframes cardHover {
+    from {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    to {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+}

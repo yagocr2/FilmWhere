@@ -11,9 +11,7 @@
   <ItemGroup>
     <None Remove="src\blocks\**" />
     <None Remove="src\modules\NewFolder1\**" />
-    <None Remove="src\modules\NewFolder\**" />
     <TypeScriptConfiguration Remove="src\blocks\**" />
     <TypeScriptConfiguration Remove="src\modules\NewFolder1\**" />
-    <TypeScriptConfiguration Remove="src\modules\NewFolder\**" />
   </ItemGroup>
 </Project>

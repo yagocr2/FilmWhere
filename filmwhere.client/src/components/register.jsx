@@ -88,7 +88,7 @@ const Register = () => {
 
             <FadeContent duration={1200} className="relative z-10 flex h-full w-full items-center justify-center">
                 <div className={`w-full max-w-md rounded-2xl ${primaryColorClass} p-8 shadow-2xl backdrop-blur-lg`}>
-                    <div className="mb-6 text-center">
+                    <div className="div-titulo mb-6 text-center">
                         <ScrollVelocity
                             className="text-shadow text-4xl font-extrabold dark:text-texto-dark text-texto"
                             texts={['FilmWhere', 'Crear Cuenta']}
