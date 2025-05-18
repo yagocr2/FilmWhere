@@ -5,6 +5,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Home from "./modules/Home/Home";
 import Inicio from "./modules/Inicio/Inicio";
+import DetallePelicula from "./modules/DetallePelicula/DetallePelicula";
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -33,7 +34,8 @@ function App() {
                         <Route path="/" element={<Home />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
-                        <Route path="/Inicio" element={<Inicio />} />
+                        <Route path="/inicio" element={<Inicio />} />
+                        <Route path="/pelicula/:id" element={<DetallePelicula />} />
 
                         {/* Protected routes (example) */}
                         {/* <Route path="/discover" element={

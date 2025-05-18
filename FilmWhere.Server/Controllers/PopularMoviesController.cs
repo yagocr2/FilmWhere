@@ -10,7 +10,7 @@ namespace FilmWhere.Server.Controllers
 {
 	[ApiController]
 	[Route("api/[controller]")]
-	public class PopularMoviesController : ControllerBase
+	public class PopularMoviesController : Controller
 	{
 		private readonly TmdbService _tmdbService;
 		private readonly DataSyncService _dataSyncService;

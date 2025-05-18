@@ -6,7 +6,9 @@ using System.Text.Json.Serialization;
 
 namespace FilmWhere.Server.Controllers
 {
-	public class PeliculasGeneroController : Controller
+	[ApiController]
+	[Route("api/[controller]")]
+	public class PeliculasGeneroController : ControllerBase
 	{
 		private readonly TmdbService _tmdbService;
 		private readonly MyDbContext _context;
