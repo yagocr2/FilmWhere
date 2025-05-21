@@ -1,4 +1,4 @@
-
+ï»¿
 // src/components/Register.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -7,18 +7,22 @@ import FadeContent from '../Animations/FadeContent/FadeContent';
 import ClickSpark from '../Animations/ClickSpark/ClickSpark';
 import ScrollVelocity from '../TextAnimations/ScrollVelocity/ScrollVelocity';
 import { useTheme } from '../context/ThemeContext';
+import { Eye, EyeOff } from 'lucide-react';
+
 
 const Register = () => {
     const { theme } = useTheme();
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [error, setErrors] = useState('');
     const [formData, setFormData] = useState({
         userName: '',
         email: '',
         password: '',
         confirmPassword: ''
     });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleChange = (e) => {
         setFormData({
@@ -26,18 +30,48 @@ const Register = () => {
             [e.target.name]: e.target.value
         });
     };
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const toggleConfirmPasswordVisibility = () => {
+        setShowConfirmPassword(!showConfirmPassword);
+    };
+    const validateForm = () => {
+        const newErrors = [];
+
+        if (!formData.userName.trim() || formData.userName.length < 2) {
+            newErrors.push('El nombre de usuario debe tener al menos 2 caracteres');
+        }
+
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.push('Por favor ingrese un correo electrÃ³nico vÃ¡lido');
+        }
+
+        if (!formData.password) {
+            newErrors.push('Por favor ingrese una contraseÃ±a');
+        } else if (formData.password.length < 6) {
+            newErrors.push('La contraseÃ±a debe tener al menos 6 caracteres');
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+            newErrors.push('Las contraseÃ±as no coinciden');
+        }
+
+        setErrors(newErrors);
+        return newErrors.length === 0;
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsLoading(true);
-        setError('');
 
-        // Validaciones básicas
-        if (formData.password !== formData.confirmPassword) {
-            setError('Las contraseñas no coinciden');
-            setIsLoading(false);
+        // Validar formulario antes de enviar
+        if (!validateForm()) {
             return;
         }
+
+        setIsLoading(true);
+        setErrors([]);
 
         try {
             const response = await fetch('/api/Auth/register', {
@@ -55,18 +89,19 @@ const Register = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                // Si hay errores específicos de la API
-                if (data.errors) {
-                    const errorMessages = Object.values(data.errors).flat().join(', ');
-                    throw new Error(errorMessages);
+                // Manejar errores especÃ­ficos del servidor
+                if (data.errors && Array.isArray(data.errors)) {
+                    setErrors(data.errors);
+                } else {
+                    setErrors([data.message || 'Error al registrarse']);
                 }
-                throw new Error(data.message || 'Error al registrar usuario');
+                return;
             }
 
-            // Registro exitoso
-            navigate('/login', { state: { registrationSuccess: true } });
+            // Registro exitoso, redirigir a inicio de sesiÃ³n
+            navigate('/login', { state: { message: 'Registro exitoso. Ahora puedes iniciar sesiÃ³n.' } });
         } catch (err) {
-            setError(err.message || 'Error al registrar usuario');
+            setErrors(['Error de conexiÃ³n. Por favor intente mÃ¡s tarde.']);
         } finally {
             setIsLoading(false);
         }
@@ -80,7 +115,7 @@ const Register = () => {
             {/* Background */}
             <div className="fixed inset-0 z-0">
                 <LiquidChrome
-                    baseColor={theme === 'dark' ? [0.05, 0.05, 0.15] : [0.9, 0.9, 1]}
+                    baseColor={theme === 'dark' ? [0.05, 0.02, 0.15] : [0.9, 0.8, 1]}
                     amplitude={0.3}
                     speed={0.15}
                 />
@@ -90,7 +125,7 @@ const Register = () => {
                 <div className={`w-full max-w-md rounded-2xl ${primaryColorClass} p-8 shadow-2xl backdrop-blur-lg`}>
                     <div className="div-titulo mb-6 text-center">
                         <ScrollVelocity
-                            className="text-shadow text-4xl font-extrabold dark:text-texto-dark text-texto"
+                            className="text-shadow text-texto text-4xl font-extrabold dark:text-texto-dark"
                             texts={['FilmWhere', 'Crear Cuenta']}
                             velocity={15}
                         />
@@ -139,34 +174,59 @@ const Register = () => {
 
                         <div>
                             <label htmlFor="password" className={`block text-sm font-medium ${textColorClass}`}>
-                                Contraseña
+                                ContraseÃ±a
                             </label>
-                            <input
-                                type="password"
-                                id="password"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                className={`mt-1 block w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
-                                placeholder="Contraseña"
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    id="password"
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    className={`mt-1 block w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+                                    placeholder="ContraseÃ±a"
+                                />
+                                <button
+                                    type="button"
+                                    className="-translate-y-1/2 absolute right-3 top-1/2 transform"
+                                    onClick={togglePasswordVisibility}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
+                                    ) : (
+                                        <Eye className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
+                                    )}
+                                </button>
+                            </div>
                         </div>
 
                         <div>
                             <label htmlFor="confirmPassword" className={`block text-sm font-medium ${textColorClass}`}>
-                                Confirmar Contraseña
+                                Confirmar ContraseÃ±a
                             </label>
-                            <input
-                                type="password"
-                                id="confirmPassword"
-                                name="confirmPassword"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                required
-                                className={`mt-1 block w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
-                                placeholder="Confirmar contraseña"
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
+                                    required
+                                    className={`mt-1 block w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+                                    placeholder="Confirmar contraseÃ±a"
+                                />
+                                <button
+                                    type="button"
+                                    className="-translate-y-1/2 absolute right-3 top-1/2 transform"
+                                    onClick={toggleConfirmPasswordVisibility}
+                                >
+                                    {showConfirmPassword ? (
+                                        <EyeOff className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
+                                    ) : (
+                                        <Eye className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
+                                    )}
+                                </button>
+                            </div>
                         </div>
 
                         <ClickSpark sparkColor={theme === 'dark' ? "#fff" : "#333"}>
@@ -192,16 +252,16 @@ const Register = () => {
 
                     <div className="mt-6 text-center">
                         <p className={textColorClass}>
-                            ¿Ya tienes una cuenta?{' '}
+                            Â¿Ya tienes una cuenta?{' '}
                             <Link to="/login" className="font-bold text-indigo-500 hover:text-indigo-600">
-                                Iniciar Sesión
+                                Iniciar SesiÃ³n
                             </Link>
                         </p>
                     </div>
 
                     <div className="mt-4 text-center">
                         <Link to="/" className={`text-sm ${textColorClass} hover:underline`}>
-                            Volver a la página de inicio
+                            Volver a la pÃ¡gina de inicio
                         </Link>
                     </div>
                 </div>

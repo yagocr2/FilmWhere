@@ -41,7 +41,6 @@ const Home = () => {
 
     return (
         <FadeContent>
-            <Layout>
                 <div className="blur-black fixed inset-0 z-0 blur-[1.8px]">
                     <GridMotion items={movies} gradientColor={"var(--color-primario)"} />
                 </div>
@@ -62,7 +61,7 @@ const Home = () => {
                                 Explora y descubre nuevas películas
                             </p>
                         </div>
-                        <Link to="/inicio">
+                        <Link to="/inicio-publico">
                         <button className="text-texto bg-primario transform rounded-lg px-5 py-3 text-2xl
             font-extrabold transition-all
             duration-300 hover:bg-primario-dark
@@ -95,8 +94,6 @@ const Home = () => {
                         </Link>
                     </div>
                 </div>
-
-            </Layout>
         </FadeContent>
     );
 };

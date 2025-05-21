@@ -29,6 +29,17 @@ namespace FilmWhere.Server.Controllers
 		[HttpPost("register")]
 		public async Task<IActionResult> Register([FromBody] RegisterModel model)
 		{
+			// Validación personalizada de contraseña
+			var passwordValidator = new PasswordValidator<Usuario>();
+			var passwordResult = await passwordValidator.ValidateAsync(_userManager, null, model.Password);
+
+			if (!passwordResult.Succeeded)
+			{
+				// Convertir errores técnicos a mensajes amigables para el usuario
+				var errorMessages = passwordResult.Errors.Select(e => FormatPasswordError(e.Description)).ToList();
+				return BadRequest(new { Errors = errorMessages });
+			}
+
 			var user = new Usuario
 			{
 				UserName = model.UserName,
@@ -38,7 +49,11 @@ namespace FilmWhere.Server.Controllers
 			var result = await _userManager.CreateAsync(user, model.Password);
 
 			if (!result.Succeeded)
-				return BadRequest(result.Errors);
+			{
+				// Transformar errores de identidad en mensajes más amigables
+				var errorMessages = result.Errors.Select(e => FormatIdentityError(e.Description)).ToList();
+				return BadRequest(new { Errors = errorMessages });
+			}
 
 			return Ok(new { Message = "Registro exitoso" });
 		}
@@ -55,11 +70,19 @@ namespace FilmWhere.Server.Controllers
 			else
 			{
 				user = await _userManager.FindByNameAsync(model.Identifier);
-
 			}
 
-			if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
-				return Unauthorized("Credenciales inválidas");
+			if (user == null)
+			{
+				// No revelar si el usuario existe o no (por seguridad)
+				return Unauthorized(new { Message = "Credenciales inválidas" });
+			}
+
+			if (!await _userManager.CheckPasswordAsync(user, model.Password))
+			{
+				// Mensaje específico para contraseña incorrecta
+				return Unauthorized(new { Message = "La contraseña es incorrecta" });
+			}
 
 			var token = GenerateJwtToken(user);
 			return Ok(new { Token = token });
@@ -87,6 +110,55 @@ namespace FilmWhere.Server.Controllers
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var token = tokenHandler.CreateToken(tokenDescriptor);
 			return tokenHandler.WriteToken(token);
+		}
+
+		// Transforma errores técnicos de contraseña en mensajes amigables
+		private string FormatPasswordError(string errorDescription)
+		{
+			if (errorDescription.Contains("must be at least"))
+			{
+				return "La contraseña debe tener al menos 8 caracteres. ";
+			}
+			else if (errorDescription.Contains("unique characters"))
+			{
+				return "La contraseña debe tener caracteres únicos suficientes. ";
+			}
+			else if (errorDescription.Contains("non alphanumeric"))
+			{
+				return "La contraseña debe incluir al menos un carácter especial. ";
+			}
+			else if (errorDescription.Contains("digit"))
+			{
+				return "La contraseña debe incluir al menos un número. ";
+			}
+			else if (errorDescription.Contains("uppercase"))
+			{
+				return "La contraseña debe incluir al menos una letra mayúscula. ";
+			}
+			else if (errorDescription.Contains("lowercase"))
+			{
+				return "La contraseña debe incluir al menos una letra minúscula. ";
+			}
+			// Devolver el mensaje original si no coincide con ninguno de los patrones anteriores
+			return errorDescription;
+		}
+
+		// Transforma errores de Identity en mensajes más amigables
+		private string FormatIdentityError(string errorDescription)
+		{
+			if (errorDescription.Contains("is already taken"))
+			{
+				if (errorDescription.Contains("Email"))
+				{
+					return "Este correo electrónico ya está registrado.";
+				}
+				else if (errorDescription.Contains("UserName"))
+				{
+					return "Este nombre de usuario ya está en uso.";
+				}
+			}
+			// Devolver el mensaje original si no coincide con ninguno de los patrones
+			return errorDescription;
 		}
 	}
 	public class RegisterModel

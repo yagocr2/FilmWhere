@@ -1,28 +1,23 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+﻿import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
-import { ThemeProvider } from "./context/ThemeContext";
+import { ProtectedRoute, AnonymousRoute } from './utils/ProtectedRoute';
+
+// Public pages
+import Home from './modules/Home/Home';
 import Login from './components/Login';
 import Register from './components/Register';
-import Home from "./modules/Home/Home";
-import Inicio from "./modules/Inicio/Inicio";
-import DetallePelicula from "./modules/DetallePelicula/DetallePelicula";
 
-// Protected route component
-const ProtectedRoute = ({ children }) => {
-    const { isAuthenticated, loading } = useAuth();
+// Protected pages
+import Inicio from './modules/Inicio/Inicio';
+import Layout from './components/Layout';
+import AuthLayout from './components/AuthLayout';
 
-    if (loading) {
-        return <div className="flex h-screen w-full items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"></div>
-        </div>;
-    }
-
-    if (!isAuthenticated) {
-        return <Navigate to="/login" />;
-    }
-
-    return children;
-};
+// Other pages that need to be added to your application
+// import Profile from './modules/Profile/Profile';
+// import Search from './modules/Search/Search';
+// import Favorites from './modules/Favorites/Favorites';
+// import WatchNow from './modules/WatchNow/WatchNow';
 
 function App() {
     return (
@@ -30,22 +25,31 @@ function App() {
             <AuthProvider>
                 <Router>
                     <Routes>
-                        {/* Public routes */}
-                        <Route path="/" element={<Home />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
-                        <Route path="/inicio" element={<Inicio />} />
-                        <Route path="/pelicula/:id" element={<DetallePelicula />} />
+                        {/* Public routes - redirect to Inicio if logged in */}
+                        <Route element={<AnonymousRoute />}>
+                            <Route path="/" element={<Home />} />
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/register" element={<Register />} />
+                        </Route>
 
-                        {/* Protected routes (example) */}
-                        {/* <Route path="/discover" element={
-              <ProtectedRoute>
-                <Discover />
-              </ProtectedRoute>
-            } /> */}
+                        {/* Protected routes - accessible only when authenticated */}
+                        <Route element={<ProtectedRoute />}>
+                            <Route path="/inicio" element={<AuthLayout><Inicio /></AuthLayout>} />
+                            {/* Add more protected routes here, using AuthLayout */}
+                            {/* <Route path="/buscar" element={<AuthLayout><Search /></AuthLayout>} /> */}
+                            {/* <Route path="/favoritos" element={<AuthLayout><Favorites /></AuthLayout>} /> */}
+                            {/* <Route path="/ver-ahora" element={<AuthLayout><WatchNow /></AuthLayout>} /> */}
+                            {/* <Route path="/perfil" element={<AuthLayout><Profile /></AuthLayout>} /> */}
 
-                        {/* Fallback route */}
-                        <Route path="*" element={<Navigate to="/" />} />
+                            {/* You can also create routes for individual movie pages */}
+                            {/* <Route path="/pelicula/:id" element={<AuthLayout><MovieDetail /></AuthLayout>} /> */}
+                        </Route>
+
+                        {/* Special case - public access with different layout */}
+                        <Route path="/inicio-publico" element={<Layout><Inicio /></Layout>} />
+
+                        {/* Fallback route for any other URL */}
+                        <Route path="*" element={<Layout><div className="p-12 text-center">P�gina no encontrada</div></Layout>} />
                     </Routes>
                 </Router>
             </AuthProvider>

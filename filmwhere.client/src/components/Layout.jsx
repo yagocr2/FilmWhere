@@ -1,4 +1,4 @@
-// components/Layout.jsx
+ï»¿// components/Layout.jsx
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext'; // Crearemos este contexto
 import ShinyText from "../TextAnimations/ShinyText/ShinyText";
@@ -11,7 +11,7 @@ export default function Layout({ children }) {
     return (
         <div className={theme === 'dark' ? 'dark' : ''}>
             {/* Header global */}
-            <header className="fixed top-0 left-0 right-0 z-50 pt-1 pb-1 px-4 flex justify-between items-center">
+            <header className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between px-4 pb-1 pt-1">
                 {/* Logo a la izquierda */}
                 <Link to="/" className="flex items-center space-x-3">
 
@@ -31,9 +31,9 @@ export default function Layout({ children }) {
                 {/* Controles a la derecha */}
                 <div className="flex items-center space-x-4">
 
-                    {/* Botones de autenticación */}
+                    {/* Botones de autenticaciÃ³n */}
                     <Link to="/login">
-                        <div className="p-2 bg-indigo-800/80 dark:bg-black/80 rounded-full hover:bg-indigo-800/50 dark:hover:bg-yellow-600/80 transition-colors duration-300">
+                        <div className="rounded-full bg-indigo-800/80 p-2 transition-colors duration-300 hover:bg-indigo-800/50 dark:bg-black/80 dark:hover:bg-yellow-600/80">
 
                         <ShinyText
                             text="Login"
@@ -44,7 +44,7 @@ export default function Layout({ children }) {
                         </div>
                     </Link>
                     <Link to="/register">
-                    <div className="p-2 bg-black/30 dark:bg-black/80 rounded-full hover:bg-indigo-800/50 dark:hover:bg-yellow-600/80 transition-colors duration-300">
+                    <div className="rounded-full bg-black/30 p-2 transition-colors duration-300 hover:bg-indigo-800/50 dark:bg-black/80 dark:hover:bg-yellow-600/80">
                         <ShinyText
                             text="Register"
                             colors={theme === 'dark' ? ["#1e00af", "#ccfc00"] : ["#ccfc00", "#1e00af"]}
@@ -54,16 +54,16 @@ export default function Layout({ children }) {
                         </div>
 
                     </Link>
-                    {/* Botón tema */}
+                    {/* BotÃ³n tema */}
                     <button
                         onClick={toggleTheme}
-                        className="p-2 bg-gray-200 dark:bg-yellow-200 rounded-full hover:bg-black dark:hover:bg-yellow-50 transition-colors duration-300"
+                        className="rounded-full bg-gray-200 p-2 transition-colors duration-300 hover:bg-black dark:bg-yellow-200 dark:hover:bg-yellow-50"
                         aria-label="Toggle theme"
                     >
                         {theme === 'dark' ? (
                             <SunIcon className="h-8 w-8 text-yellow-600" />
                         ) : (
-                            <MoonIcon className="h-8 w-8 text-purple-600 " />
+                            <MoonIcon className="h-8 w-8 text-purple-600" />
                         )}
                     </button>
                 </div>

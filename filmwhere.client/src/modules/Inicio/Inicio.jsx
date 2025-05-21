@@ -270,7 +270,6 @@ const Inicio = () => {
     return (
         <FadeContent>
             <div className="relative h-screen w-screen overflow-x-hidden">
-            <Layout>
                 <div className="fixed inset-0 z-0">
                         <LiquidChrome
                             baseColor={theme === 'dark' ? [0.05, 0.02, 0.15] : [0.9, 0.8, 1]}
@@ -352,7 +351,6 @@ const Inicio = () => {
                         error={error.topRated}
                     />
                 </div>
-            </Layout>
                 </div>
         </FadeContent>
     );

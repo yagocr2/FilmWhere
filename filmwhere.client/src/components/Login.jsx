@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import LiquidChrome from '../Backgrounds/LiquidChrome/LiquidChrome';
@@ -6,11 +6,13 @@ import FadeContent from '../Animations/FadeContent/FadeContent';
 import ClickSpark from '../Animations/ClickSpark/ClickSpark';
 import ScrollVelocity from '../TextAnimations/ScrollVelocity/ScrollVelocity';
 import { useTheme } from '../context/ThemeContext';
+import { Eye, EyeOff } from 'lucide-react';
+
 
 const Login = () => {
     const { theme } = useTheme();
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { login, isAuthenticated, loading } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
@@ -18,15 +20,38 @@ const Login = () => {
         password: ''
     });
 
+    // Redirect if already authenticated
+    useEffect(() => {
+        if (isAuthenticated && !loading) {
+            navigate('/inicio');
+        }
+    }, [isAuthenticated, loading, navigate]);
+    const [showPassword, setShowPassword] = useState(false);
+
+
     const handleChange = (e) => {
         setFormData({
             ...formData,
             [e.target.name]: e.target.value
         });
     };
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!formData.identifier.trim()) {
+            setError('Por favor ingrese su nombre de usuario o email');
+            return;
+        }
+
+        if (!formData.password) {
+            setError('Por favor ingrese su contraseña');
+            return;
+        }
+
         setIsLoading(true);
         setError('');
 
@@ -45,20 +70,28 @@ const Login = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.message || 'Error al iniciar sesi�n');
+                throw new Error(data.message || 'Error al iniciar sesión');
             }
 
-            // Guardar el token en el contexto
+            // Guardar el token en el contexto y localStorage (AuthContext se encarga de esto)
             login(data.token);
-
-            // Redireccionar a la p�gina de inicio
+            // Redireccionar a la página de inicio
             navigate('/inicio');
         } catch (err) {
-            setError(err.message || 'Error al iniciar sesi�n');
+            setError(err.message || 'Error al iniciar sesión');
         } finally {
             setIsLoading(false);
         }
     };
+
+    // Show loading spinner while checking auth state
+    if (loading) {
+        return (
+            <div className="flex h-screen w-screen items-center justify-center">
+                <div className="border-primario h-16 w-16 animate-spin rounded-full border-b-2 border-t-2"></div>
+            </div>
+        );
+    }
 
     const primaryColorClass = theme === 'dark' ? 'bg-primario-dark' : 'bg-primario';
     const textColorClass = theme === 'dark' ? 'text-texto-dark' : 'text-texto';
@@ -68,7 +101,7 @@ const Login = () => {
             {/* Background */}
             <div className="fixed inset-0 z-0">
                 <LiquidChrome
-                    baseColor={theme === 'dark' ? [0.05, 0.05, 0.15] : [0.9, 0.9, 1]}
+                    baseColor={theme === 'dark' ? [0.05, 0.02, 0.15] : [0.9, 0.8, 1]}
                     amplitude={0.3}
                     speed={0.15}
                 />
@@ -79,7 +112,7 @@ const Login = () => {
                     <div className="mb-6 text-center">
                         <ScrollVelocity
                             className="text-shadow text-texto text-4xl font-extrabold dark:text-texto-dark"
-                            texts={['FilmWhere', 'Iniciar Sesi�n']}
+                            texts={['FilmWhere', 'Iniciar Sesión']}
                             velocity={15}
                         />
                     </div>
@@ -109,18 +142,30 @@ const Login = () => {
 
                         <div>
                             <label htmlFor="password" className={`block text-sm font-medium ${textColorClass}`}>
-                                Contrase�a
+                                Contraseña
                             </label>
-                            <input
-                                type="password"
-                                id="password"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                className={`mt-1 block w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
-                                placeholder="Contrase�a"
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    id="password"
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    className={`mt-1 block w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+                                    placeholder="Contraseña"
+                                />
+                                <button
+                                    type="button"
+                                    className="-translate-y-1/2 absolute right-3 top-1/2 transform"
+                                    onClick={togglePasswordVisibility}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
+                                    ) : (
+                                        <Eye className={`h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
+                                    )}
+                                </button>
+                            </div>
                         </div>
 
                         <ClickSpark sparkColor={theme === 'dark' ? "#fff" : "#333"}>
@@ -138,7 +183,7 @@ const Login = () => {
                                         Cargando...
                                     </span>
                                 ) : (
-                                    'Iniciar Sesi�n'
+                                    'Iniciar Sesión'
                                 )}
                             </button>
                         </ClickSpark>
@@ -146,16 +191,16 @@ const Login = () => {
 
                     <div className="mt-6 text-center">
                         <p className={textColorClass}>
-                            �No tienes una cuenta?{' '}
+                            ¿No tienes una cuenta?{' '}
                             <Link to="/register" className="font-bold text-indigo-500 hover:text-indigo-600">
-                                Reg�strate
+                                Regístrate
                             </Link>
                         </p>
                     </div>
 
                     <div className="mt-4 text-center">
                         <Link to="/" className={`text-sm ${textColorClass} hover:underline`}>
-                            Volver a la p�gina de inicio
+                            Volver a la página de inicio
                         </Link>
                     </div>
                 </div>
