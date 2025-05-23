@@ -29,18 +29,24 @@ Usa dos de las grandes base de datos que existe como TMDB y WatchMode para que n
 ## Documentation
 ASP:
 - [Pagina Oficial](https://learn.microsoft.com/es-es/aspnet/core/fundamentals/minimal-apis/overview?view=aspnetcore-8.0&WT.mc_id=dotnet-35129-website)
+
 React:
 - [Pagina Oficial](https://es.react.dev/learn)
 - [DevDocs](https://devdocs.io/react/)
+  
 React + ASP.NET:
 - [Pagina Oficial](https://learn.microsoft.com/es-es/visualstudio/javascript/tutorial-asp-net-core-with-react?view=vs-2022)
+  
  UserIdentity:
 - [Pagina Oficial](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity?view=aspnetcore-8.0&tabs=visual-studio)
+
 TailwindCSS
 - [Pagina Oficial](https://v3.tailwindcss.com)
 - [Devdocs](https://devdocs.io/tailwindcss/)
+
 Postgres:
 - [DevDocs](https://devdocs.io/postgresql~17/)
+
 ReactBits:
 - [Pagina Oficial](https://www.reactbits.dev)
 
