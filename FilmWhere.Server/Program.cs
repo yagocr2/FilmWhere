@@ -17,7 +17,6 @@ namespace FilmWhere.Server
 	{
 		public static void Main(string[] args)
 		{
-
 			Env.Load();
 			var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +28,9 @@ namespace FilmWhere.Server
 			//Configuración de la base de datos
 			builder.Services.AddDbContext<MyDbContext>(options =>
 				options.UseNpgsql(builder.Configuration
-					.GetConnectionString("DefaultConnection"))
+					.GetConnectionString("DefaultConnection")
+					//,opt => opt.CommandTimeout(120))
+					)
 			);
 
 			// Configuración de HttpClient para servicios externos

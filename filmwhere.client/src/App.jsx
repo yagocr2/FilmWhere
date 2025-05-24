@@ -49,7 +49,7 @@ function App() {
                         <Route path="/inicio-publico" element={<Layout><Inicio /></Layout>} />
 
                         {/* Fallback route for any other URL */}
-                        <Route path="*" element={<Layout><div className="p-12 text-center">P�gina no encontrada</div></Layout>} />
+                        <Route path="*" element={<Layout><div className="bg-primario text-bg-primario rounded p-12 text-center dark:bg-primario-dark dark:text-bg-primario-dark">Página no encontrada</div></Layout>} />
                     </Routes>
                 </Router>
             </AuthProvider>

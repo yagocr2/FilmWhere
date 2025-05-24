@@ -1,76 +1,129 @@
-﻿// components/Layout.jsx
-import { Link } from 'react-router-dom';
-import { useTheme } from '../context/ThemeContext'; // Crearemos este contexto
-import ShinyText from "../TextAnimations/ShinyText/ShinyText";
-import StarBorder from "../Animations/StarBorder/StarBorder";
-import {SunIcon, MoonIcon} from "@heroicons/react/24/outline"
+﻿import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { Sun, Moon, UserCircle, LogOut, Home, Search, Heart, Film, Settings, LogIn } from 'lucide-react';
+import { useState } from 'react';
 
-export default function Layout({ children }) {
+const AuthLayout = ({ children }) => {
     const { theme, toggleTheme } = useTheme();
+    const { logout } = useAuth();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/');
+    };
+
+    const navItems = [
+        { name: 'Inicio', icon: <Home size={20} />, path: '/inicio-publico' },
+        { name: 'Buscar', icon: <Search size={20} />, path: '/buscar' },
+        { name: 'Iniciar Sesion', icon: <LogIn size={20}/>, path: '/login' }
+    ];
+
+    const primaryBgClass = theme === 'dark' ? 'bg-primario-dark' : 'bg-primario';
+    const secondaryBgClass = theme === 'dark' ? 'bg-secundario-dark' : 'bg-secundario';
+    const textClass = theme === 'dark' ? 'text-texto-dark' : 'text-texto';
+    const navbarBgClass = theme === 'dark' ? 'bg-black/80' : 'bg-white/80';
+    const navbarTextClass = theme === 'dark' ? 'text-texto-dark' : 'text-texto';
+    const activeClass = theme === 'dark' ? 'bg-primario text-texto' : 'bg-primario-dark text-texto-dark';
+    const hoverClass = theme === 'dark'
+        ? 'hover:bg-primario hover:text-texto'
+        : 'hover:bg-primario-dark hover:text-texto-dark';
 
     return (
-        <div className={theme === 'dark' ? 'dark' : ''}>
-            {/* Header global */}
-            <header className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between px-4 pb-1 pt-1">
-                {/* Logo a la izquierda */}
-                <Link to="/" className="flex items-center space-x-3">
+        <div className="flex min-h-screen flex-col">
+            {/* Top navigation */}
+            <header className={`${navbarBgClass} backdrop-blur-lg fixed top-0 w-full z-50 shadow-md`}>
+                <div className="container mx-auto px-4">
+                    <div className="flex h-16 items-center justify-between">
+                        {/* Logo */}
+                        <Link to="/inicio" className="flex items-center">
+                            <span className={`text-2xl font-extrabold ${navbarTextClass}`}>FilmWhere</span>
+                        </Link>
 
-                    <img
-                        src="/public/logo.png"
-                        alt="Logo"
-                        className="h-20 w-20 object-contain mix-blend-difference"
-                    />
-                    {/*<ShinyText*/}
-                    {/*    text="FilmWhere"*/}
-                    {/*    colors={theme === 'dark' ? ["#ccfc00", "#1e00af"] : ["#1e00af", "#ccfc00"]}*/}
-                    {/*    velocity={0.8}*/}
-                    {/*    fontSize="1.5rem"*/}
-                    {/*/>*/}
-                </Link>
-                
-                {/* Controles a la derecha */}
-                <div className="flex items-center space-x-4">
+                        {/* Desktop navigation */}
+                        <div className="hidden items-center space-x-4 md:flex">
+                            {navItems.map((item) => (
+                                <Link
+                                    key={item.name}
+                                    to={item.path}
+                                    className={`${navbarTextClass} ${hoverClass} px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 transition-colors`}
+                                >
+                                    {item.icon}
+                                    <span>{item.name}</span>
+                                </Link>
+                            ))}
 
-                    {/* Botones de autenticación */}
-                    <Link to="/login">
-                        <div className="rounded-full bg-indigo-800/80 p-2 transition-colors duration-300 hover:bg-indigo-800/50 dark:bg-black/80 dark:hover:bg-yellow-600/80">
-
-                        <ShinyText
-                            text="Login"
-                            colors={theme === 'dark' ? ["#ccfc00", "#1e00af"] : ["#1e00af", "#ccfc00"]}
-                            velocity={0.8}
-                            fontSize="1.1rem"
-                            />
-                        </div>
-                    </Link>
-                    <Link to="/register">
-                    <div className="rounded-full bg-black/30 p-2 transition-colors duration-300 hover:bg-indigo-800/50 dark:bg-black/80 dark:hover:bg-yellow-600/80">
-                        <ShinyText
-                            text="Register"
-                            colors={theme === 'dark' ? ["#1e00af", "#ccfc00"] : ["#ccfc00", "#1e00af"]}
-                            velocity={0.8}
-                            fontSize="1.1rem"
-                        />
+                            {/* Theme toggle */}
+                            <button
+                                onClick={toggleTheme}
+                                className={`${navbarTextClass} p-2 rounded-full ${hoverClass} transition-colors`}
+                            >
+                                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                            </button>
                         </div>
 
-                    </Link>
-                    {/* Botón tema */}
-                    <button
-                        onClick={toggleTheme}
-                        className="rounded-full bg-gray-200 p-2 transition-colors duration-300 hover:bg-black dark:bg-yellow-200 dark:hover:bg-yellow-50"
-                        aria-label="Toggle theme"
-                    >
-                        {theme === 'dark' ? (
-                            <SunIcon className="h-8 w-8 text-yellow-600" />
-                        ) : (
-                            <MoonIcon className="h-8 w-8 text-purple-600" />
-                        )}
-                    </button>
+                        {/* Mobile menu button */}
+                        <div className="flex items-center md:hidden">
+                            <button
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                className={`${navbarTextClass} p-2 rounded-md`}
+                            >
+                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    {isMenuOpen ? (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    ) : (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                    )}
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
+
+                {/* Mobile menu */}
+                {isMenuOpen && (
+                    <div className={`md:hidden ${navbarBgClass} backdrop-blur-lg shadow-lg`}>
+                        <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
+                            {navItems.map((item) => (
+                                <Link
+                                    key={item.name}
+                                    to={item.path}
+                                    className={`${navbarTextClass} ${hoverClass} block px-3 py-2 rounded-md text-base font-medium flex items-center space-x-2`}
+                                    onClick={() => setIsMenuOpen(false)}
+                                >
+                                    {item.icon}
+                                    <span>{item.name}</span>
+                                </Link>
+                            ))}
+
+                            <button
+                                onClick={toggleTheme}
+                                className={`${navbarTextClass} ${hoverClass} w-full block px-3 py-2 rounded-md text-base font-medium flex items-center space-x-2`}
+                            >
+                                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                                <span>Cambiar tema</span>
+                            </button>
+
+                        </div>
+                    </div>
+                )}
             </header>
 
-            {/* Contenido principal */}
-            <main>{children}</main>
+            {/* Content with padding for navbar */}
+            <main className="flex-grow pt-16">
+                {children}
+            </main>
+
+            {/* Footer - Optional */}
+            <footer className={`${navbarBgClass} backdrop-blur-lg py-4 mt-6 shadow-inner`}>
+                <div className="container mx-auto px-4 text-center">
+                    <p className={`${navbarTextClass} text-sm`}>� {new Date().getFullYear()} FilmWhere - Todos los derechos reservados</p>
+                </div>
+            </footer>
         </div>
     );
 };
+
+export default AuthLayout;
