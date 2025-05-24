@@ -7,6 +7,8 @@ import { ProtectedRoute, AnonymousRoute } from './utils/ProtectedRoute';
 import Home from './modules/Home/Home';
 import Login from './components/Login';
 import Register from './components/Register';
+import Search from './modules/Search/Search';
+import DetallePeli from './modules/DetallePelicula/DetallePelicula';
 
 // Protected pages
 import Inicio from './modules/Inicio/Inicio';
@@ -35,21 +37,20 @@ function App() {
                         {/* Protected routes - accessible only when authenticated */}
                         <Route element={<ProtectedRoute />}>
                             <Route path="/inicio" element={<AuthLayout><Inicio /></AuthLayout>} />
+                            <Route path="/buscar" element={<AuthLayout><Search /></AuthLayout>} />
                             {/* Add more protected routes here, using AuthLayout */}
-                            {/* <Route path="/buscar" element={<AuthLayout><Search /></AuthLayout>} /> */}
                             {/* <Route path="/favoritos" element={<AuthLayout><Favorites /></AuthLayout>} /> */}
                             {/* <Route path="/ver-ahora" element={<AuthLayout><WatchNow /></AuthLayout>} /> */}
                             {/* <Route path="/perfil" element={<AuthLayout><Profile /></AuthLayout>} /> */}
 
                             {/* You can also create routes for individual movie pages */}
-                            {/* <Route path="/pelicula/:id" element={<AuthLayout><MovieDetail /></AuthLayout>} /> */}
+                            <Route path="/pelicula/:id" element={<AuthLayout><DetallePeli /></AuthLayout>} />
                         </Route>
 
                         {/* Special case - public access with different layout */}
                         <Route path="/inicio-publico" element={<Layout><Inicio /></Layout>} />
-
                         {/* Fallback route for any other URL */}
-                        <Route path="*" element={<Layout><div className="bg-primario text-bg-primario rounded p-12 text-center dark:bg-primario-dark dark:text-bg-primario-dark">Página no encontrada</div></Layout>} />
+                        <Route path="*" element={<div className="bg-primario text-bg-primario rounded p-12 text-center dark:bg-primario-dark dark:text-bg-primario-dark">Página no encontrada</div>} />
                     </Routes>
                 </Router>
             </AuthProvider>

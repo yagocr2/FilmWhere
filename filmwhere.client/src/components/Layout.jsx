@@ -1,24 +1,16 @@
-﻿import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+﻿import { Link, } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
-import { Sun, Moon, UserCircle, LogOut, Home, Search, Heart, Film, Settings, LogIn } from 'lucide-react';
+import { Sun, Moon, LogOut, Home, Search, LogIn } from 'lucide-react';
 import { useState } from 'react';
 
 const AuthLayout = ({ children }) => {
     const { theme, toggleTheme } = useTheme();
-    const { logout } = useAuth();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const navigate = useNavigate();
-
-    const handleLogout = () => {
-        logout();
-        navigate('/');
-    };
 
     const navItems = [
         { name: 'Inicio', icon: <Home size={20} />, path: '/inicio-publico' },
         { name: 'Buscar', icon: <Search size={20} />, path: '/buscar' },
-        { name: 'Iniciar Sesion', icon: <LogIn size={20}/>, path: '/login' }
+        { name: 'Iniciar Sesion', icon: <LogIn size={20} />, path: '/login' }
     ];
 
     const primaryBgClass = theme === 'dark' ? 'bg-primario-dark' : 'bg-primario';
