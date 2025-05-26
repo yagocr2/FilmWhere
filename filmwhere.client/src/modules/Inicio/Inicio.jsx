@@ -137,7 +137,7 @@ const Inicio = () => {
     useEffect(() => {
         const fetchPopular = async () => {
             try {
-                const res = await fetch("/api/PopularMovies?page=1&cantidad=15");
+                const res = await fetch("/api/pelicula/populares?page=1&cantidad=15");
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
 
@@ -166,7 +166,7 @@ const Inicio = () => {
         const fetchActionMovies = async () => {
             try {
                 // Esto es un placeholder. En un escenario real, deberías tener un endpoint específico
-                const res = await fetch("/api/PopularMovies?page=2&cantidad=15");
+                const res = await fetch("/api/pelicula/genero/Acción?page=1&cantidad=15");
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
 
@@ -193,7 +193,7 @@ const Inicio = () => {
         const fetchHorrorMovies = async () => {
             try {
                 // Placeholder - ajustar con tu endpoint real
-                const res = await fetch("/api/PopularMovies?page=3&cantidad=15");
+                const res = await fetch("/api/pelicula/genero/Terror?page=1&cantidad=15");
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
 
@@ -220,7 +220,7 @@ const Inicio = () => {
             try {
                 // Ajustar con el endpoint que devuelva películas por año actual
                 const currentYear = new Date().getFullYear();
-                const res = await fetch(`/api/PopularMovies?year=${currentYear}&cantidad=15`);
+                const res = await fetch(`/api/pelicula/estrenos?year=${currentYear}&cantidad=15`);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
 
@@ -246,7 +246,7 @@ const Inicio = () => {
         const fetchTopRated = async () => {
             try {
                 // Este es un placeholder - ajustar según tu API
-                const res = await fetch("/api/PopularMovies?page=4&cantidad=15");
+                const res = await fetch("/api/pelicula/mejor-valoradas?page=1&cantidad=15");
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
 
@@ -254,7 +254,8 @@ const Inicio = () => {
                     id: m.id,
                     title: m.title,
                     posterUrl: m.posterUrl,
-                    year: m.year
+                    year: m.year,
+                    rating: m.rating
                 }));
 
                 updateState('topRated', formattedData);

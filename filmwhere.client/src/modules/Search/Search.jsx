@@ -169,13 +169,13 @@ const Search = () => {
         try {
             let url;
             if (query.trim()) {
-                // B�squeda específica - solo 2 páginas máximo
-                url = `/api/SearchMovies?query=${encodeURIComponent(query)}&page=${page}`;
+                // Búsqueda específica - solo 2 páginas máximo
+                url = `/api/pelicula/buscar?query=${encodeURIComponent(query)}&page=${page}`;
                 setIsSearching(true);
                 setTotalPages(3);
             } else {
                 // Carga popular - 10 páginas con 50 películas cada una
-                url = `/api/PopularMovies?page=${page}&cantidad=48`;
+                url = `/api/pelicula/populares?page=${page}&cantidad=48`;
                 setIsSearching(false);
                 setTotalPages(10);
             }

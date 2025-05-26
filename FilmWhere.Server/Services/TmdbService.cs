@@ -99,6 +99,7 @@ namespace FilmWhere.Services
 			public string Title { get; set; } = "";
 			public string Poster_Path { get; set; } = "";
 			public string Overview { get; set; } = "";
+			public decimal Vote_Average { get; set; }
 			public DateTime Release_Date { get; set; }
 		}
 		public class TmdbMovieDetails
