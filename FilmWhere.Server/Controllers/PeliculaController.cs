@@ -602,10 +602,124 @@ namespace FilmWhere.Server.Controllers
 		}
 
 		#endregion
+		[HttpGet("detalle/{id}")]
+		public async Task<ActionResult<MovieDetailResponse>> GetMovieDetails(string id)
+		{
+			try
+			{
+				// Buscar primero en la base de datos local
+				var localMovie = await _context.Peliculas
+					.Include(p => p.Generos)
+						.ThenInclude(pg => pg.Genero)
+					.Include(p => p.Plataformas)
+						.ThenInclude(pp => pp.Plataforma)
+					.Include(p => p.Reseñas)
+						.ThenInclude(r => r.Usuario)
+					.FirstOrDefaultAsync(p => p.Id == id || p.IdApiTmdb.ToString() == id);
+
+				if (localMovie != null)
+				{
+					var movieDetail = new MovieDetailResponse
+					{
+						Id = localMovie.Id,
+						Title = localMovie.Titulo,
+						PosterUrl = $"https://image.tmdb.org/t/p/w500/{localMovie.PosterUrl}",
+						Year = localMovie.Año ?? 0,
+						Rating = localMovie.Reseñas.Any()
+							? Math.Round(localMovie.Reseñas.Average(r => r.Calificacion), 1)
+							: null,
+						Genres = localMovie.Generos.Select(pg => pg.Genero.Nombre).ToList(),
+						Platforms = localMovie.Plataformas.Select(pp => new PlatformInfo
+						{
+							Name = pp.Plataforma.Nombre,
+							Type = pp.Plataforma.Tipo.ToString(),
+							Price = pp.Precio,
+							Url = pp.Plataforma.Enlace
+						}).ToList(),
+						Reviews = localMovie.Reseñas.OrderByDescending(r => r.Fecha).Take(5).Select(r => new ReviewInfo
+						{
+							Id = r.Id,
+							Comment = r.Comentario,
+							Rating = r.Calificacion,
+							Date = r.Fecha,
+							UserName = r.Usuario.UserName
+						}).ToList(),
+						ReviewCount = localMovie.Reseñas.Count,
+						TmdbId = localMovie.IdApiTmdb
+					};
+
+					return movieDetail;
+				}
+
+				// Si no está en la base de datos local, intentar obtener información básica de TMDB
+				if (int.TryParse(id, out int tmdbId))
+				{
+					// Aquí podrías integrar una llamada específica a TMDB para obtener detalles
+					// Por ahora, devolvemos los datos básicos disponibles
+					var tmdbResponse = await _tmdbService.GetPopularMoviesAsync(1);
+					var tmdbMovie = tmdbResponse?.Results?.FirstOrDefault(m => m.Id == tmdbId);
+
+					if (tmdbMovie != null)
+					{
+						var basicMovieDetail = new MovieDetailResponse
+						{
+							Id = tmdbMovie.Id.ToString(),
+							Title = tmdbMovie.Title,
+							PosterUrl = $"https://image.tmdb.org/t/p/w500/{tmdbMovie.Poster_Path}",
+							Year = tmdbMovie.Release_Date.Year,
+							Rating = (decimal?)tmdbMovie.Vote_Average,
+							Genres = new List<string>(),
+							Platforms = new List<PlatformInfo>(),
+							Reviews = new List<ReviewInfo>(),
+							ReviewCount = 0,
+							TmdbId = tmdbMovie.Id
+						};
+
+						return basicMovieDetail;
+					}
+				}
+
+				return NotFound($"No se encontró película con ID {id}");
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error al obtener detalles de película con ID {Id}", id);
+				return StatusCode(500, $"Error al obtener detalles de la película: {ex.Message}");
+			}
+		}
 	}
 
 	#region DTOs
+	public class MovieDetailResponse
+	{
+		public string Id { get; set; }
+		public string Title { get; set; }
+		public string PosterUrl { get; set; }
+		public int Year { get; set; }
+		public decimal? Rating { get; set; }
+		public List<string> Genres { get; set; } = new List<string>();
+		public List<PlatformInfo> Platforms { get; set; } = new List<PlatformInfo>();
+		public List<ReviewInfo> Reviews { get; set; } = new List<ReviewInfo>();
+		public int ReviewCount { get; set; }
+		public int TmdbId { get; set; }
+	}
 
+	public class PlatformInfo
+	{
+		public string Name { get; set; }
+		public string Type { get; set; }
+		public decimal Price { get; set; }
+		public string Url { get; set; }
+	}
+
+	public class ReviewInfo
+	{
+		public string Id { get; set; }
+		public string Comment { get; set; }
+		public decimal Rating { get; set; }
+		public DateTime Date { get; set; }
+		public string UserName { get; set; }
+	}
 	public class MovieResponse
 	{
 		public string Id { get; set; }
