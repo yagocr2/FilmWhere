@@ -5,11 +5,14 @@ import FadeContent from '../../Animations/FadeContent/FadeContent';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 import { LiquidChrome } from '../../Backgrounds/LiquidChrome/LiquidChrome'
 
 const MovieSlider = ({ title, movies, loading, error }) => {
     const sliderRef = useRef(null);
     const { theme } = useTheme();
+    const { user } = useAuth();
+
 
     const scroll = (direction) => {
         if (sliderRef.current) {
@@ -60,30 +63,35 @@ const MovieSlider = ({ title, movies, loading, error }) => {
                 className="scrollbar-hide flex space-x-4 overflow-x-auto pb-4"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-                {movies.map((movie, index) => (
-                    <div
-                        key={index}
-                        className="w-36 flex-shrink-0 transform transition-transform duration-300 hover:scale-105 md:w-44"
-                    >
-                        <Link to={`/pelicula/${movie.id}`}>
-                            <div className="relative h-56 overflow-hidden rounded-lg shadow-lg md:h-64">
-                                <img
-                                    src={movie.posterUrl}
-                                    alt={movie.title || 'Película'}
-                                    className="h-full w-full object-cover"
-                                    onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src = '/placeholder-movie.jpg'; // Imagen por defecto
-                                    }}
-                                />
-                                <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 transition-opacity duration-300 hover:opacity-100">
-                                    <p className="truncate text-sm font-bold text-white">{movie.title}</p>
-                                    {movie.year && <p className="text-xs text-white">{movie.year}</p>}
+                {movies.map((movie, index) => {
+                    // Determinar la ruta según si el usuario está autenticado
+                    const moviePath = user ? `/pelicula/${movie.id}` : `/pelicula-publica/${movie.id}`;
+
+                    return (
+                        <div
+                            key={index}
+                            className="w-36 flex-shrink-0 transform transition-transform duration-300 hover:scale-105 md:w-44"
+                        >
+                            <Link to={moviePath}>
+                                <div className="relative h-56 overflow-hidden rounded-lg shadow-lg md:h-64">
+                                    <img
+                                        src={movie.posterUrl}
+                                        alt={movie.title || 'Película'}
+                                        className="h-full w-full object-cover"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = '/placeholder-movie.jpg'; // Imagen por defecto
+                                        }}
+                                    />
+                                    <div className="bg-gradient-to-t to-transparent absolute inset-0 flex flex-col justify-end from-black/70 p-2 opacity-0 transition-opacity duration-300 hover:opacity-100">
+                                        <p className="truncate text-sm font-bold text-white">{movie.title}</p>
+                                        {movie.year && <p className="text-xs text-white">{movie.year}</p>}
+                                    </div>
                                 </div>
-                            </div>
-                        </Link>
-                    </div>
-                ))}
+                            </Link>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
@@ -213,7 +221,7 @@ const Inicio = () => {
 
         fetchHorrorMovies();
     }, []);
-
+    //ROldan020503*
     // Efecto para cargar películas recién estrenadas
     useEffect(() => {
         const fetchNewReleases = async () => {
@@ -295,12 +303,12 @@ const Inicio = () => {
                                     filter: 'blur(2px)'
                                 }}
                             ></div>
-                            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent"></div>
+                            <div className="bg-gradient-to-r to-transparent absolute inset-0 from-black/80 via-black/50"></div>
                             <div className="absolute inset-0 flex flex-col justify-center p-8">
-                                <h2 className="text-texto-dark text-shadow mb-4 text-4xl font-bold md:text-5xl">
+                                <h2 className="text-shadow mb-4 text-4xl font-bold text-texto-dark md:text-5xl">
                                     {popularMovies[0].title}
                                 </h2>
-                                <p className="text-texto-dark text-shadow mb-6 max-w-lg text-xl md:text-2xl">
+                                <p className="text-shadow mb-6 max-w-lg text-xl text-texto-dark md:text-2xl">
                                     Película destacada de la semana
                                 </p>
                                 <Link

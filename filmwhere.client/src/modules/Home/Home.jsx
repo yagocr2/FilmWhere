@@ -21,8 +21,6 @@ const Home = () => {
                 const res = await fetch("/api/pelicula/populares?page=1&cantidad=28");
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
-                console.log("Datos de la API:", data); // <- Ver esto en consola
-                // Data viene como array de { id, title, posterUrl, year }
                 const items = data.map(m => m.posterUrl);
                 setMovies(items);
             } catch (err) {
@@ -36,7 +34,7 @@ const Home = () => {
     }, []);
     console.log(movies)
     // Mientras carga o hay error
-    if (loading) return <FadeContent><Layout>Loading…</Layout></FadeContent>;
+    if (loading) return <FadeContent>Loading…</FadeContent>;
     if (error) return <FadeContent><Layout>{error}</Layout></FadeContent>;
 
     return (

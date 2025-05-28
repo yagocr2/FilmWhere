@@ -1,65 +1,72 @@
 ﻿// modules/Search/Search.jsx
 import { useEffect, useState, useCallback } from "react";
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Search as SearchIcon, Filter, Grid, List } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 import FadeContent from '../../Animations/FadeContent/FadeContent';
 import LiquidChrome from "../../Backgrounds/LiquidChrome/LiquidChrome";
 
 const MovieCard = ({ movie, viewMode }) => {
     const { theme } = useTheme();
+    const { user } = useAuth();
+
+    // Determinar la ruta según si el usuario está autenticado
+    const moviePath = user ? `/pelicula/${movie.id}` : `/pelicula-publica/${movie.id}`;
 
     if (viewMode === 'list') {
         return (
-            <div className={`${theme === 'dark' ? 'bg-secundario-dark border-gray-700' : 'bg-secundario border-gray-200'} 
-                p-4 rounded-lg border transition-all duration-300 hover:shadow-lg cursor-pointer`}>
-                <div className="flex space-x-4">
-                    <div className="h-36 w-24 flex-shrink-0">
-                        <img
-                            src={movie.posterUrl}
-                            alt={movie.title}
-                            className="h-full w-full rounded-md object-cover"
-                            onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = '/placeholder-movie.jpg';
-                            }}
-                        />
-                    </div>
-                    <div className="flex-1">
-                        <h3 className={`text-lg font-bold mb-2 ${theme === 'dark' ? 'text-texto-dark' : 'text-texto'}`}>
-                            {movie.title}
-                        </h3>
-                        <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                            Año: {movie.year || 'N/A'}
-                        </p>
-                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                            ID: {movie.id}
-                        </p>
+            <Link to={moviePath}>
+                <div className={`${theme === 'dark' ? 'bg-secundario-dark border-gray-700' : 'bg-secundario border-gray-200'} 
+                    p-4 rounded-lg border transition-all duration-300 hover:shadow-lg cursor-pointer hover:scale-[1.02]`}>
+                    <div className="flex space-x-4">
+                        <div className="h-36 w-24 flex-shrink-0">
+                            <img
+                                src={movie.posterUrl}
+                                alt={movie.title}
+                                className="h-full w-full rounded-md object-cover"
+                                onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = '/placeholder-movie.jpg';
+                                }}
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className={`text-lg font-bold mb-2 ${theme === 'dark' ? 'text-texto-dark' : 'text-texto'}`}>
+                                {movie.title}
+                            </h3>
+                            <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                                Año: {movie.year || 'N/A'}
+                            </p>
+                            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                                ID: {movie.id}
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </Link>
         );
     }
 
     return (
         <div className="w-full transform cursor-pointer transition-transform duration-300 hover:scale-105">
-            {/*<Link to={`/pelicula/${movie.id}`}>*/}
-            <div className="relative h-64 overflow-hidden rounded-lg shadow-lg md:h-80">
-                <img
-                    src={movie.posterUrl}
-                    alt={movie.title}
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = '/placeholder-movie.jpg';
-                    }}
-                />
-                <div className="bg-gradient-to-t to-transparent absolute inset-0 flex flex-col justify-end from-black/70 p-3 opacity-0 transition-opacity duration-300 hover:opacity-100">
-                    <p className="mb-1 line-clamp-2 text-sm font-bold text-white">{movie.title}</p>
-                    {movie.year && <p className="text-xs text-white">{movie.year}</p>}
+            <Link to={moviePath}>
+                <div className="relative h-64 overflow-hidden rounded-lg shadow-lg md:h-80">
+                    <img
+                        src={movie.posterUrl}
+                        alt={movie.title}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/placeholder-movie.jpg';
+                        }}
+                    />
+                    <div className="bg-gradient-to-t to-transparent absolute inset-0 flex flex-col justify-end from-black/70 p-3 opacity-0 transition-opacity duration-300 hover:opacity-100">
+                        <p className="mb-1 line-clamp-2 text-sm font-bold text-white">{movie.title}</p>
+                        {movie.year && <p className="text-xs text-white">{movie.year}</p>}
+                    </div>
                 </div>
-            </div>
-            {/*</Link>*/}
+            </Link>
         </div>
     );
 };
@@ -177,7 +184,7 @@ const Search = () => {
                 setTotalPages(3);
             } else {
                 // Carga popular - 10 páginas con 50 películas cada una
-                url = `/api/pelicula/populares?page=${page}&cantidad=48`;
+                url = `/api/pelicula/populares?page=${page}&cantidad=50`;
                 setIsSearching(false);
                 setTotalPages(10);
             }
@@ -230,7 +237,7 @@ const Search = () => {
         setSearchParams(newSearchParams);
     };
 
-    // Manejar cambio de p�gina
+    // Manejar cambio de página
     const handlePageChange = (newPage) => {
         const newSearchParams = new URLSearchParams(searchParams);
         newSearchParams.set('page', newPage.toString());
