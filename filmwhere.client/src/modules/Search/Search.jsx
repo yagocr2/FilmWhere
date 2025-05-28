@@ -43,6 +43,7 @@ const MovieCard = ({ movie, viewMode }) => {
 
     return (
         <div className="w-full transform cursor-pointer transition-transform duration-300 hover:scale-105">
+            {/*<Link to={`/pelicula/${movie.id}`}>*/}
             <div className="relative h-64 overflow-hidden rounded-lg shadow-lg md:h-80">
                 <img
                     src={movie.posterUrl}
@@ -53,11 +54,12 @@ const MovieCard = ({ movie, viewMode }) => {
                         e.target.src = '/placeholder-movie.jpg';
                     }}
                 />
-                <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/70 to-transparent p-3 opacity-0 transition-opacity duration-300 hover:opacity-100">
+                <div className="bg-gradient-to-t to-transparent absolute inset-0 flex flex-col justify-end from-black/70 p-3 opacity-0 transition-opacity duration-300 hover:opacity-100">
                     <p className="mb-1 line-clamp-2 text-sm font-bold text-white">{movie.title}</p>
                     {movie.year && <p className="text-xs text-white">{movie.year}</p>}
                 </div>
             </div>
+            {/*</Link>*/}
         </div>
     );
 };
@@ -243,7 +245,7 @@ const Search = () => {
 
     return (
         <FadeContent>
-            <div className="z-1 fixed inset-0">
+            <div className="fixed inset-0 z-1">
                 <LiquidChrome
                     baseColor={theme === 'dark' ? [0.05, 0.02, 0.15] : [0.9, 0.8, 1]}
                     amplitude={0.3}
@@ -264,7 +266,7 @@ const Search = () => {
                             <div className="flex space-x-2">
                                 <div className="relative flex-1">
                                     <SearchIcon
-                                        className="-translate-y-1/2 absolute left-3 top-1/2 transform text-black dark:text-white"
+                                        className="absolute top-1/2 left-3 -translate-y-1/2 transform text-black dark:text-white"
                                         size={20}
                                     />
                                     <input

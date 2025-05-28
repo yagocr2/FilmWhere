@@ -49,8 +49,12 @@ function App() {
 
                         {/* Special case - public access with different layout */}
                         <Route path="/inicio-publico" element={<Layout><Inicio /></Layout>} />
+                        <Route path="/buscar-publico" element={<Layout><Search /></Layout>} />
+                        <Route path="/pelicula-publica/:id" element={<Layout><DetallePeli /></Layout>} />
+
+
                         {/* Fallback route for any other URL */}
-                        <Route path="*" element={<div className="bg-primario text-bg-primario rounded p-12 text-center dark:bg-primario-dark dark:text-bg-primario-dark">Página no encontrada</div>} />
+                        <Route path="*" element={<div className="text-bg-primario rounded bg-primario p-12 text-center dark:bg-primario-dark dark:text-bg-primario-dark">Página no encontrada</div>} />
                     </Routes>
                 </Router>
             </AuthProvider>

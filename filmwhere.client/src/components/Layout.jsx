@@ -9,7 +9,7 @@ const AuthLayout = ({ children }) => {
 
     const navItems = [
         { name: 'Inicio', icon: <Home size={20} />, path: '/inicio-publico' },
-        { name: 'Buscar', icon: <Search size={20} />, path: '/buscar' },
+        { name: 'Buscar', icon: <Search size={20} />, path: '/buscar-publico' },
         { name: 'Iniciar Sesion', icon: <LogIn size={20} />, path: '/login' }
     ];
 
@@ -30,7 +30,7 @@ const AuthLayout = ({ children }) => {
                 <div className="container mx-auto px-4">
                     <div className="flex h-16 items-center justify-between">
                         {/* Logo */}
-                        <Link to="/inicio" className="flex items-center">
+                        <Link to="/home" className="flex items-center">
                             <span className={`text-2xl font-extrabold ${navbarTextClass}`}>FilmWhere</span>
                         </Link>
 
@@ -77,7 +77,7 @@ const AuthLayout = ({ children }) => {
                 {/* Mobile menu */}
                 {isMenuOpen && (
                     <div className={`md:hidden ${navbarBgClass} backdrop-blur-lg shadow-lg`}>
-                        <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
+                        <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3">
                             {navItems.map((item) => (
                                 <Link
                                     key={item.name}
