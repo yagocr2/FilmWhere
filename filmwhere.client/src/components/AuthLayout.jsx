@@ -96,7 +96,7 @@ const AuthLayout = ({ children }) => {
                 {/* Mobile menu */}
                 {isMenuOpen && (
                     <div className={`md:hidden ${navbarBgClass} backdrop-blur-lg shadow-lg`}>
-                        <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
+                        <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3">
                             {navItems.map((item) => (
                                 <Link
                                     key={item.name}

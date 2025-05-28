@@ -18,7 +18,7 @@ const Home = () => {
     useEffect(() => {
         const fetchPopular = async () => {
             try {
-                const res = await fetch("/api/PopularMovies?page=1&cantidad=28");
+                const res = await fetch("/api/pelicula/populares?page=1&cantidad=28");
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
                 console.log("Datos de la API:", data); // <- Ver esto en consola
@@ -45,9 +45,9 @@ const Home = () => {
                     <GridMotion items={movies} gradientColor={"var(--color-primario)"} />
                 </div>
 
-                <div className="-translate-x-1/2 -translate-y-1/2 absolute left-1/2 top-1/2 w-full">
+                <div className="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2">
                     <ScrollVelocity
-                        className="text-shadow text-texto-dark text-center text-7xl font-extrabold"
+                        className="text-shadow text-center text-7xl font-extrabold text-texto-dark"
                         texts={['Bienvenido a', 'FilmWhere']}
                         velocity={20}
                         parallaxClassName="w-full"
@@ -57,13 +57,13 @@ const Home = () => {
                     />
                     <div className="flex flex-col items-center space-y-4">
                         <div className="mt-8 inline-block rounded-lg bg-black/50 px-4 py-2 backdrop-blur-sm">
-                            <p className="text-shadow text-texto-dark text-center text-2xl font-extrabold">
+                            <p className="text-shadow text-center text-2xl font-extrabold text-texto-dark">
                                 Explora y descubre nuevas películas
                             </p>
                         </div>
                         <Link to="/inicio-publico">
-                        <button className="text-texto bg-primario transform rounded-lg px-5 py-3 text-2xl
-            font-extrabold transition-all
+                        <button className="transform rounded-lg bg-primario px-5 py-3 text-2xl
+            font-extrabold text-texto transition-all
             duration-300 hover:bg-primario-dark
 
             hover:text-texto-dark hover:shadow-lg hover:scale-105 dark:text-texto-dark dark:bg-primario-dark dark:hover:bg-primario dark:hover:text-texto">
@@ -74,8 +74,8 @@ const Home = () => {
                     </div>
                     <div className="mt-5 flex flex-row items-center justify-center space-x-4">
                         <Link to="/register">
-                            <button className="text-texto-dark bg-primario-dark rounded-lg p-3 text-2xl
-            font-extrabold shadow-md transition-all
+                            <button className="rounded-lg bg-primario-dark p-3 text-2xl font-extrabold
+            text-texto-dark shadow-md transition-all
             duration-300 hover:bg-primario hover:text-texto
 
             hover:scale-105 hover:shadow-lg dark:text-texto dark:bg-primario dark:hover:bg-primario-dark dark:hover:text-texto-dark">
@@ -84,8 +84,8 @@ const Home = () => {
                         </Link>
 
                         <Link to="/login">
-                            <button className="text-texto-dark bg-primario-dark rounded-lg p-3 text-2xl
-            font-extrabold shadow-md transition-all
+                            <button className="rounded-lg bg-primario-dark p-3 text-2xl font-extrabold
+            text-texto-dark shadow-md transition-all
             duration-300 hover:bg-primario hover:text-texto
             
             hover:scale-105 hover:shadow-lg dark:text-texto dark:bg-primario dark:hover:bg-primario-dark dark:hover:text-texto-dark">

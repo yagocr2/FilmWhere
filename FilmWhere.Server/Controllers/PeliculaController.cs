@@ -2,6 +2,7 @@
 using FilmWhere.Models;
 using FilmWhere.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Text.Json.Serialization;
@@ -125,6 +126,144 @@ namespace FilmWhere.Server.Controllers
             {
                 _logger.LogError(ex, "Error obteniendo populares de TMDB");
                 return StatusCode(500, "Error al obtener películas populares de TMDB");
+            }
+        }
+        private int? GetTmdbGenreId(string genreName)
+        {
+            var genreMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+    {
+        {"acción", 28}, {"accion", 28},
+        {"aventura", 12},
+        {"animación", 16}, {"animacion", 16},
+        {"comedia", 35},
+        {"crimen", 80},
+        {"documental", 99},
+        {"drama", 18},
+        {"familia", 10751},
+        {"fantasía", 14}, {"fantasia", 14},
+        {"historia", 36},
+        {"terror", 27}, {"horror", 27},
+        {"música", 10402}, {"musica", 10402},
+        {"misterio", 9648},
+        {"romance", 10749},
+        {"ciencia ficción", 878}, {"ciencia ficcion", 878}, {"sci-fi", 878},
+        {"thriller", 53},
+        {"guerra", 10752},
+        {"western", 37}
+    };
+
+            return genreMap.TryGetValue(genreName, out var id) ? id : null;
+        }
+        private async Task<ActionResult<List<PopularMovieResponse>>> GetTopRatedOnlyTmdbAsync(int page = 1, int cantidad = 28)
+        {
+            try
+            {
+                List<TmdbSearchResult> allMovies = new();
+                int currentPage = page;
+                bool hasMorePages = true;
+                while (allMovies.Count < cantidad && hasMorePages && currentPage <= 3) // Limitar a 3 páginas
+                {
+                    var tmdbResponse = await _tmdbService.GetTopRatedMoviesAsync(currentPage);
+
+                    if (tmdbResponse == null || !tmdbResponse.Results.Any())
+                    {
+                        hasMorePages = false;
+                        break;
+                    }
+
+                    allMovies.AddRange(tmdbResponse.Results);
+                    currentPage++;
+
+                    if (currentPage > tmdbResponse.Total_Pages) hasMorePages = false;
+                }
+
+                if (!allMovies.Any())
+                    return NotFound("No se encontraron películas populares");
+
+                var topRatedMovies = allMovies
+                    .Take(cantidad)
+                    .Select(m => new PopularMovieResponse
+                    {
+                        Id = m.Id.ToString(),
+                        Title = m.Title,
+                        PosterUrl = $"https://image.tmdb.org/t/p/w500/{m.Poster_Path}",
+                        Year = m.Release_Date.Year,
+                        Rating = (decimal?)m.Vote_Average
+                    })
+                    .ToList();
+                return topRatedMovies;
+                
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error obteniendo películas por género ");
+                return StatusCode(500, "Error al obtener películas populares de TMDB");
+            }
+        }
+
+        private async Task<List<MovieResponse>> GetMoviesByTmdbGenreAsync(int genreId, int cantidad)
+        {
+            try
+            {
+                // Usar el endpoint de discover para obtener películas por género específico
+                var genreResponse = await _tmdbService.GetMoviesByGenreAsync(genreId, 1);
+
+                if (genreResponse?.Results != null && genreResponse.Results.Any())
+                {
+                    var movies = genreResponse.Results
+                        .Take(cantidad)
+                        .Select(m => new MovieResponse
+                        {
+                            Id = m.Id.ToString(),
+                            Title = m.Title,
+                            PosterUrl = $"https://image.tmdb.org/t/p/w500/{m.Poster_Path}",
+                            Year = m.Release_Date.Year,
+                            Rating = (decimal?)m.Vote_Average
+                        })
+                        .ToList();
+
+                    return movies;
+                }
+
+                return new List<MovieResponse>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error obteniendo películas de TMDB por género {GenreId}", genreId);
+                return new List<MovieResponse>();
+            }
+        }
+
+        private async Task<List<MovieResponse>> SearchMoviesByGenreKeywordAsync(string genreName, int cantidad)
+        {
+            try
+            {
+                // Buscar usando palabras clave relacionadas con el género
+                var searchResponse = await _tmdbService.SearchMoviesAsync(genreName, 1);
+
+                if (searchResponse?.Results != null && searchResponse.Results.Any())
+                {
+                    var movies = searchResponse.Results
+                        .Take(cantidad)
+                        .Select(m => new MovieResponse
+                        {
+                            Id = m.Id.ToString(),
+                            Title = m.Title,
+                            PosterUrl = $"https://image.tmdb.org/t/p/w500/{m.Poster_Path}",
+                            Year = m.Release_Date.Year,
+                            Rating = (decimal?)m.Vote_Average
+                        })
+                        .ToList();
+
+                    return movies;
+                }
+
+                return new List<MovieResponse>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error buscando películas por palabra clave de género {GenreName}", genreName);
+                return new List<MovieResponse>();
             }
         }
 
@@ -477,14 +616,22 @@ namespace FilmWhere.Server.Controllers
                     }
                 }
 
-                // Respaldo: obtener películas populares de TMDB (sin filtro de género específico)
+                // NUEVO: Respaldo con TMDB filtrando por género específico
                 _logger.LogInformation("Usando respaldo TMDB para género {GenreName}", genreName);
-                var popularMovies = await GetPopularOnlyTmdbAsync(1, cantidad);
 
-                if (popularMovies.Value != null)
+                // Mapear nombre de género a ID de TMDB
+                var genreId = GetTmdbGenreId(genreName);
+                if (genreId.HasValue)
                 {
-                    return Ok(popularMovies.Value);
+                    var genreMovies = await GetMoviesByTmdbGenreAsync(genreId.Value, cantidad);
+                    if (genreMovies.Any())
+                        return genreMovies;
                 }
+
+                // Si no se puede mapear el género, buscar películas que contengan el género en el título o descripción
+                var searchResults = await SearchMoviesByGenreKeywordAsync(genreName, cantidad);
+                if (searchResults.Any())
+                    return searchResults;
 
                 return NotFound($"No se encontraron películas para el género '{genreName}'");
             }
@@ -725,18 +872,21 @@ namespace FilmWhere.Server.Controllers
 
                 // Respaldo con películas populares de TMDB
                 _logger.LogInformation("Usando respaldo TMDB para mejor valoradas");
-                var popularResult = await GetPopularOnlyTmdbAsync(page, cantidad);
+                var popularResult = await GetTopRatedOnlyTmdbAsync(page, cantidad);
 
                 if (popularResult.Value != null)
                 {
-                    var tmdbMovies = popularResult.Value.Select(p => new MovieResponse
-                    {
-                        Id = p.Id,
-                        Title = p.Title,
-                        PosterUrl = p.PosterUrl,
-                        Year = p.Year,
-                        Rating = p.Rating
-                    }).ToList();
+                    decimal maxRating = popularResult.Value.Max(p => p.Rating) ?? 7;
+                    var tmdbMovies = popularResult.Value
+                        .Where(p => p.Rating <= maxRating)
+                        .Select(p => new MovieResponse
+                        {
+                            Id = p.Id,
+                            Title = p.Title,
+                            PosterUrl = p.PosterUrl,
+                            Year = p.Year,
+                            Rating = p.Rating
+                        }).ToList();
 
                     return tmdbMovies;
                 }
@@ -851,7 +1001,6 @@ namespace FilmWhere.Server.Controllers
                 {
                     try
                     {
-
                         // Buscar primero en la base de datos local
                         var localMovie = await _context.Peliculas
                             .Include(p => p.Generos)
@@ -898,31 +1047,31 @@ namespace FilmWhere.Server.Controllers
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Error al obtener los detalles de la pelicula");
-                        return StatusCode(500, $"Error al obtener detalles: {ex.Message}");
+                        _logger.LogWarning(ex, "Error accediendo a BD local para detalles");
+                        // Continuar con TMDB como respaldo
                     }
                 }
 
-                // Si no está en la base de datos local, intentar obtener información básica de TMDB
+                // CORREGIR: Si no está en BD local, buscar en TMDB usando GetMovieDetailsAsync
                 if (int.TryParse(id, out int tmdbId))
                 {
-                    var tmdbResponse = await _tmdbService.GetPopularMoviesAsync(1);
-                    var tmdbMovie = tmdbResponse?.Results?.FirstOrDefault(m => m.Id == tmdbId);
+                    // Usar el método correcto para obtener detalles específicos
+                    var movieDetails = await _tmdbService.GetMovieDetailsAsync(tmdbId);
 
-                    if (tmdbMovie != null)
+                    if (movieDetails != null)
                     {
                         var basicMovieDetail = new MovieDetailResponse
                         {
-                            Id = tmdbMovie.Id.ToString(),
-                            Title = tmdbMovie.Title,
-                            PosterUrl = $"https://image.tmdb.org/t/p/w500/{tmdbMovie.Poster_Path}",
-                            Year = tmdbMovie.Release_Date.Year,
-                            Rating = (decimal?)tmdbMovie.Vote_Average,
-                            Genres = new List<string>(),
-                            Platforms = new List<PlatformInfo>(),
-                            Reviews = new List<ReviewInfo>(),
+                            Id = movieDetails.Id.ToString(),
+                            Title = movieDetails.Title,
+                            PosterUrl = $"https://image.tmdb.org/t/p/w500/{movieDetails.Poster_Path}",
+                            Year = movieDetails.GetReleaseDate()?.Year ?? 0,
+                            Rating = movieDetails.Vote_Average, // TMDB no devuelve rating en detalles
+                            Genres = movieDetails.Genres.Select(g => g.Name).ToList(),
+                            Platforms = new List<PlatformInfo>(), // No hay plataformas en TMDB
+                            Reviews = new List<ReviewInfo>(), // No hay reviews locales
                             ReviewCount = 0,
-                            TmdbId = tmdbMovie.Id
+                            TmdbId = movieDetails.Id
                         };
 
                         return basicMovieDetail;
