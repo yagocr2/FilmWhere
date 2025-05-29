@@ -339,8 +339,9 @@ namespace FilmWhere.Server.Controllers
 				{
 					// Replace the problematic line with the following code to fix the CS0815 error:
 					var plataformas = await _watchModeService.GetStreamingSourcesAsync(tmdbId); // Correctly await the asynchronous method
-																			   // Usar el método correcto para obtener detalles específicos
+																								// Usar el método correcto para obtener detalles específicos
 					var movieDetails = await _tmdbService.GetMovieDetailsAsync(tmdbId);
+                    _logger.BeginScope("Obteniendo detalles de película TMDB ID: {TmdbId}", plataformas);
 
 					if (movieDetails != null)
 					{
@@ -353,7 +354,7 @@ namespace FilmWhere.Server.Controllers
 							Year = movieDetails.GetReleaseDate()?.Year ?? 0,
 							Rating = movieDetails.Vote_Average, // TMDB no devuelve rating en detalles
 							Genres = movieDetails.Genres.Select(g => g.Name).ToList(),
-							Platforms = plataformas, // No hay plataformas en TMDB
+							Platforms = plataformas,
 							Reviews = new List<ReviewDTO>(), // No hay reviews locales
 							ReviewCount = 0,
 							TmdbId = movieDetails.Id

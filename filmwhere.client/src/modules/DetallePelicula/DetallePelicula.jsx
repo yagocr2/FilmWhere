@@ -36,7 +36,6 @@ const DetallePelicula = () => {
 
                 // Aquí podrías verificar si la película está en favoritos del usuario
                 // checkIfFavorite(data.id);
-                console.log(data)
             } catch (err) {
                 console.error('Error fetching movie data:', err);
                 setError(err.message);

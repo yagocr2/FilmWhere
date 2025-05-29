@@ -1,4 +1,6 @@
 ﻿using System.Net.Http.Headers;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using FilmWhere.Models;
 using FilmWhere.Server.DTOs;
 using Microsoft.Extensions.Logging;
@@ -29,21 +31,46 @@ namespace FilmWhere.Services
 		{
 			try
 			{
-				var response = await _httpClient.GetFromJsonAsync<WatchModeSourcesResponse>(
-					$"title/{tmdbId}/sources/?apiKey={_apiKey}&regions={region}");
+				var searchResponse = await _httpClient.GetFromJsonAsync<WatchModeSearchResponse>(
+					$"search/?apiKey={_apiKey}&search_field=tmdb_movie_id&search_value={tmdbId}");
+				_logger.LogInformation("Buscando plataformas para TMDB ID: {TmdbId}", searchResponse);
+				
 
-				if (response?.Sources == null)
+				var movie = searchResponse.Title_Results.First();
+				var watchModeId = movie.Id;
+
+				var sourcesUrl = $"title/{watchModeId}/sources/?apiKey={_apiKey}&regions={region}";
+				var httpResponse = await _httpClient.GetAsync(sourcesUrl);
+				var jsonContent = await httpResponse.Content.ReadAsStringAsync();
+
+				var jsonOptions = new JsonSerializerOptions
 				{
-					_logger.LogWarning("No se encontraron fuentes para TMDB ID: {TmdbId}", tmdbId);
+					PropertyNameCaseInsensitive = true
+				};
+
+				var sources = JsonSerializer.Deserialize<List<WatchModeSource>>(jsonContent, jsonOptions);
+
+				if (sources == null || !sources.Any())
+				{
+					_logger.LogWarning("No se encontraron fuentes para WatchMode ID: {WatchModeId}", watchModeId);
 					return new List<PlataformaDTO>();
 				}
 
 				// Filtrar y categorizar todas las plataformas disponibles
-				var platforms = response.Sources
+				var platforms = sources
 					.Where(s => !string.IsNullOrEmpty(s.Name))
 					.GroupBy(s => s.Name) // Evitar duplicados por plataforma
-					.Select(g => g.OrderBy(s => GetTypePriority(s.Type)).First()) // Priorizar tipos
+					.Select(g => g.OrderBy(s => GetTypePriority(s.Type)).First())
+					.Select(source => new PlataformaDTO
+					{
+						Id = source.Source_Id,
+						Name = source.Name,
+						Type = MapWatchModeTypeToSpanish(source.Type),
+						Price = source.Price,
+						Url = source.Web_Url ?? ""
+					})
 					.ToList();
+
 
 				_logger.LogInformation("Encontradas {Count} plataformas para TMDB ID: {TmdbId}",
 					platforms.Count, tmdbId);
@@ -55,6 +82,17 @@ namespace FilmWhere.Services
 				_logger.LogError(ex, "Error obteniendo plataformas para ID: {TmdbId}", tmdbId);
 				return new List<PlataformaDTO>();
 			}
+		}
+		private string MapWatchModeTypeToSpanish(string watchModeType)
+		{
+			return watchModeType?.ToLower() switch
+			{
+				"sub" => "Suscripción",
+				"rent" => "Alquiler",
+				"buy" => "Compra",
+				"free" => "Gratis",
+				_ => "Otro"
+			};
 		}
 
 		// NUEVO: Método para buscar película por título y obtener ID interno de WatchMode
@@ -70,7 +108,7 @@ namespace FilmWhere.Services
 
 				var response = await _httpClient.GetFromJsonAsync<WatchModeSearchResponse>(searchUrl);
 
-				var movie = response?.TitleResults?.FirstOrDefault();
+				var movie = response?.Title_Results?.FirstOrDefault();
 				if (movie != null)
 				{
 					_logger.LogInformation("Película encontrada en WatchMode: {Title} (ID: {Id})",
@@ -179,32 +217,40 @@ namespace FilmWhere.Services
 		//DTOs
 		public class WatchModeSourcesResponse
 		{
-			public List<PlataformaDTO> Sources { get; set; } = new();
+			public List<WatchModeSource> Sources { get; set; } = new();
+		}
+
+		public class WatchModeSource
+		{
+			public int Source_Id { get; set; }
+			public string Name { get; set; } = "";
+			public string Type { get; set; } = "";
+			public string Region { get; set; } = "";
+			public string Web_Url { get; set; } = "";
+			public string Format { get; set; } = "";
+			public decimal? Price { get; set; }
 		}
 
 		public class WatchModeSearchResponse
 		{
-			public List<WatchModeSearchResult> TitleResults { get; set; } = new();
+			public List<WatchModeSearchResult> Title_Results { get; set; } = new();
 		}
+
 		public class WatchModeSearchResult
 		{
 			public int Id { get; set; }
 			public string Name { get; set; } = "";
 			public int? Year { get; set; }
 			public string Type { get; set; } = "";
-			public int? TmdbId { get; set; }
-		}
-		public class WatchModePricingResponse
-		{
-			public decimal? Price { get; set; }
 		}
 
 		public class WatchModeAvailability
 		{
 			public List<string> Countries { get; set; } = new();
 			public DateTime? First_Available { get; set; }
-			public List<PlataformaDTO> Sources { get; set; } = new();
+			public List<WatchModeSource> Sources { get; set; } = new();
 		}
+
 		public class WatchModeSourcesListResponse
 		{
 			public List<WatchModePlatformDetails> Sources { get; set; } = new();
@@ -222,7 +268,7 @@ namespace FilmWhere.Services
 			public decimal? Price { get; set; }
 		}
 
-		
+
 	}
 
 }
