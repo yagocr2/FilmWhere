@@ -2,6 +2,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, PlayCircle, Calendar, Clock, Users, ArrowLeft, Heart, Popcorn } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import ReviewModal from '../../components/ReviewModal';
 
 const DetallePelicula = () => {
     const { id } = useParams();
@@ -12,6 +13,8 @@ const DetallePelicula = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isFavorite, setIsFavorite] = useState(false);
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
 
     useEffect(() => {
         const fetchMovieData = async () => {

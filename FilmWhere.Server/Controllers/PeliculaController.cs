@@ -80,55 +80,56 @@ namespace FilmWhere.Server.Controllers
             }
         }
 
-        // Método para obtener populares solo de TMDB
-        private async Task<ActionResult<List<PeliculaDTO>>> GetPopularOnlyTmdbAsync(int page = 1, int cantidad = 28)
-        {
-            try
-            {
-                List<TmdbSearchResult> allMovies = new();
-                int currentPage = page;
-                bool hasMorePages = true;
+		// Método para obtener populares solo de TMDB
+		private async Task<ActionResult<List<PeliculaDTO>>> GetPopularOnlyTmdbAsync(int page = 1, int cantidad = 50)
+		{
+			try
+			{
+				List<TmdbSearchResult> allMovies = new();
 
-                while (allMovies.Count < cantidad && hasMorePages && currentPage <= 3) // Limitar a 3 páginas
-                {
-                    var tmdbResponse = await _tmdbService.GetPopularMoviesAsync(currentPage);
+				// Para obtener 50 películas necesitamos aproximadamente 3 páginas de TMDB (20 por página)
+				int paginasNecesarias = Math.Max(3, (int)Math.Ceiling((double)cantidad / 20));
 
-                    if (tmdbResponse == null || !tmdbResponse.Results.Any())
-                    {
-                        hasMorePages = false;
-                        break;
-                    }
+				// Calcular desde qué página de TMDB empezar
+				int paginaInicioTmdb = ((page - 1) * paginasNecesarias) + 1;
 
-                    allMovies.AddRange(tmdbResponse.Results);
-                    currentPage++;
+				// Obtener las páginas necesarias
+				for (int i = 0; i < paginasNecesarias && allMovies.Count < cantidad * 2; i++)
+				{
+					int paginaTmdb = paginaInicioTmdb + i;
+					var tmdbResponse = await _tmdbService.GetPopularMoviesAsync(paginaTmdb);
 
-                    if (currentPage > tmdbResponse.Total_Pages) hasMorePages = false;
-                }
+					if (tmdbResponse == null || !tmdbResponse.Results.Any())
+						break;
 
-                if (!allMovies.Any())
-                    return NotFound("No se encontraron películas populares");
+					allMovies.AddRange(tmdbResponse.Results);
+				}
 
-                var popularMovies = allMovies
-                    .Take(cantidad)
-                    .Select(m => new PeliculaDTO
-                    {
-                        Id = m.Id.ToString(),
-                        Title = m.Title,
-                        PosterUrl = $"https://image.tmdb.org/t/p/w500/{m.Poster_Path}",
-                        Year = m.Release_Date.Year,
-                        Rating = (decimal?)m.Vote_Average
-                    })
-                    .ToList();
+				if (!allMovies.Any())
+					return NotFound("No se encontraron películas populares");
 
-                return popularMovies;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error obteniendo populares de TMDB");
-                return StatusCode(500, "Error al obtener películas populares de TMDB");
-            }
-        }
-        private int? GetTmdbGenreId(string genreName)
+				// Tomar solo la cantidad solicitada
+				var popularMovies = allMovies
+					.Take(cantidad)
+					.Select(m => new PeliculaDTO
+					{
+						Id = m.Id.ToString(),
+						Title = m.Title,
+						PosterUrl = $"https://image.tmdb.org/t/p/w500/{m.Poster_Path}",
+						Year = m.Release_Date.Year,
+						Rating = (decimal?)m.Vote_Average
+					})
+					.ToList();
+
+				return popularMovies;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error obteniendo populares de TMDB para página {Page}", page);
+				return StatusCode(500, "Error al obtener películas populares de TMDB");
+			}
+		}
+		private int? GetTmdbGenreId(string genreName)
         {
             var genreMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
     {
@@ -805,51 +806,60 @@ namespace FilmWhere.Server.Controllers
             }
         }
 
-        [HttpGet("populares")]
-        public async Task<ActionResult<List<PeliculaDTO>>> GetPopularMovies(int page = 1, int year = 0, int cantidad = 0)
-        {
-            try
-            {
-                bool dbAvailable = await IsDatabaseAvailableAsync();
+		[HttpGet("populares")]
+		public async Task<ActionResult<List<PeliculaDTO>>> GetPopularMovies(int page = 1, int year = 0, int cantidad = 50)
+		{
+			try
+			{
+				// Validar parámetros
+				if (page < 1) page = 1;
+				if (cantidad < 1) cantidad = 50;
+				if (cantidad > 100) cantidad = 100; // Limitar máximo por rendimiento
 
-                // Si se solicita un año específico, buscar en la base de datos
-                if (year > 0 && dbAvailable)
-                {
-                    try
-                    {
-                        var storedMovies = await _context.Peliculas
-                            .Where(p => p.Año == year)
-                            .OrderByDescending(p => p.Reseñas.Count)
-                            .Take(cantidad > 0 ? cantidad : 28)
-                            .Select(p => new PeliculaDTO
-                            {
-                                Id = p.Id,
-                                Title = p.Titulo,
-                                PosterUrl = $"https://image.tmdb.org/t/p/w500/{p.PosterUrl}",
-                                Year = p.Año ?? 0
-                            })
-                            .ToListAsync();
+				bool dbAvailable = await IsDatabaseAvailableAsync();
 
-                        if (storedMovies.Any())
-                            return storedMovies;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Error obteniendo populares de BD local");
-                    }
-                }
+				// Si se solicita un año específico, buscar en la base de datos
+				if (year > 0 && dbAvailable)
+				{
+					try
+					{
+						int skip = (page - 1) * cantidad;
 
-                // Usar TMDB como fuente principal o respaldo
-                return await GetPopularOnlyTmdbAsync(page, cantidad > 0 ? cantidad : 28);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener películas populares");
-                return StatusCode(500, "Error al obtener películas populares");
-            }
-        }
+						var storedMovies = await _context.Peliculas
+							.Where(p => p.Año == year)
+							.OrderByDescending(p => p.Reseñas.Count)
+							.ThenByDescending(p => p.Id)
+							.Skip(skip)
+							.Take(cantidad)
+							.Select(p => new PeliculaDTO
+							{
+								Id = p.Id,
+								Title = p.Titulo,
+								PosterUrl = $"https://image.tmdb.org/t/p/w500/{p.PosterUrl}",
+								Year = p.Año ?? 0
+							})
+							.ToListAsync();
 
-        [HttpGet("mejor-valoradas")]
+						if (storedMovies.Any())
+							return storedMovies;
+					}
+					catch (Exception ex)
+					{
+						_logger.LogWarning(ex, "Error obteniendo populares de BD local");
+					}
+				}
+
+				// Usar TMDB como fuente principal o respaldo
+				return await GetPopularOnlyTmdbAsync(page, cantidad);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error al obtener películas populares - Página: {Page}, Cantidad: {Cantidad}", page, cantidad);
+				return StatusCode(500, "Error al obtener películas populares");
+			}
+		}
+
+		[HttpGet("mejor-valoradas")]
         public async Task<ActionResult<List<PeliculaDTO>>> GetTopRatedMovies(
             [FromQuery] int page = 1,
             [FromQuery] int cantidad = 20,

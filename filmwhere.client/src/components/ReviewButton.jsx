@@ -1,15 +1,12 @@
 // components/ReviewButton.jsx
 import React, { useState } from 'react';
 import { MessageSquarePlus, Star } from 'lucide-react';
-import { useParams } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import ReviewModal from './ReviewModal';
 
 const ReviewButton = ({ currentMovie = null }) => {
-    const { id } = useParams();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { theme } = useTheme();
-    currentMovie = id;
 
     const handleOpenModal = () => {
         setIsModalOpen(true);

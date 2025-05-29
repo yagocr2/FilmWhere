@@ -184,7 +184,7 @@ const Search = () => {
                 setTotalPages(3);
             } else {
                 // Carga popular - 10 páginas con 50 películas cada una
-                url = `/api/pelicula/populares?page=${page}&cantidad=50`;
+                url = `/api/pelicula/populares?page=${page}&cantidad=48`;
                 setIsSearching(false);
                 setTotalPages(10);
             }

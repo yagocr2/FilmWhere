@@ -59,10 +59,8 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
             setLoading(false);
         }
     };
-    useEffect(() => {
-        console.log('selectedMovie ha cambiado:', selectedMovie);
-    }, [selectedMovie]);
-    const handleSelectMovie = (movie) => {
+
+    const handleSelectMovie =  (movie) => {
         setSelectedMovie(movie);
         setStep('review');
     };
