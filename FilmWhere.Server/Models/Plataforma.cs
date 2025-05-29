@@ -17,7 +17,7 @@ namespace FilmWhere.Models
 		[Required]
 		[MaxLength(100)]
 		public string Nombre { get; set; }  // Ej: Netflix, Disney+
-
+		public decimal? Precio { get; set; }
 		[MaxLength(200)]
 		public string Enlace { get; set; }  // URL de la plataforma
 		public TipoPlataforma Tipo { get; set; }

@@ -173,7 +173,7 @@ const DetallePelicula = () => {
                         <div className="relative">
                             <img
                                 src={movie.posterUrl}
-                                alt={movie.titulo}
+                                alt={movie.title}
                                 className="h-96 w-64 rounded-lg object-cover shadow-2xl"
                                 onError={(e) => {
                                     e.target.onerror = null;

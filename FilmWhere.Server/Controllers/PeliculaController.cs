@@ -12,18 +12,21 @@ namespace FilmWhere.Server.Controllers
     public class PeliculaController : ControllerBase
     {
         private readonly TmdbService _tmdbService;
+        private readonly WatchModeService _watchModeService;
         private readonly DataSyncService _dataSyncService;
         private readonly MyDbContext _context;
         private readonly ILogger<PeliculaController> _logger;
 
         public PeliculaController(
             TmdbService tmdbService,
-            DataSyncService dataSyncService,
+			WatchModeService watchModeService,
+			DataSyncService dataSyncService,
             MyDbContext context,
             ILogger<PeliculaController> logger)
         {
             _tmdbService = tmdbService;
-            _dataSyncService = dataSyncService;
+			_watchModeService = watchModeService;
+			_dataSyncService = dataSyncService;
             _context = context;
             _logger = logger;
         }
@@ -331,10 +334,12 @@ namespace FilmWhere.Server.Controllers
 					}
 				}
 
-				// CORREGIR: Si no está en BD local, buscar en TMDB usando GetMovieDetailsAsync
+				//Si no está en BD local, buscar en TMDB usando GetMovieDetailsAsync
 				if (int.TryParse(id, out int tmdbId))
 				{
-					// Usar el método correcto para obtener detalles específicos
+					// Replace the problematic line with the following code to fix the CS0815 error:
+					var plataformas = await _watchModeService.GetStreamingSourcesAsync(tmdbId); // Correctly await the asynchronous method
+																			   // Usar el método correcto para obtener detalles específicos
 					var movieDetails = await _tmdbService.GetMovieDetailsAsync(tmdbId);
 
 					if (movieDetails != null)
@@ -348,7 +353,7 @@ namespace FilmWhere.Server.Controllers
 							Year = movieDetails.GetReleaseDate()?.Year ?? 0,
 							Rating = movieDetails.Vote_Average, // TMDB no devuelve rating en detalles
 							Genres = movieDetails.Genres.Select(g => g.Name).ToList(),
-							Platforms = new List<PlataformaDTO>(), // No hay plataformas en TMDB
+							Platforms = plataformas, // No hay plataformas en TMDB
 							Reviews = new List<ReviewDTO>(), // No hay reviews locales
 							ReviewCount = 0,
 							TmdbId = movieDetails.Id
