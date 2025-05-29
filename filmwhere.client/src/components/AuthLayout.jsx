@@ -1,6 +1,7 @@
 ﻿import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import ReviewButton from './ReviewButton';
 import { Sun, Moon, UserCircle, LogOut, Home, Search, Heart, Film, Settings } from 'lucide-react';
 import { useState } from 'react';
 
@@ -132,6 +133,7 @@ const AuthLayout = ({ children }) => {
             {/* Content with padding for navbar */}
             <main className="flex-grow pt-16">
                 {children}
+                <ReviewButton />
             </main>
 
             {/* Footer - Optional */}

@@ -1,322 +1,322 @@
+ï»¿// components/ReviewModal.jsx
 import React, { useState, useEffect } from 'react';
-import { Star, X, Send, Search } from 'lucide-react';
+import { X, Search, Star, Send, Film } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { useAuth } from '../context/AuthContext';
 
-const ReviewModal = ({ isOpen, onClose, preselectedMovie = null }) => {
+const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
     const { theme } = useTheme();
-    const { user } = useAuth();
-
-    const [selectedMovie, setSelectedMovie] = useState(preselectedMovie);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [step, setStep] = useState(currentMovie ? 'review' : 'search');
+    const [selectedMovie, setSelectedMovie] = useState(currentMovie);
+    const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
-    const [isSearching, setIsSearching] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [rating, setRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const [comment, setComment] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
-    // Reset form when modal opens/closes
+    // Reset modal state when it opens/closes
     useEffect(() => {
         if (isOpen) {
-            setSelectedMovie(preselectedMovie);
-            setSearchTerm('');
-            setSearchResults([]);
+            if (currentMovie) {
+                setSelectedMovie(currentMovie);
+                setStep('review');
+            } else {
+                setSelectedMovie(null);
+                setStep('search');
+                setSearchQuery('');
+                setSearchResults([]);
+            }
             setRating(0);
             setHoverRating(0);
             setComment('');
-            setError(null);
-            setSuccess(false);
         }
-    }, [isOpen, preselectedMovie]);
+    }, [isOpen, currentMovie]);
 
-    // Search movies
-    const searchMovies = async (term) => {
-        if (!term.trim()) {
-            setSearchResults([]);
-            return;
-        }
+    const handleSearch = async () => {
+        if (!searchQuery.trim()) return;
 
-        setIsSearching(true);
+        setLoading(true);
         try {
-            const response = await fetch(`/api/peliculas/buscar?query=${encodeURIComponent(term)}`);
-            if (response.ok) {
-                const results = await response.json();
-                setSearchResults(results);
-            }
-        } catch (err) {
-            console.error('Error searching movies:', err);
+            const response = await fetch(`/api/pelicula/buscar?query=${encodeURIComponent(searchQuery)}`);
+            const data = await response.json();
+            setSearchResults(data.results || []);
+        } catch (error) {
+            console.error('Error searching movies:', error);
+            setSearchResults([]);
         } finally {
-            setIsSearching(false);
+            setLoading(false);
         }
     };
 
-    // Handle search input change
-    useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            if (searchTerm && !preselectedMovie) {
-                searchMovies(searchTerm);
-            }
-        }, 300);
+    const handleSelectMovie = (movie) => {
+        setSelectedMovie(movie);
+        setStep('review');
+    };
 
-        return () => clearTimeout(timeoutId);
-    }, [searchTerm, preselectedMovie]);
+    const handleSubmitReview = async () => {
+        if (!selectedMovie || rating === 0) return;
 
-    // Submit review
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        if (!selectedMovie) {
-            setError('Por favor selecciona una película');
-            return;
-        }
-
-        if (rating === 0) {
-            setError('Por favor califica la película');
-            return;
-        }
-
-        setIsSubmitting(true);
-        setError(null);
-
+        setSubmitting(true);
         try {
-            const response = await fetch('/api/reseñas', {
+            const reviewData = {
+                movieId: selectedMovie.id,
+                rating: rating,
+                comment: comment.trim() || null
+            };
+
+            const response = await fetch('/api/reseÃ±a', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    // Add authentication header if needed
+                    // 'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    peliculaId: selectedMovie.id,
-                    calificacion: rating,
-                    comentario: comment.trim() || null
-                })
+                body: JSON.stringify(reviewData)
             });
 
             if (response.ok) {
-                setSuccess(true);
-                setTimeout(() => {
-                    onClose();
-                }, 1500);
+                // Success feedback
+                alert('Â¡ReseÃ±a enviada con Ã©xito!');
+                onClose();
             } else {
-                const errorData = await response.json();
-                setError(errorData.message || 'Error al enviar la reseña');
+                throw new Error('Error al enviar la reseÃ±a');
             }
-        } catch (err) {
-            setError('Error de conexión. Inténtalo de nuevo.');
+        } catch (error) {
+            console.error('Error submitting review:', error);
+            alert('Hubo un error al enviar tu reseÃ±a. Por favor, intÃ©ntalo de nuevo.');
         } finally {
-            setIsSubmitting(false);
+            setSubmitting(false);
         }
+    };
+
+    const handleBackToSearch = () => {
+        setSelectedMovie(null);
+        setStep('search');
+        setRating(0);
+        setHoverRating(0);
+        setComment('');
     };
 
     if (!isOpen) return null;
 
-    const bgClass = theme === 'dark' ? 'bg-primario-dark' : 'bg-white';
-    const textClass = theme === 'dark' ? 'text-texto-dark' : 'text-texto';
-    const borderClass = theme === 'dark' ? 'border-gray-600' : 'border-gray-300';
-    const inputBgClass = theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100';
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className={`${bgClass} ${textClass} relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg shadow-xl`}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className={`relative w-full max-w-2xl max-h-[90vh] m-4 rounded-lg shadow-2xl overflow-hidden ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                }`}>
                 {/* Header */}
-                <div className={`sticky top-0 ${bgClass} border-b ${borderClass} px-6 py-4`}>
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-2xl font-bold">
-                            {preselectedMovie ? 'Reseñar película' : 'Nueva reseña'}
-                        </h2>
-                        <button
-                            onClick={onClose}
-                            className={`p-2 rounded-full transition-colors ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
-                                }`}
-                        >
-                            <X size={20} />
-                        </button>
-                    </div>
+                <div className={`flex items-center justify-between p-6 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+                    }`}>
+                    <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                        }`}>
+                        {step === 'search' ? 'Buscar PelÃ­cula' : `Escribir ReseÃ±a sobre ${currentMovie.title}`}
+                    </h2>
+                    <button
+                        onClick={onClose}
+                        className={`p-2 rounded-full transition-colors ${theme === 'dark'
+                                ? 'hover:bg-gray-700 text-gray-400 hover:text-white'
+                                : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
+                            }`}
+                    >
+                        <X size={24} />
+                    </button>
                 </div>
 
                 {/* Content */}
-                <div className="p-6">
-                    {success ? (
-                        <div className="text-center py-8">
-                            <div className="text-green-500 text-6xl mb-4">?</div>
-                            <h3 className="text-xl font-semibold mb-2">¡Reseña enviada!</h3>
-                            <p className="text-gray-500">Tu reseña ha sido publicada exitosamente.</p>
-                        </div>
-                    ) : (
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* Movie Selection */}
-                            {!preselectedMovie ? (
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">
-                                        Buscar película
-                                    </label>
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                                        <input
-                                            type="text"
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            placeholder="Escribe el nombre de la película..."
-                                            className={`w-full pl-10 pr-4 py-3 ${inputBgClass} ${borderClass} border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-                                        />
-                                    </div>
-
-                                    {/* Search Results */}
-                                    {searchResults.length > 0 && (
-                                        <div className={`mt-2 max-h-48 overflow-y-auto border ${borderClass} rounded-lg`}>
-                                            {searchResults.map((movie) => (
-                                                <button
-                                                    key={movie.id}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setSelectedMovie(movie);
-                                                        setSearchTerm(movie.titulo);
-                                                        setSearchResults([]);
-                                                    }}
-                                                    className={`w-full p-3 text-left transition-colors border-b ${borderClass} last:border-b-0 ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-                                                        }`}
-                                                >
-                                                    <div className="flex items-center space-x-3">
-                                                        <img
-                                                            src={movie.posterUrl}
-                                                            alt={movie.titulo}
-                                                            className="w-12 h-16 object-cover rounded"
-                                                            onError={(e) => {
-                                                                e.target.src = '/placeholder-movie.jpg';
-                                                            }}
-                                                        />
-                                                        <div>
-                                                            <div className="font-medium">{movie.titulo}</div>
-                                                            <div className="text-sm text-gray-500">{movie.año}</div>
-                                                        </div>
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {isSearching && (
-                                        <div className="text-center py-4 text-gray-500">
-                                            Buscando películas...
-                                        </div>
-                                    )}
+                <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                    {step === 'search' && (
+                        <div className="space-y-6">
+                            {/* Search Input */}
+                            <div className="space-y-4">
+                                <div className="flex space-x-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar pelÃ­cula por tÃ­tulo..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                        className={`flex-1 px-4 py-3 rounded-lg border transition-colors ${theme === 'dark'
+                                                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500'
+                                                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500'
+                                            } focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+                                    />
+                                    <button
+                                        onClick={handleSearch}
+                                        disabled={loading || !searchQuery.trim()}
+                                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        {loading ? (
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                            <Search size={20} />
+                                        )}
+                                    </button>
                                 </div>
-                            ) : (
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">
-                                        Película seleccionada
-                                    </label>
-                                    <div className={`p-4 ${inputBgClass} rounded-lg border ${borderClass}`}>
-                                        <div className="flex items-center space-x-3">
-                                            <img
-                                                src={selectedMovie.posterUrl || preselectedMovie.posterUrl}
-                                                alt={selectedMovie.titulo || preselectedMovie.title}
-                                                className="w-16 h-20 object-cover rounded"
-                                                onError={(e) => {
-                                                    e.target.src = '/placeholder-movie.jpg';
-                                                }}
-                                            />
-                                            <div>
-                                                <div className="font-medium text-lg">
-                                                    {selectedMovie.titulo || preselectedMovie.title}
+                            </div>
+
+                            {/* Search Results */}
+                            {searchResults.length > 0 && (
+                                <div className="space-y-3">
+                                    <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                                        }`}>
+                                        Resultados de bÃºsqueda
+                                    </h3>
+                                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                                        {searchResults.map((movie) => (
+                                            <div
+                                                key={movie.id}
+                                                onClick={() => handleSelectMovie(movie)}
+                                                className={`flex items-center space-x-4 p-3 rounded-lg cursor-pointer transition-colors ${theme === 'dark'
+                                                        ? 'hover:bg-gray-700 border border-gray-700'
+                                                        : 'hover:bg-gray-50 border border-gray-200'
+                                                    }`}
+                                            >
+                                                <img
+                                                    src={movie.posterUrl || '/placeholder-movie.jpg'}
+                                                    alt={movie.title}
+                                                    className="w-12 h-16 object-cover rounded"
+                                                    onError={(e) => {
+                                                        e.target.src = '/placeholder-movie.jpg';
+                                                    }}
+                                                />
+                                                <div className="flex-1">
+                                                    <h4 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                                                        }`}>
+                                                        {movie.title}
+                                                    </h4>
+                                                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                                                        }`}>
+                                                        {movie.year}
+                                                    </p>
                                                 </div>
-                                                <div className="text-gray-500">
-                                                    {selectedMovie.año || preselectedMovie.year}
-                                                </div>
+                                                <Film size={20} className="text-blue-500" />
                                             </div>
-                                        </div>
+                                        ))}
                                     </div>
                                 </div>
                             )}
 
+                            {searchQuery && searchResults.length === 0 && !loading && (
+                                <div className="text-center py-8">
+                                    <Film size={48} className={`mx-auto mb-4 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'
+                                        }`} />
+                                    <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                                        }`}>
+                                        No se encontraron pelÃ­culas con ese tÃ­tulo
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {step === 'review' && selectedMovie && (
+                        <div className="space-y-6">
+                            {/* Selected Movie Info */}
+                            <div className={`flex items-center space-x-4 p-4 rounded-lg border ${theme === 'dark' ? 'border-gray-700 bg-gray-700/50' : 'border-gray-200 bg-gray-50'
+                                }`}>
+                                <img
+                                    src={selectedMovie.posterUrl || '/placeholder-movie.jpg'}
+                                    alt={selectedMovie.title}
+                                    className="w-16 h-20 object-cover rounded"
+                                    onError={(e) => {
+                                        e.target.src = '/placeholder-movie.jpg';
+                                    }}
+                                />
+                                <div className="flex-1">
+                                    <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                                        }`}>
+                                        {selectedMovie.title}
+                                    </h3>
+                                    <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                                        }`}>
+                                        {selectedMovie.year}
+                                    </p>
+                                </div>
+                                {!currentMovie && (
+                                    <button
+                                        onClick={handleBackToSearch}
+                                        className={`px-3 py-1 text-sm rounded transition-colors ${theme === 'dark'
+                                                ? 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                            }`}
+                                    >
+                                        Cambiar
+                                    </button>
+                                )}
+                            </div>
+
                             {/* Rating */}
-                            <div>
-                                <label className="block text-sm font-medium mb-2">
-                                    Calificación (obligatorio)
+                            <div className="space-y-2">
+                                <label className={`block text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                                    }`}>
+                                    CalificaciÃ³n *
                                 </label>
-                                <div className="flex items-center space-x-1">
+                                <div className="flex items-center space-x-2">
                                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
                                         <button
                                             key={star}
-                                            type="button"
+                                            onClick={() => setRating(star)}
                                             onMouseEnter={() => setHoverRating(star)}
                                             onMouseLeave={() => setHoverRating(0)}
-                                            onClick={() => setRating(star)}
-                                            className="p-1 transition-transform hover:scale-110"
+                                            className="transition-transform hover:scale-110"
                                         >
                                             <Star
                                                 size={24}
                                                 className={`${star <= (hoverRating || rating)
                                                         ? 'text-yellow-400 fill-current'
-                                                        : 'text-gray-400'
+                                                        : theme === 'dark'
+                                                            ? 'text-gray-600'
+                                                            : 'text-gray-300'
                                                     }`}
                                             />
                                         </button>
                                     ))}
-                                    <span className="ml-2 text-sm text-gray-500">
-                                        {rating > 0 ? `${rating}/10` : 'Sin calificar'}
+                                    <span className={`ml-4 text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                                        }`}>
+                                        {hoverRating || rating}/10
                                     </span>
                                 </div>
                             </div>
 
                             {/* Comment */}
-                            <div>
-                                <label className="block text-sm font-medium mb-2">
+                            <div className="space-y-2">
+                                <label className={`block text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                                    }`}>
                                     Comentario (opcional)
                                 </label>
                                 <textarea
                                     value={comment}
                                     onChange={(e) => setComment(e.target.value)}
-                                    placeholder="Comparte tu opinión sobre la película..."
+                                    placeholder="Comparte tu opiniÃ³n sobre esta pelÃ­cula..."
                                     rows={4}
-                                    maxLength={1000}
-                                    className={`w-full px-4 py-3 ${inputBgClass} ${borderClass} border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none`}
+                                    className={`w-full px-4 py-3 rounded-lg border transition-colors resize-none ${theme === 'dark'
+                                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500'
+                                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500'
+                                        } focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+                                    maxLength={500}
                                 />
-                                <div className="text-right text-xs text-gray-500 mt-1">
-                                    {comment.length}/1000 caracteres
+                                <div className={`text-sm text-right ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                                    }`}>
+                                    {comment.length}/500
                                 </div>
                             </div>
-
-                            {/* Error Message */}
-                            {error && (
-                                <div className="p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg">
-                                    {error}
-                                </div>
-                            )}
 
                             {/* Submit Button */}
-                            <div className="flex justify-end space-x-3">
-                                <button
-                                    type="button"
-                                    onClick={onClose}
-                                    className={`px-6 py-2 border ${borderClass} rounded-lg transition-colors ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
-                                        }`}
-                                    disabled={isSubmitting}
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting || !selectedMovie || rating === 0}
-                                    className={`px-6 py-2 bg-blue-600 text-white rounded-lg transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2`}
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                            <span>Enviando...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Send size={16} />
-                                            <span>Publicar reseña</span>
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </form>
+                            <button
+                                onClick={handleSubmitReview}
+                                disabled={rating === 0 || submitting}
+                                className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                            >
+                                {submitting ? (
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <>
+                                        <Send size={20} />
+                                        <span className="font-medium">Enviar ReseÃ±a</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>
