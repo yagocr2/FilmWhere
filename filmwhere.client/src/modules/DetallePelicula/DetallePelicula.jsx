@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, PlayCircle, Calendar, Clock, Users, ArrowLeft, Heart } from 'lucide-react';
+import { Star, PlayCircle, Calendar, Clock, Users, ArrowLeft, Heart, Popcorn } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
 const DetallePelicula = () => {
@@ -20,7 +20,7 @@ const DetallePelicula = () => {
                 setError(null);
 
                 // Llamar a tu API para obtener los detalles completos de la película
-                const response = await fetch(`/api/pelicula/detalle/${id}`);
+                const response = await fetch(`/api/pelicula/${id}`);
 
                 if (!response.ok) {
                     if (response.status === 404) {
@@ -235,9 +235,31 @@ const DetallePelicula = () => {
 
                         {/* Información adicional */}
                         <div className="space-y-6">
+                            {/*Sinopsis*/}
+                            {movie.overview !== '' ? (
+                                <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-300'
+                                    }`}>
+                                    <h3 className="mb-4 flex items-center text-xl font-semibold">
+                                        <Popcorn className="mr-2" />
+                                        Sinopsis
+                                    </h3>
+                                    <p>{movie.overview}</p>
+                                </div>
+                            ) : (
+                                <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-300'
+                                    }`}>
+                                    <h3 className="mb-4 flex items-center text-xl font-semibold">
+                                            <Popcorn className="mr-2" />
+                                        Dónde ver
+                                    </h3>
+                                    <p className="text-gray-500">
+                                        Información de plataformas próximamente disponible.
+                                    </p>
+                                </div>
+                            )}
                             {/* Plataformas */}
                             {movie.platforms && movie.platforms.length > 0 ? (
-                                <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+                                <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-300'
                                     }`}>
                                     <h3 className="mb-4 flex items-center text-xl font-semibold">
                                         <PlayCircle className="mr-2" />
@@ -279,7 +301,7 @@ const DetallePelicula = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+                                <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-300'
                                     }`}>
                                     <h3 className="mb-4 flex items-center text-xl font-semibold">
                                         <PlayCircle className="mr-2" />
@@ -293,7 +315,7 @@ const DetallePelicula = () => {
 
                             {/* Reseñas */}
                             {movie.reviews && movie.reviews.length > 0 ? (
-                                <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+                                <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-300'
                                     }`}>
                                     <h3 className="mb-4 text-xl font-semibold">
                                         Reseñas ({movie.reviewCount})
@@ -325,7 +347,7 @@ const DetallePelicula = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'
+                                <div className={`p-6 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-300'
                                     }`}>
                                     <h3 className="mb-2 text-xl font-semibold">Reseñas</h3>
                                     <p className="text-gray-500">

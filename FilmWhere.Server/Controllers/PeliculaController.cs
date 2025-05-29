@@ -1,11 +1,8 @@
 ﻿using FilmWhere.Context;
-using FilmWhere.Models;
 using FilmWhere.Services;
+using FilmWhere.Server.DTOs;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
-using System.Text.Json.Serialization;
 using static FilmWhere.Services.TmdbService;
 
 namespace FilmWhere.Server.Controllers
@@ -48,7 +45,7 @@ namespace FilmWhere.Server.Controllers
         }
 
         // Método para buscar solo en TMDB
-        private async Task<ActionResult<List<MovieResponse>>> SearchOnlyTmdbAsync(string query, int page = 1)
+        private async Task<ActionResult<List<PeliculaDTO>>> SearchOnlyTmdbAsync(string query, int page = 1)
         {
             try
             {
@@ -61,7 +58,7 @@ namespace FilmWhere.Server.Controllers
 
                 var movies = tmdbResponse.Results
                     .Take(20)
-                    .Select(m => new MovieResponse
+                    .Select(m => new PeliculaDTO
                     {
                         Id = m.Id.ToString(),
                         Title = m.Title,
@@ -81,7 +78,7 @@ namespace FilmWhere.Server.Controllers
         }
 
         // Método para obtener populares solo de TMDB
-        private async Task<ActionResult<List<PopularMovieResponse>>> GetPopularOnlyTmdbAsync(int page = 1, int cantidad = 28)
+        private async Task<ActionResult<List<PeliculaDTO>>> GetPopularOnlyTmdbAsync(int page = 1, int cantidad = 28)
         {
             try
             {
@@ -110,7 +107,7 @@ namespace FilmWhere.Server.Controllers
 
                 var popularMovies = allMovies
                     .Take(cantidad)
-                    .Select(m => new PopularMovieResponse
+                    .Select(m => new PeliculaDTO
                     {
                         Id = m.Id.ToString(),
                         Title = m.Title,
@@ -154,7 +151,7 @@ namespace FilmWhere.Server.Controllers
 
             return genreMap.TryGetValue(genreName, out var id) ? id : null;
         }
-        private async Task<ActionResult<List<PopularMovieResponse>>> GetTopRatedOnlyTmdbAsync(int page = 1, int cantidad = 28)
+        private async Task<ActionResult<List<PeliculaDTO>>> GetTopRatedOnlyTmdbAsync(int page = 1, int cantidad = 28)
         {
             try
             {
@@ -182,7 +179,7 @@ namespace FilmWhere.Server.Controllers
 
                 var topRatedMovies = allMovies
                     .Take(cantidad)
-                    .Select(m => new PopularMovieResponse
+                    .Select(m => new PeliculaDTO
                     {
                         Id = m.Id.ToString(),
                         Title = m.Title,
@@ -192,7 +189,7 @@ namespace FilmWhere.Server.Controllers
                     })
                     .ToList();
                 return topRatedMovies;
-                
+
             }
             catch (Exception ex)
             {
@@ -201,7 +198,7 @@ namespace FilmWhere.Server.Controllers
             }
         }
 
-        private async Task<List<MovieResponse>> GetMoviesByTmdbGenreAsync(int genreId, int cantidad)
+        private async Task<List<PeliculaDTO>> GetMoviesByTmdbGenreAsync(int genreId, int cantidad)
         {
             try
             {
@@ -212,7 +209,7 @@ namespace FilmWhere.Server.Controllers
                 {
                     var movies = genreResponse.Results
                         .Take(cantidad)
-                        .Select(m => new MovieResponse
+                        .Select(m => new PeliculaDTO
                         {
                             Id = m.Id.ToString(),
                             Title = m.Title,
@@ -225,16 +222,16 @@ namespace FilmWhere.Server.Controllers
                     return movies;
                 }
 
-                return new List<MovieResponse>();
+                return new List<PeliculaDTO>();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error obteniendo películas de TMDB por género {GenreId}", genreId);
-                return new List<MovieResponse>();
+                return new List<PeliculaDTO>();
             }
         }
 
-        private async Task<List<MovieResponse>> SearchMoviesByGenreKeywordAsync(string genreName, int cantidad)
+        private async Task<List<PeliculaDTO>> SearchMoviesByGenreKeywordAsync(string genreName, int cantidad)
         {
             try
             {
@@ -245,7 +242,7 @@ namespace FilmWhere.Server.Controllers
                 {
                     var movies = searchResponse.Results
                         .Take(cantidad)
-                        .Select(m => new MovieResponse
+                        .Select(m => new PeliculaDTO
                         {
                             Id = m.Id.ToString(),
                             Title = m.Title,
@@ -258,12 +255,12 @@ namespace FilmWhere.Server.Controllers
                     return movies;
                 }
 
-                return new List<MovieResponse>();
+                return new List<PeliculaDTO>();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error buscando películas por palabra clave de género {GenreName}", genreName);
-                return new List<MovieResponse>();
+                return new List<PeliculaDTO>();
             }
         }
 
@@ -273,78 +270,109 @@ namespace FilmWhere.Server.Controllers
 
         // Obtener película específica por ID
         [HttpGet("{id}")]
-        public async Task<ActionResult<MovieResponse>> GetMovieById(int id)
+        public async Task<ActionResult<PeliculaDTO>> GetMovieById(string id)
         {
-            try
-            {
-                // Verificar disponibilidad de la base de datos
-                bool dbAvailable = await IsDatabaseAvailableAsync();
+			try
+			{
+				bool dbAvailable = await IsDatabaseAvailableAsync();
+				if (dbAvailable)
+				{
+					try
+					{
+						// Buscar primero en la base de datos local
+						var localMovie = await _context.Peliculas
+							.Include(p => p.Generos)
+								.ThenInclude(pg => pg.Genero)
+							.Include(p => p.Plataformas)
+								.ThenInclude(pp => pp.Plataforma)
+							.Include(p => p.Reseñas)
+								.ThenInclude(r => r.Usuario)
+							.FirstOrDefaultAsync(p => p.Id == id || p.IdApiTmdb.ToString() == id);
 
-                if (dbAvailable)
-                {
-                    var movie = await _context.Peliculas
-                        .Where(p => p.IdApiTmdb == id)
-                        .Select(p => new MovieResponse
-                        {
-                            Id = p.Id,
-                            Title = p.Titulo,
-                            PosterUrl = $"https://image.tmdb.org/t/p/w500/{p.PosterUrl}",
-                            Year = p.Año ?? 0
-                        })
-                        .FirstOrDefaultAsync();
+						if (localMovie != null)
+						{
+							var movieDetail = new PeliculaDTO
+							{
+								Id = localMovie.Id,
+								Title = localMovie.Titulo,
+								PosterUrl = $"https://image.tmdb.org/t/p/w500/{localMovie.PosterUrl}",
+                                Overview = localMovie.Sinopsis, 
+								Year = localMovie.Año ?? 0,
+								Rating = localMovie.Reseñas.Any()
+									? Math.Round(localMovie.Reseñas.Average(r => r.Calificacion), 1)
+									: null,
+								Genres = localMovie.Generos.Select(pg => pg.Genero.Nombre).ToList(),
+								Platforms = localMovie.Plataformas.Select(pp => new PlataformaDTO
+								{
+									Name = pp.Plataforma.Nombre,
+									Type = pp.Plataforma.Tipo.ToString(),
+									Price = pp.Precio,
+									Url = pp.Plataforma.Enlace
+								}).ToList(),
+								Reviews = localMovie.Reseñas.OrderByDescending(r => r.Fecha).Take(5).Select(r => new ReviewDTO
+								{
+									Id = r.Id,
+									Comment = r.Comentario,
+									Rating = r.Calificacion,
+									Date = r.Fecha,
+									UserName = r.Usuario.UserName
+								}).ToList(),
+								ReviewCount = localMovie.Reseñas.Count,
+								TmdbId = localMovie.IdApiTmdb
+							};
 
-                    if (movie != null)
-                        return movie;
-                }
+							return movieDetail;
+						}
+					}
+					catch (Exception ex)
+					{
+						_logger.LogWarning(ex, "Error accediendo a BD local para detalles");
+						// Continuar con TMDB como respaldo
+					}
+				}
 
-                // Si no hay película en la base de datos o la BD no está disponible, usar TMDB
-                var tmdbResponse = await _tmdbService.GetPopularMoviesAsync(1);
-                if (tmdbResponse != null && tmdbResponse.Results.Any())
-                {
-                    var tmdbMovie = tmdbResponse.Results
-                        .Where(m => m.Id == id)
-                        .Select(m => new MovieResponse
-                        {
-                            Id = m.Id.ToString(),
-                            Title = m.Title,
-                            PosterUrl = $"https://image.tmdb.org/t/p/w500/{m.Poster_Path}",
-                            Year = m.Release_Date.Year,
-                            Rating = (decimal?)m.Vote_Average
-                        })
-                        .FirstOrDefault();
+				// CORREGIR: Si no está en BD local, buscar en TMDB usando GetMovieDetailsAsync
+				if (int.TryParse(id, out int tmdbId))
+				{
+					// Usar el método correcto para obtener detalles específicos
+					var movieDetails = await _tmdbService.GetMovieDetailsAsync(tmdbId);
 
-                    if (tmdbMovie != null)
-                        return tmdbMovie;
-                }
+					if (movieDetails != null)
+					{
+						var basicMovieDetail = new PeliculaDTO
+						{
+							Id = movieDetails.Id.ToString(),
+							Title = movieDetails.Title,
+							PosterUrl = $"https://image.tmdb.org/t/p/w500/{movieDetails.Poster_Path}",
+                            Overview = movieDetails.Overview,
+							Year = movieDetails.GetReleaseDate()?.Year ?? 0,
+							Rating = movieDetails.Vote_Average, // TMDB no devuelve rating en detalles
+							Genres = movieDetails.Genres.Select(g => g.Name).ToList(),
+							Platforms = new List<PlataformaDTO>(), // No hay plataformas en TMDB
+							Reviews = new List<ReviewDTO>(), // No hay reviews locales
+							ReviewCount = 0,
+							TmdbId = movieDetails.Id
+						};
 
-                // Como último recurso, intentar obtener detalles específicos de TMDB
-                var movieDetails = await _tmdbService.GetMovieDetailsAsync(id);
-                if (movieDetails != null)
-                {
-                    return new MovieResponse
-                    {
-                        Id = movieDetails.Id.ToString(),
-                        Title = movieDetails.Title,
-                        PosterUrl = $"https://image.tmdb.org/t/p/w500/{movieDetails.Poster_Path}",
-                        Year = movieDetails.GetReleaseDate()?.Year ?? 0
-                    };
-                }
+						return basicMovieDetail;
+					}
+				}
 
-                return NotFound($"No se encontró película con ID {id}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener película por ID {Id}", id);
-                return StatusCode(500, $"Error al obtener película por ID: {ex.Message}");
-            }
-        }
+				return NotFound($"No se encontró película con ID {id}");
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error al obtener detalles de película con ID {Id}", id);
+				return StatusCode(500, $"Error al obtener detalles de la película: {ex.Message}");
+			}
+		}
 
         #endregion
 
         #region Búsquedas
 
         [HttpGet("buscar")]
-        public async Task<ActionResult<List<MovieResponse>>> SearchMovies(
+        public async Task<ActionResult<List<PeliculaDTO>>> SearchMovies(
            [FromQuery] string query,
            [FromQuery] int page = 1)
         {
@@ -360,7 +388,7 @@ namespace FilmWhere.Server.Controllers
                 // Verificar disponibilidad de la base de datos
                 bool dbAvailable = await IsDatabaseAvailableAsync();
 
-                List<MovieResponse> localResults = new();
+                List<PeliculaDTO> localResults = new();
 
                 if (dbAvailable)
                 {
@@ -371,7 +399,7 @@ namespace FilmWhere.Server.Controllers
                             .Where(p => p.Titulo.Contains(query))
                             .Skip((page - 1) * 20)
                             .Take(20)
-                            .Select(p => new MovieResponse
+                            .Select(p => new PeliculaDTO
                             {
                                 Id = p.Id,
                                 Title = p.Titulo,
@@ -408,7 +436,7 @@ namespace FilmWhere.Server.Controllers
                     {
                         var tmdbResults = tmdbResponse.Results
                             .Take(20 - localResults.Count)
-                            .Select(m => new MovieResponse
+                            .Select(m => new PeliculaDTO
                             {
                                 Id = m.Id.ToString(),
                                 Title = m.Title,
@@ -501,7 +529,7 @@ namespace FilmWhere.Server.Controllers
         }
 
         [HttpGet("busqueda-avanzada")]
-        public async Task<ActionResult<List<MovieResponse>>> AdvancedSearch(
+        public async Task<ActionResult<List<PeliculaDTO>>> AdvancedSearch(
             [FromQuery] string? title,
             [FromQuery] int? year,
             [FromQuery] string? genre,
@@ -538,7 +566,7 @@ namespace FilmWhere.Server.Controllers
                         var results = await query
                             .Skip((page - 1) * 20)
                             .Take(20)
-                            .Select(p => new MovieResponse
+                            .Select(p => new PeliculaDTO
                             {
                                 Id = p.Id,
                                 Title = p.Titulo,
@@ -576,7 +604,7 @@ namespace FilmWhere.Server.Controllers
         #region Películas por Género
 
         [HttpGet("genero/{genreName}")]
-        public async Task<ActionResult<List<MovieResponse>>> GetMoviesByGenre(string genreName, int cantidad = 15)
+        public async Task<ActionResult<List<PeliculaDTO>>> GetMoviesByGenre(string genreName, int cantidad = 15)
         {
             try
             {
@@ -597,7 +625,7 @@ namespace FilmWhere.Server.Controllers
                                 .Select(pg => pg.Pelicula)
                                 .OrderByDescending(p => p.Reseñas.Count)
                                 .Take(cantidad)
-                                .Select(p => new MovieResponse
+                                .Select(p => new PeliculaDTO
                                 {
                                     Id = p.Id,
                                     Title = p.Titulo,
@@ -643,7 +671,7 @@ namespace FilmWhere.Server.Controllers
         }
 
         [HttpGet("generos")]
-        public async Task<ActionResult<List<GenreResponse>>> GetAvailableGenres()
+        public async Task<ActionResult<List<GeneroDTO>>> GetAvailableGenres()
         {
             try
             {
@@ -654,7 +682,7 @@ namespace FilmWhere.Server.Controllers
                     try
                     {
                         var genres = await _context.Generos
-                            .Select(g => new GenreResponse
+                            .Select(g => new GeneroDTO
                             {
                                 Id = g.Id,
                                 Name = g.Nombre
@@ -671,7 +699,7 @@ namespace FilmWhere.Server.Controllers
                 }
 
                 // Respaldo: géneros básicos predefinidos
-                var defaultGenres = new List<GenreResponse>
+                var defaultGenres = new List<GeneroDTO>
                 {
                     new() { Id = "28", Name = "Acción" },
                     new() { Id = "12", Name = "Aventura" },
@@ -708,7 +736,7 @@ namespace FilmWhere.Server.Controllers
         #region Estrenos y populares
 
         [HttpGet("estrenos")]
-        public async Task<ActionResult<List<MovieResponse>>> GetRecentReleases(int año = 0, int cantidad = 15)
+        public async Task<ActionResult<List<PeliculaDTO>>> GetRecentReleases(int año = 0, int cantidad = 15)
         {
             try
             {
@@ -723,7 +751,7 @@ namespace FilmWhere.Server.Controllers
                             .Where(p => p.Año == targetYear)
                             .OrderByDescending(p => p.Id)
                             .Take(cantidad)
-                            .Select(p => new MovieResponse
+                            .Select(p => new PeliculaDTO
                             {
                                 Id = p.Id,
                                 Title = p.Titulo,
@@ -748,7 +776,7 @@ namespace FilmWhere.Server.Controllers
                     var popularMovies = tmdbResponse.Results
                         .Where(m => m.Release_Date.Year == targetYear)
                         .Take(cantidad)
-                        .Select(m => new MovieResponse
+                        .Select(m => new PeliculaDTO
                         {
                             Id = m.Id.ToString(),
                             Title = m.Title,
@@ -772,7 +800,7 @@ namespace FilmWhere.Server.Controllers
         }
 
         [HttpGet("populares")]
-        public async Task<ActionResult<List<PopularMovieResponse>>> GetPopularMovies(int page = 1, int year = 0, int cantidad = 0)
+        public async Task<ActionResult<List<PeliculaDTO>>> GetPopularMovies(int page = 1, int year = 0, int cantidad = 0)
         {
             try
             {
@@ -787,7 +815,7 @@ namespace FilmWhere.Server.Controllers
                             .Where(p => p.Año == year)
                             .OrderByDescending(p => p.Reseñas.Count)
                             .Take(cantidad > 0 ? cantidad : 28)
-                            .Select(p => new PopularMovieResponse
+                            .Select(p => new PeliculaDTO
                             {
                                 Id = p.Id,
                                 Title = p.Titulo,
@@ -816,7 +844,7 @@ namespace FilmWhere.Server.Controllers
         }
 
         [HttpGet("mejor-valoradas")]
-        public async Task<ActionResult<List<MovieResponse>>> GetTopRatedMovies(
+        public async Task<ActionResult<List<PeliculaDTO>>> GetTopRatedMovies(
             [FromQuery] int page = 1,
             [FromQuery] int cantidad = 20,
             [FromQuery] int? year = null)
@@ -851,7 +879,7 @@ namespace FilmWhere.Server.Controllers
                             .ThenByDescending(x => x.NumeroReseñas)
                             .Skip(skip)
                             .Take(cantidad)
-                            .Select(x => new MovieResponse
+                            .Select(x => new PeliculaDTO
                             {
                                 Id = x.Pelicula.Id,
                                 Title = x.Pelicula.Titulo,
@@ -879,7 +907,7 @@ namespace FilmWhere.Server.Controllers
                     decimal maxRating = popularResult.Value.Max(p => p.Rating) ?? 7;
                     var tmdbMovies = popularResult.Value
                         .Where(p => p.Rating <= maxRating)
-                        .Select(p => new MovieResponse
+                        .Select(p => new PeliculaDTO
                         {
                             Id = p.Id,
                             Title = p.Title,
@@ -988,165 +1016,6 @@ namespace FilmWhere.Server.Controllers
             }
         }
 
-        #endregion
-
-        #region Detalle
-        [HttpGet("detalle/{id}")]
-        public async Task<ActionResult<MovieDetailResponse>> GetMovieDetails(string id)
-        {
-            try
-            {
-                bool dbAvailable = await IsDatabaseAvailableAsync();
-                if (dbAvailable)
-                {
-                    try
-                    {
-                        // Buscar primero en la base de datos local
-                        var localMovie = await _context.Peliculas
-                            .Include(p => p.Generos)
-                                .ThenInclude(pg => pg.Genero)
-                            .Include(p => p.Plataformas)
-                                .ThenInclude(pp => pp.Plataforma)
-                            .Include(p => p.Reseñas)
-                                .ThenInclude(r => r.Usuario)
-                            .FirstOrDefaultAsync(p => p.Id == id || p.IdApiTmdb.ToString() == id);
-
-                        if (localMovie != null)
-                        {
-                            var movieDetail = new MovieDetailResponse
-                            {
-                                Id = localMovie.Id,
-                                Title = localMovie.Titulo,
-                                PosterUrl = $"https://image.tmdb.org/t/p/w500/{localMovie.PosterUrl}",
-                                Year = localMovie.Año ?? 0,
-                                Rating = localMovie.Reseñas.Any()
-                                    ? Math.Round(localMovie.Reseñas.Average(r => r.Calificacion), 1)
-                                    : null,
-                                Genres = localMovie.Generos.Select(pg => pg.Genero.Nombre).ToList(),
-                                Platforms = localMovie.Plataformas.Select(pp => new PlatformInfo
-                                {
-                                    Name = pp.Plataforma.Nombre,
-                                    Type = pp.Plataforma.Tipo.ToString(),
-                                    Price = pp.Precio,
-                                    Url = pp.Plataforma.Enlace
-                                }).ToList(),
-                                Reviews = localMovie.Reseñas.OrderByDescending(r => r.Fecha).Take(5).Select(r => new ReviewInfo
-                                {
-                                    Id = r.Id,
-                                    Comment = r.Comentario,
-                                    Rating = r.Calificacion,
-                                    Date = r.Fecha,
-                                    UserName = r.Usuario.UserName
-                                }).ToList(),
-                                ReviewCount = localMovie.Reseñas.Count,
-                                TmdbId = localMovie.IdApiTmdb
-                            };
-
-                            return movieDetail;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Error accediendo a BD local para detalles");
-                        // Continuar con TMDB como respaldo
-                    }
-                }
-
-                // CORREGIR: Si no está en BD local, buscar en TMDB usando GetMovieDetailsAsync
-                if (int.TryParse(id, out int tmdbId))
-                {
-                    // Usar el método correcto para obtener detalles específicos
-                    var movieDetails = await _tmdbService.GetMovieDetailsAsync(tmdbId);
-
-                    if (movieDetails != null)
-                    {
-                        var basicMovieDetail = new MovieDetailResponse
-                        {
-                            Id = movieDetails.Id.ToString(),
-                            Title = movieDetails.Title,
-                            PosterUrl = $"https://image.tmdb.org/t/p/w500/{movieDetails.Poster_Path}",
-                            Year = movieDetails.GetReleaseDate()?.Year ?? 0,
-                            Rating = movieDetails.Vote_Average, // TMDB no devuelve rating en detalles
-                            Genres = movieDetails.Genres.Select(g => g.Name).ToList(),
-                            Platforms = new List<PlatformInfo>(), // No hay plataformas en TMDB
-                            Reviews = new List<ReviewInfo>(), // No hay reviews locales
-                            ReviewCount = 0,
-                            TmdbId = movieDetails.Id
-                        };
-
-                        return basicMovieDetail;
-                    }
-                }
-
-                return NotFound($"No se encontró película con ID {id}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener detalles de película con ID {Id}", id);
-                return StatusCode(500, $"Error al obtener detalles de la película: {ex.Message}");
-            }
-        }
         #endregion	
     }
-
-    #region DTOs
-    public class MovieDetailResponse
-    {
-        public string Id { get; set; }
-        public string Title { get; set; }
-        public string PosterUrl { get; set; }
-        public int Year { get; set; }
-        public decimal? Rating { get; set; }
-        public List<string> Genres { get; set; } = new List<string>();
-        public List<PlatformInfo> Platforms { get; set; } = new List<PlatformInfo>();
-        public List<ReviewInfo> Reviews { get; set; } = new List<ReviewInfo>();
-        public int ReviewCount { get; set; }
-        public int TmdbId { get; set; }
-    }
-
-    public class PlatformInfo
-    {
-        public string Name { get; set; }
-        public string Type { get; set; }
-        public decimal Price { get; set; }
-        public string Url { get; set; }
-    }
-
-    public class ReviewInfo
-    {
-        public string Id { get; set; }
-        public string Comment { get; set; }
-        public decimal Rating { get; set; }
-        public DateTime Date { get; set; }
-        public string UserName { get; set; }
-    }
-    public class MovieResponse
-    {
-        public string Id { get; set; }
-        public string Title { get; set; }
-        public string PosterUrl { get; set; }
-        public int Year { get; set; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public decimal? Rating { get; set; }
-    }
-
-    public class PopularMovieResponse
-    {
-        public string Id { get; set; }
-        public string Title { get; set; }
-        public string PosterUrl { get; set; }
-        public int Year { get; set; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public decimal? Rating { get; set; }
-    }
-
-    public class GenreResponse
-    {
-        public string Id { get; set; }
-        public string Name { get; set; }
-    }
-
-    #endregion
 }
