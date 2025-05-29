@@ -278,7 +278,6 @@ const Inicio = () => {
 
     return (
         <FadeContent>
-            <div className="relative h-screen w-screen overflow-x-hidden">
                 <div className="fixed inset-0 z-0">
                         <LiquidChrome
                             baseColor={theme === 'dark' ? [0.05, 0.02, 0.15] : [0.9, 0.8, 1]}
@@ -287,7 +286,7 @@ const Inicio = () => {
                             interactive={false}
                     />
                 </div>
-                    <div className={`container mx-auto px-4 py-8 ${theme === 'dark' ? 'text-texto-dark' : 'text-texto'} relative inset-1 z-1`}>
+                    <div className={`container mx-auto px-4 py-8 relative z-10 ${theme === 'dark' ? 'text-texto-dark' : 'text-texto'} relative inset-1 z-1`}>
                     <div className="mb-8">
                         <h1 className="mb-2 text-4xl font-bold">Explora FilmWhere</h1>
                         <p className="text-lg opacity-80">Descubre películas por categorías y encuentra dónde verlas</p>
@@ -359,7 +358,6 @@ const Inicio = () => {
                         loading={loading.topRated}
                         error={error.topRated}
                     />
-                </div>
                 </div>
         </FadeContent>
     );

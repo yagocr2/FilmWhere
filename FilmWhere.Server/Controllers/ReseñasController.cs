@@ -138,7 +138,7 @@ namespace FilmWhere.Server.Controllers
 			}
 		}
 
-		// POST: api/reseñas - MÉTODO MEJORADO CON SINCRONIZACIÓN
+		// POST: api/reseñas
 		[HttpPost]
 		public async Task<ActionResult<object>> CrearReseña([FromBody] CrearReseñaDto dto)
 		{
