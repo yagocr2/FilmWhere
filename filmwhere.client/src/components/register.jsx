@@ -16,9 +16,9 @@ const Register = () => {
     const [error, setErrors] = useState('');
     const [formData, setFormData] = useState({
         userName: '',
-        name: '',
-        surname: '',
-        birthDate: '',
+        nombre: '',
+        apellidos: '',
+        fechaNacimiento: '',
         email: '',
         password: '',
         confirmPassword: ''
@@ -64,7 +64,7 @@ const Register = () => {
         }
 
         // Validar que la fecha de nacimiento no sea futura
-        if (formData.birthDate && formData.birthDate > today) {
+        if (formData.fechaNacimiento && formData.fechaNacimiento > today) {
             newErrors.push('La fecha de nacimiento no puede ser futura');
         }
 
@@ -91,16 +91,16 @@ const Register = () => {
                 },
                 body: JSON.stringify({
                     userName: formData.userName,
-                    name: formData.name,
-                    surname: formData.surname,
-                    birthDate: formData.birthDate,
+                    nombre: formData.nombre,
+                    apellidos: formData.apellidos,
                     email: formData.email,
+                    fechaNacimiento: formData.fechaNacimiento,
                     password: formData.password
                 })
+        
             });
 
             const data = await response.json();
-
             if (!response.ok) {
                 // Manejar errores específicos del servidor
                 if (data.errors && Array.isArray(data.errors)) {
@@ -114,6 +114,7 @@ const Register = () => {
             // Registro exitoso, redirigir a inicio de sesión
             navigate('/login', { state: { message: 'Registro exitoso. Ahora puedes iniciar sesión.' } });
         } catch (err) {
+            console.log('Response status: ', err);
             setErrors(['Error de conexión. Por favor intente más tarde.']);
         } finally {
             setIsLoading(false);
@@ -154,14 +155,14 @@ const Register = () => {
                         {/* Sección de nombre y apellido con estructura corregida */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label htmlFor="name" className={`block text-sm font-medium ${textColorClass}`}>
+                                <label htmlFor="nombre" className={`block text-sm font-medium ${textColorClass}`}>
                                     Nombre
                                 </label>
                                 <input
                                     type="text"
-                                    id="name"
-                                    name="name"
-                                    value={formData.name}
+                                    id="nombre"
+                                    name="nombre"
+                                    value={formData.nombre}
                                     onChange={handleChange}
                                     required
                                     minLength={2}
@@ -171,14 +172,14 @@ const Register = () => {
                                 />
                             </div>
                             <div>
-                                <label htmlFor="surname" className={`block text-sm font-medium ${textColorClass}`}>
+                                <label htmlFor="apellidos" className={`block text-sm font-medium ${textColorClass}`}>
                                     Apellidos
                                 </label>
                                 <input
                                     type="text"
-                                    id="surname"
-                                    name="surname"
-                                    value={formData.surname}
+                                    id="apellidos"
+                                    name="apellidos"
+                                    value={formData.apellidos}
                                     onChange={handleChange}
                                     required
                                     minLength={2}
@@ -189,14 +190,14 @@ const Register = () => {
                             </div>
                         </div>
                         <div>
-                            <label htmlFor="birthDate" className={`block text-sm font-medium ${textColorClass}`}>
+                            <label htmlFor="fechaNacimiento" className={`block text-sm font-medium ${textColorClass}`}>
                                 Fecha de nacimiento
                             </label>
                             <input
                                 type="date"
-                                id="birthDate"
-                                name="birthDate"
-                                value={formData.birthDate}
+                                id="fechaNacimiento"
+                                name="fechaNacimiento"
+                                value={formData.fechaNacimiento}
                                 onChange={handleChange}
                                 required
                                 max={today}

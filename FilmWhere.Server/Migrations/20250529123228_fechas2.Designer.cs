@@ -3,6 +3,7 @@ using System;
 using FilmWhere.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FilmWhere.Server.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250529123228_fechas2")]
+    partial class fechas2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -195,8 +198,8 @@ namespace FilmWhere.Server.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
-                    b.Property<DateOnly>("FechaNacimiento")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("FechaNacimiento")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("FechaRegistro")
                         .ValueGeneratedOnAdd()

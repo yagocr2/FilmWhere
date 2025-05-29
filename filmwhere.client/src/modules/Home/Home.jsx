@@ -32,7 +32,7 @@ const Home = () => {
         };
         fetchPopular();
     }, []);
-    console.log(movies)
+    
     // Mientras carga o hay error
     if (loading) return <FadeContent>Loading…</FadeContent>;
     if (error) return <FadeContent><Layout>{error}</Layout></FadeContent>;

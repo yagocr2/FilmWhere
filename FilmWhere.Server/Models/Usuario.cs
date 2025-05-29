@@ -27,8 +27,9 @@ namespace FilmWhere.Models
 		[PersonalData]
 		[ProtectedPersonalData]
 		[Required(ErrorMessage = "La fecha de nacimiento es obligatoria.")]
+		[Column(TypeName = "date")]
 		[DataType(DataType.Date)]
-		public DateTime FechaNacimiento { get; set; } = DateTime.UtcNow;
+		public DateOnly FechaNacimiento { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
 		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 		public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
 

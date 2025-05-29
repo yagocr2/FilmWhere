@@ -36,7 +36,7 @@ const DetallePelicula = () => {
 
                 // Aquí podrías verificar si la película está en favoritos del usuario
                 // checkIfFavorite(data.id);
-
+                console.log(data)
             } catch (err) {
                 console.error('Error fetching movie data:', err);
                 setError(err.message);
@@ -78,7 +78,7 @@ const DetallePelicula = () => {
 
     if (loading) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-bg-primario-dark' : 'bg-bg-primario'
+            <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-primario-dark' : 'bg-primario'
                 }`}>
                 <div className="text-center">
                     <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
@@ -92,9 +92,9 @@ const DetallePelicula = () => {
 
     if (error) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-bg-primario-dark' : 'bg-bg-primario'
+            <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-primario-dark' : 'bg-primario'
                 }`}>
-                <div className="mx-auto max-w-md text-center">
+                <div className="mx-auto max-w-md text-center bg-white">
                     <div className={`rounded-lg p-6 ${theme === 'dark' ? 'bg-red-900/20 text-red-400' : 'bg-red-100 text-red-600'
                         }`}>
                         <h2 className="mb-2 text-xl font-bold">Error al cargar la película</h2>
@@ -127,7 +127,7 @@ const DetallePelicula = () => {
 
     if (!movie) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-bg-primario-dark text-texto-dark' : 'bg-bg-primario text-texto'
+            <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-primario-dark text-texto-dark' : 'bg-primario text-texto'
                 }`}>
                 <p>No se encontró información de la película</p>
             </div>
@@ -135,7 +135,7 @@ const DetallePelicula = () => {
     }
 
     return (
-        <div className={`min-h-screen ${theme === 'dark' ? 'bg-bg-primario-dark text-texto-dark' : 'bg-bg-primario text-texto'
+        <div className={`min-h-screen ${theme === 'dark' ? 'bg-primario-dark text-texto-dark' : 'bg-primario text-texto'
             }`}>
             {/* Header con botón de volver */}
             <div className="sticky top-0 z-10 border-b border-gray-700 bg-black/20 backdrop-blur-sm">

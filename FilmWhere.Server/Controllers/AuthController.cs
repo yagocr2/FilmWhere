@@ -29,6 +29,14 @@ namespace FilmWhere.Server.Controllers
 		[HttpPost("register")]
 		public async Task<IActionResult> Register([FromBody] RegisterModel model)
 		{
+			if (!ModelState.IsValid)
+			{
+				var errors = ModelState.Values
+					.SelectMany(v => v.Errors)
+					.Select(e => e.ErrorMessage)
+					.ToList();
+				return BadRequest(new { Errors = errors });
+			}
 			// Validación personalizada de contraseña
 			var passwordValidator = new PasswordValidator<Usuario>();
 			var passwordResult = await passwordValidator.ValidateAsync(_userManager, null, model.Password);
@@ -39,7 +47,6 @@ namespace FilmWhere.Server.Controllers
 				var errorMessages = passwordResult.Errors.Select(e => FormatPasswordError(e.Description)).ToList();
 				return BadRequest(new { Errors = errorMessages });
 			}
-
 			var user = new Usuario
 			{
 				UserName = model.UserName,
@@ -49,7 +56,7 @@ namespace FilmWhere.Server.Controllers
 				FechaNacimiento = model.FechaNacimiento
 
 			};
-
+			
 			var result = await _userManager.CreateAsync(user, model.Password);
 
 			if (!result.Succeeded)
@@ -179,8 +186,8 @@ namespace FilmWhere.Server.Controllers
 		[EmailAddress]
 		public string Email { get; set; }
 		[Required]
-		[DataType(DataType.DateTime)]
-		public DateTime FechaNacimiento { get; set; } 
+		[DataType(DataType.Date)]
+		public DateOnly FechaNacimiento { get; set; } 
 		[Required]
 		[DataType(DataType.Password)]
 		public string Password { get; set; }
