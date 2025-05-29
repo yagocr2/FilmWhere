@@ -1,5 +1,6 @@
 ﻿using FilmWhere.Context;
 using FilmWhere.Models;
+using FilmWhere.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,12 +17,18 @@ namespace FilmWhere.Server.Controllers
 		private readonly MyDbContext _context;
 		private readonly UserManager<Usuario> _userManager;
 		private readonly ILogger<ReseñasController> _logger;
+		private readonly DataSyncService _dataSyncService; // Nueva dependencia
 
-		public ReseñasController(MyDbContext context, UserManager<Usuario> userManager, ILogger<ReseñasController> logger)
+		public ReseñasController(
+			MyDbContext context,
+			UserManager<Usuario> userManager,
+			ILogger<ReseñasController> logger,
+			DataSyncService dataSyncService) // Inyectar DataSyncService
 		{
 			_context = context;
 			_userManager = userManager;
 			_logger = logger;
+			_dataSyncService = dataSyncService;
 		}
 
 		// GET: api/reseñas
@@ -131,7 +138,7 @@ namespace FilmWhere.Server.Controllers
 			}
 		}
 
-		// POST: api/reseñas
+		// POST: api/reseñas - MÉTODO MEJORADO CON SINCRONIZACIÓN
 		[HttpPost]
 		public async Task<ActionResult<object>> CrearReseña([FromBody] CrearReseñaDto dto)
 		{
@@ -155,11 +162,11 @@ namespace FilmWhere.Server.Controllers
 					return Unauthorized(new { message = "Usuario no autenticado" });
 				}
 
-				// Verificar que la película existe
-				var pelicula = await _context.Peliculas.FindAsync(dto.PeliculaId);
+				// NUEVA LÓGICA: Sincronizar película si no existe localmente
+				var pelicula = await EnsureMovieExistsAsync(dto.PeliculaId, dto.TituloPelicula);
 				if (pelicula == null)
 				{
-					return NotFound(new { message = "Película no encontrada" });
+					return NotFound(new { message = "No se pudo encontrar o sincronizar la película" });
 				}
 
 				// Verificar si el usuario ya reseñó esta película
@@ -213,12 +220,110 @@ namespace FilmWhere.Server.Controllers
 					})
 					.FirstOrDefaultAsync();
 
+				_logger.LogInformation("Reseña creada exitosamente para película: {TituloPelicula} por usuario: {UsuarioId}",
+					pelicula.Titulo, userId);
+
 				return CreatedAtAction(nameof(GetReseña), new { id = reseña.Id }, reseñaCreada);
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "Error al crear la reseña");
 				return StatusCode(500, new { message = "Error interno del servidor" });
+			}
+		}
+
+		// NUEVO MÉTODO: Asegurar que la película existe en la base de datos local
+		private async Task<Pelicula?> EnsureMovieExistsAsync(string peliculaId, string? tituloPelicula = null)
+		{
+			try
+			{
+				// Primero verificar si ya existe localmente
+				var existingMovie = await _context.Peliculas.FindAsync(peliculaId);
+				if (existingMovie != null)
+				{
+					_logger.LogInformation("Película ya existe localmente: {TituloPelicula} (ID: {PeliculaId})",
+						existingMovie.Titulo, peliculaId);
+
+					// Opcional: Actualizar plataformas en segundo plano si la película ya existe
+					_ = Task.Run(async () =>
+					{
+						try
+						{
+							await _dataSyncService.UpdateMoviePlatformsAsync(existingMovie);
+							_logger.LogInformation("Plataformas actualizadas en segundo plano para: {TituloPelicula}",
+								existingMovie.Titulo);
+						}
+						catch (Exception ex)
+						{
+							_logger.LogWarning(ex, "Error actualizando plataformas en segundo plano para: {TituloPelicula}",
+								existingMovie.Titulo);
+						}
+					});
+
+					return existingMovie;
+				}
+
+				// Si no existe localmente, intentar sincronizar
+				_logger.LogInformation("Película no existe localmente, iniciando sincronización: ID {PeliculaId}, Título: {TituloPelicula}",
+					peliculaId, tituloPelicula ?? "No proporcionado");
+
+				// Opción 1: Si tenemos el título, sincronizar por título
+				if (!string.IsNullOrEmpty(tituloPelicula))
+				{
+					await _dataSyncService.SyncMovieByTitleAsync(tituloPelicula);
+				}
+				// Opción 2: Si solo tenemos el ID de TMDB, intentar sincronizar por ID
+				else if (int.TryParse(peliculaId, out int tmdbId))
+				{
+					await SyncMovieByTmdbIdAsync(tmdbId);
+				}
+				else
+				{
+					_logger.LogWarning("No se puede sincronizar película: ID no es válido como TMDB ID y no se proporcionó título");
+					return null;
+				}
+
+				// Verificar si la sincronización fue exitosa
+				var syncedMovie = await _context.Peliculas.FindAsync(peliculaId);
+				if (syncedMovie != null)
+				{
+					_logger.LogInformation("Película sincronizada exitosamente: {TituloPelicula} (ID: {PeliculaId})",
+						syncedMovie.Titulo, peliculaId);
+				}
+				else
+				{
+					_logger.LogWarning("La sincronización no resultó en la película esperada con ID: {PeliculaId}", peliculaId);
+				}
+
+				return syncedMovie;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error asegurando que la película existe: ID {PeliculaId}, Título: {TituloPelicula}",
+					peliculaId, tituloPelicula);
+				return null;
+			}
+		}
+
+		// NUEVO MÉTODO: Sincronizar película por TMDB ID
+		private async Task SyncMovieByTmdbIdAsync(int tmdbId)
+		{
+			try
+			{
+				// Este método necesitaría ser añadido al DataSyncService
+				// Por ahora, intentamos crear la película básica con la información de TMDB
+				_logger.LogInformation("Sincronizando película por TMDB ID: {TmdbId}", tmdbId);
+
+				// Aquí podrías llamar a un nuevo método en DataSyncService
+				// await _dataSyncService.SyncMovieByTmdbIdAsync(tmdbId);
+
+				// Por ahora, log de que se necesita implementar
+				_logger.LogWarning("Sincronización por TMDB ID no implementada completamente. ID: {TmdbId}", tmdbId);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error sincronizando película por TMDB ID: {TmdbId}", tmdbId);
+				throw;
 			}
 		}
 
@@ -404,12 +509,13 @@ namespace FilmWhere.Server.Controllers
 		}
 	}
 
-	// DTOs para las operaciones
+	// DTOs actualizados para las operaciones
 	public class CrearReseñaDto
 	{
 		public string PeliculaId { get; set; } = string.Empty;
 		public decimal Calificacion { get; set; }
 		public string? Comentario { get; set; }
+		public string? TituloPelicula { get; set; } // NUEVO: Campo opcional para el título
 	}
 
 	public class ActualizarReseñaDto
@@ -418,4 +524,3 @@ namespace FilmWhere.Server.Controllers
 		public string? Comentario { get; set; }
 	}
 }
-

@@ -37,6 +37,8 @@ namespace FilmWhere.Server
 			ConfigureHttpClients(builder);
 
 			// Servicios personalizados
+			builder.Services.AddScoped<TmdbService>();
+			builder.Services.AddScoped<WatchModeService>();
 			builder.Services.AddScoped<DataSyncService>();
 
 			// Identity + JWT
