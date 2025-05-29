@@ -43,7 +43,11 @@ namespace FilmWhere.Server.Controllers
 			var user = new Usuario
 			{
 				UserName = model.UserName,
-				Email = model.Email
+				Nombre = model.Nombre,
+				Apellido = model.Apellidos,
+				Email = model.Email,
+				FechaNacimiento = model.FechaNacimiento
+
 			};
 
 			var result = await _userManager.CreateAsync(user, model.Password);
@@ -168,9 +172,15 @@ namespace FilmWhere.Server.Controllers
 		[MaxLength(20)]
 		public string UserName { get; set; }
 		[Required]
+		public string Nombre { get; set; } = string.Empty;
+		[Required]
+		public string Apellidos { get; set; } = string.Empty;
+		[Required]
 		[EmailAddress]
 		public string Email { get; set; }
-
+		[Required]
+		[DataType(DataType.DateTime)]
+		public DateTime FechaNacimiento { get; set; } 
 		[Required]
 		[DataType(DataType.Password)]
 		public string Password { get; set; }

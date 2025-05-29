@@ -1,5 +1,4 @@
-﻿
-// src/components/Register.jsx
+﻿// src/components/Register.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import LiquidChrome from '../Backgrounds/LiquidChrome/LiquidChrome';
@@ -17,12 +16,18 @@ const Register = () => {
     const [error, setErrors] = useState('');
     const [formData, setFormData] = useState({
         userName: '',
+        name: '',
+        surname: '',
+        birthDate: '',
         email: '',
         password: '',
         confirmPassword: ''
     });
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    // Obtener la fecha actual en formato YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
 
     const handleChange = (e) => {
         setFormData({
@@ -58,6 +63,11 @@ const Register = () => {
             newErrors.push('Las contraseñas no coinciden');
         }
 
+        // Validar que la fecha de nacimiento no sea futura
+        if (formData.birthDate && formData.birthDate > today) {
+            newErrors.push('La fecha de nacimiento no puede ser futura');
+        }
+
         setErrors(newErrors);
         return newErrors.length === 0;
     };
@@ -81,6 +91,9 @@ const Register = () => {
                 },
                 body: JSON.stringify({
                     userName: formData.userName,
+                    name: formData.name,
+                    surname: formData.surname,
+                    birthDate: formData.birthDate,
                     email: formData.email,
                     password: formData.password
                 })
@@ -136,8 +149,60 @@ const Register = () => {
                             {error}
                         </div>
                     )}
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    
+                    <form onSubmit={handleSubmit} className="space-y-3">
+                        {/* Sección de nombre y apellido con estructura corregida */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label htmlFor="name" className={`block text-sm font-medium ${textColorClass}`}>
+                                    Nombre
+                                </label>
+                                <input
+                                    type="text"
+                                    id="name"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    required
+                                    minLength={2}
+                                    maxLength={20}
+                                    className={`mt-1 block w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+                                    placeholder="Tu nombre"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="surname" className={`block text-sm font-medium ${textColorClass}`}>
+                                    Apellidos
+                                </label>
+                                <input
+                                    type="text"
+                                    id="surname"
+                                    name="surname"
+                                    value={formData.surname}
+                                    onChange={handleChange}
+                                    required
+                                    minLength={2}
+                                    maxLength={30}
+                                    className={`mt-1 block w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+                                    placeholder="Tus apellidos"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label htmlFor="birthDate" className={`block text-sm font-medium ${textColorClass}`}>
+                                Fecha de nacimiento
+                            </label>
+                            <input
+                                type="date"
+                                id="birthDate"
+                                name="birthDate"
+                                value={formData.birthDate}
+                                onChange={handleChange}
+                                required
+                                max={today}
+                                className={`mt-1 block w-full rounded-lg border border-gray-300 p-3 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}
+                            />
+                        </div>
                         <div>
                             <label htmlFor="userName" className={`block text-sm font-medium ${textColorClass}`}>
                                 Nombre de usuario
@@ -155,7 +220,6 @@ const Register = () => {
                                 placeholder="Nombre de usuario"
                             />
                         </div>
-
                         <div>
                             <label htmlFor="email" className={`block text-sm font-medium ${textColorClass}`}>
                                 Email

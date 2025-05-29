@@ -155,6 +155,7 @@ namespace FilmWhere.Services
 				"sub" => TipoPlataforma.Suscripción,
 				"rent" => TipoPlataforma.Alquiler,
 				"buy" => TipoPlataforma.Compra,
+				"free" => TipoPlataforma.Gratis, // "free" puede ser considerado como Otro
 				_ => TipoPlataforma.Otro // Valor por defecto
 			};
 		}

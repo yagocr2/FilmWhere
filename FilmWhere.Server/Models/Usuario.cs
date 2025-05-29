@@ -12,6 +12,23 @@ namespace FilmWhere.Models
 		[MinLength(2, ErrorMessage = "El nombre debe tener al menos 2 caracteres.")]
 		[MaxLength(50, ErrorMessage = "El nombre no puede exceder 50 caracteres.")]
 		public override string UserName { get; set; }
+		[PersonalData]
+		[ProtectedPersonalData]
+		[Required(ErrorMessage = "El nombre es obligatorio.")]
+		[MinLength(2, ErrorMessage = "El nombre debe tener al menos 2 caracteres.")]
+		[MaxLength(50, ErrorMessage = "El nombre no puede exceder 50 caracteres.")]
+		public string Nombre { get; set; }
+		[PersonalData]
+		[ProtectedPersonalData]
+		[Required(ErrorMessage = "El apellido es obligatorio.")]
+		[MinLength(2, ErrorMessage = "El apellido debe tener al menos 2 caracteres.")]
+		[MaxLength(50, ErrorMessage = "El apellido no puede exceder 50 caracteres.")]
+		public string Apellido { get; set; }
+		[PersonalData]
+		[ProtectedPersonalData]
+		[Required(ErrorMessage = "La fecha de nacimiento es obligatoria.")]
+		[DataType(DataType.Date)]
+		public DateTime FechaNacimiento { get; set; } = DateTime.UtcNow;
 		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 		public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
 

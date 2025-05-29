@@ -9,6 +9,7 @@ namespace FilmWhere.Models
 			Suscripción, // "sub" en WatchMode
 			Alquiler,    // "rent"
 			Compra,      // "buy"
+			Gratis,      // "free"
 			Otro         // Para tipos no reconocidos
 		}
 		public string Id { get; set; }
