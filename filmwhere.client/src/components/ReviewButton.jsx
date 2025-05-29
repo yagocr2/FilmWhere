@@ -28,7 +28,7 @@ const ReviewButton = ({ currentMovie = null }) => {
                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 focus:ring-blue-500/50'
                         : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 focus:ring-blue-400/50'
                     }`}
-                title={currentMovie ? `Reseñar "${currentMovie.title}"` : "Escribir reseña"}
+                title={currentMovie ? `Reseñar "${currentMovie.title}"` : "Escribir Reseña"}
             >
                 <MessageSquarePlus size={20} />
                 <span className="hidden sm:inline font-medium">

@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search, Star, Send, Film } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+
 
 const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
     const { theme } = useTheme();
@@ -14,6 +16,7 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
     const [hoverRating, setHoverRating] = useState(0);
     const [comment, setComment] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const { token } = useAuth();
 
     // Reset modal state when it opens/closes
     useEffect(() => {
@@ -38,9 +41,17 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
 
         setLoading(true);
         try {
-            const response = await fetch(`/api/pelicula/buscar?query=${encodeURIComponent(searchQuery)}`);
+            const response = await fetch(`/api/pelicula/buscar?query=${encodeURIComponent(searchQuery)}&page=1`);
+
             const data = await response.json();
-            setSearchResults(data.results || []);
+            const formattedMovies = data.map(movie => ({
+                id: movie.id,
+                title: movie.title,
+                posterUrl: movie.posterUrl,
+                year: movie.year
+            }));
+            console.log(formattedMovies)
+            setSearchResults(formattedMovies || []);
         } catch (error) {
             console.error('Error searching movies:', error);
             setSearchResults([]);
@@ -48,7 +59,9 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
             setLoading(false);
         }
     };
-
+    useEffect(() => {
+        console.log('selectedMovie ha cambiado:', selectedMovie);
+    }, [selectedMovie]);
     const handleSelectMovie = (movie) => {
         setSelectedMovie(movie);
         setStep('review');
@@ -60,17 +73,17 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
         setSubmitting(true);
         try {
             const reviewData = {
-                movieId: selectedMovie.id,
-                rating: rating,
-                comment: comment.trim() || null
+                peliculaId: selectedMovie.id,
+                calificacion: rating,
+                comentario: comment.trim() || "",
+                tituloPelicula: selectedMovie.title,
             };
 
-            const response = await fetch('/api/reseña', {
+            const response = await fetch('/api/reseñas', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    // Add authentication header if needed
-                    // 'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(reviewData)
             });
@@ -102,20 +115,21 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className={`relative w-full max-w-2xl max-h-[90vh] m-4 rounded-lg shadow-2xl overflow-hidden ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+            <div className={`relative w-full max-w-3xl max-h-[100vh] m-4 rounded-lg shadow-2xl overflow-hidden ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
                 }`}>
                 {/* Header */}
                 <div className={`flex items-center justify-between p-6 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
                     }`}>
-                    <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
-                        }`}>
-                        {step === 'search' ? 'Buscar Película' : `Escribir Reseña sobre ${currentMovie.title}`}
+                    <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                        {step === 'search'
+                            ? 'Buscar Película'
+                            : `Escribir Reseña sobre ${selectedMovie?.title || ''}`}
                     </h2>
                     <button
                         onClick={onClose}
                         className={`p-2 rounded-full transition-colors ${theme === 'dark'
-                                ? 'hover:bg-gray-700 text-gray-400 hover:text-white'
-                                : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
+                            ? 'hover:bg-gray-700 text-gray-400 hover:text-white'
+                            : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
                             }`}
                     >
                         <X size={24} />
@@ -123,7 +137,7 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
                 </div>
 
                 {/* Content */}
-                <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                <div className="p-6 overflow-y-auto max-h-[calc(90vh-150px)]">
                     {step === 'search' && (
                         <div className="space-y-6">
                             {/* Search Input */}
@@ -136,8 +150,8 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                                         className={`flex-1 px-4 py-3 rounded-lg border transition-colors ${theme === 'dark'
-                                                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500'
-                                                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500'
+                                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500'
+                                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500'
                                             } focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
                                     />
                                     <button
@@ -156,19 +170,19 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
 
                             {/* Search Results */}
                             {searchResults.length > 0 && (
-                                <div className="space-y-3">
+                                <div className="space-y-4">
                                     <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
                                         }`}>
                                         Resultados de búsqueda
                                     </h3>
-                                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                                    <div className="space-y-2 max-h-96 overflow-y-auto">
                                         {searchResults.map((movie) => (
                                             <div
                                                 key={movie.id}
                                                 onClick={() => handleSelectMovie(movie)}
                                                 className={`flex items-center space-x-4 p-3 rounded-lg cursor-pointer transition-colors ${theme === 'dark'
-                                                        ? 'hover:bg-gray-700 border border-gray-700'
-                                                        : 'hover:bg-gray-50 border border-gray-200'
+                                                    ? 'hover:bg-gray-700 border border-gray-700'
+                                                    : 'hover:bg-gray-50 border border-gray-200'
                                                     }`}
                                             >
                                                 <img
@@ -236,8 +250,8 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
                                     <button
                                         onClick={handleBackToSearch}
                                         className={`px-3 py-1 text-sm rounded transition-colors ${theme === 'dark'
-                                                ? 'bg-gray-600 text-gray-300 hover:bg-gray-500'
-                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                            ? 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                             }`}
                                     >
                                         Cambiar
@@ -261,12 +275,12 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
                                             className="transition-transform hover:scale-110"
                                         >
                                             <Star
-                                                size={24}
+                                                size={21}
                                                 className={`${star <= (hoverRating || rating)
-                                                        ? 'text-yellow-400 fill-current'
-                                                        : theme === 'dark'
-                                                            ? 'text-gray-600'
-                                                            : 'text-gray-300'
+                                                    ? 'text-yellow-400 fill-current'
+                                                    : theme === 'dark'
+                                                        ? 'text-gray-600'
+                                                        : 'text-gray-300'
                                                     }`}
                                             />
                                         </button>
@@ -290,8 +304,8 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
                                     placeholder="Comparte tu opinión sobre esta película..."
                                     rows={4}
                                     className={`w-full px-4 py-3 rounded-lg border transition-colors resize-none ${theme === 'dark'
-                                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500'
-                                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500'
+                                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500'
+                                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500'
                                         } focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
                                     maxLength={500}
                                 />
