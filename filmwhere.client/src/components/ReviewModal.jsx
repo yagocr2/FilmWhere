@@ -20,23 +20,38 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
     const [submitting, setSubmitting] = useState(false);
     const { token } = useAuth();
 
-    // Reset modal state when it opens/closes
+    // Reset modal state when movie ID changes (page change)
+    useEffect(() => {
+        // Reset everything when movie ID changes (navigating to different movie page)
+        setSelectedMovie(null);
+        setStep('search');
+        setSearchQuery('');
+        setSearchResults([]);
+        setRating(0);
+        setHoverRating(0);
+        setComment('');
+        setLoading(false);
+        setSubmitting(false);
+    }, [id]);
+
+    // Set initial state when modal opens
     useEffect(() => {
         if (isOpen) {
             if (currentMovie) {
                 setSelectedMovie(currentMovie);
                 setStep('review');
             } else {
-                setSelectedMovie(null);
-                setStep('search');
-                setSearchQuery('');
-                setSearchResults([]);
+                // Only reset search if we don't have a selected movie already
+                if (!selectedMovie) {
+                    setStep('search');
+                }
             }
+            // Always reset review form fields when modal opens
             setRating(0);
             setHoverRating(0);
             setComment('');
         }
-    }, [isOpen, currentMovie]);
+    }, [isOpen, currentMovie, selectedMovie]);
 
     const handleSearch = async () => {
         if (!searchQuery.trim()) return;
@@ -65,6 +80,10 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
     const handleSelectMovie = (movie) => {
         setSelectedMovie(movie);
         setStep('review');
+        // Reset review form when selecting a new movie
+        setRating(0);
+        setHoverRating(0);
+        setComment('');
     };
 
     const handleSubmitReview = async () => {
@@ -111,6 +130,15 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
         setComment('');
     };
 
+    const handleClose = () => {
+        // Don't reset search state on close, only form state
+        setRating(0);
+        setHoverRating(0);
+        setComment('');
+        setSubmitting(false);
+        onClose();
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -126,7 +154,7 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
                             : `Escribir Reseña sobre ${selectedMovie?.title || ''}`}
                     </h2>
                     <button
-                        onClick={onClose}
+                        onClick={handleClose}
                         className={`p-2 rounded-full transition-colors ${theme === 'dark'
                             ? 'hover:bg-gray-700 text-gray-400 hover:text-white'
                             : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
