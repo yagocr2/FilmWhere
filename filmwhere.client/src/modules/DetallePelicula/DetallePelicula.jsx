@@ -13,8 +13,6 @@ const DetallePelicula = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isFavorite, setIsFavorite] = useState(false);
-    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-
 
     useEffect(() => {
         const fetchMovieData = async () => {

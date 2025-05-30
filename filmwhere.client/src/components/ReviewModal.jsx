@@ -3,9 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { X, Search, Star, Send, Film } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useParams } from 'react-router-dom';
 
 
 const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
+    const { id } = useParams();
     const { theme } = useTheme();
     const [step, setStep] = useState(currentMovie ? 'review' : 'search');
     const [selectedMovie, setSelectedMovie] = useState(currentMovie);
@@ -60,7 +62,7 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
         }
     };
 
-    const handleSelectMovie =  (movie) => {
+    const handleSelectMovie = (movie) => {
         setSelectedMovie(movie);
         setStep('review');
     };
