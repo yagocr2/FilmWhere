@@ -9,6 +9,7 @@ namespace FilmWhere.Models
 			Suscripción, // "sub" en WatchMode
 			Alquiler,    // "rent"
 			Compra,      // "buy"
+			Gratis,      // "free"
 			Otro         // Para tipos no reconocidos
 		}
 		public string Id { get; set; }
@@ -16,9 +17,8 @@ namespace FilmWhere.Models
 		[Required]
 		[MaxLength(100)]
 		public string Nombre { get; set; }  // Ej: Netflix, Disney+
-
 		[MaxLength(200)]
-		public string Enlace { get; set; }  // URL de la plataforma
+		public string? Enlace { get; set; }  // URL de la plataforma
 		public TipoPlataforma Tipo { get; set; }
 
 		// Propiedad de navegación

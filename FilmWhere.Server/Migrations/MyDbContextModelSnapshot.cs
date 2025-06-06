@@ -63,8 +63,13 @@ namespace FilmWhere.Server.Migrations
                     b.Property<int>("IdApiTmdb")
                         .HasColumnType("integer");
 
-                    b.Property<decimal>("Precio")
-                        .HasColumnType("numeric");
+                    b.Property<string>("PosterUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Sinopsis")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Titulo")
                         .IsRequired()
@@ -99,7 +104,10 @@ namespace FilmWhere.Server.Migrations
                     b.Property<string>("PlataformaId")
                         .HasColumnType("text");
 
-                    b.Property<decimal>("Precio")
+                    b.Property<string>("Enlace")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("Precio")
                         .HasColumnType("decimal(5,2)");
 
                     b.HasKey("PeliculaId", "PlataformaId");
@@ -115,7 +123,6 @@ namespace FilmWhere.Server.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Enlace")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
@@ -175,6 +182,11 @@ namespace FilmWhere.Server.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Apellido")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
@@ -186,15 +198,27 @@ namespace FilmWhere.Server.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<DateOnly>("FechaNacimiento")
+                        .HasColumnType("date");
+
                     b.Property<DateTime>("FechaRegistro")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FotoPerfil")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)

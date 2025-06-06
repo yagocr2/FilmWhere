@@ -8,8 +8,9 @@ namespace FilmWhere.Models
 		[Required]
 		[MaxLength(200)]
 		public string Titulo { get; set; }
+		public string Sinopsis { get; set; }
 		public int? Año { get; set; }
-		public decimal Precio { get; set; }
+		public string PosterUrl { get; set; }
 		[Required]
 		public int IdApiTmdb { get; set; }
 
@@ -18,7 +19,6 @@ namespace FilmWhere.Models
 		public ICollection<Reseña> Reseñas { get; set; } = new List<Reseña>();
 		public ICollection<PeliculaGenero> Generos { get; set; } = new List<PeliculaGenero>();
 		public ICollection<PeliculaPlataforma> Plataformas { get; set; } = new List<PeliculaPlataforma>();
-
 
 	}
 }

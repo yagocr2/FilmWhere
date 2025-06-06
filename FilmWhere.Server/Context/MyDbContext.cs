@@ -7,6 +7,7 @@ namespace FilmWhere.Context
 	public class MyDbContext : IdentityDbContext<Usuario>
 	{
 		public DbSet<Usuario> Usuarios { get; set; }
+		public DbSet<UsuarioSeguidor> UsuarioSeguidor { get; set; }
 		public DbSet<Pelicula> Peliculas { get; set; }
 		public DbSet<Reseña> Reseñas { get; set; }
 		public DbSet<Plataforma> Plataformas { get; set; }

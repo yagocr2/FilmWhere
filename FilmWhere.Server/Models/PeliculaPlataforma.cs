@@ -9,7 +9,8 @@ namespace FilmWhere.Models
 		public string PlataformaId { get; set; }
 
 		[Column(TypeName = "decimal(5,2)")]
-		public decimal Precio { get; set; }  // Precio de alquiler/compra
+		public decimal? Precio { get; set; }  // Precio de alquiler/compra
+		public string? Enlace { get; set; }  // URL de la plataforma
 
 		// Propiedades de navegación
 		public Pelicula Pelicula { get; set; }

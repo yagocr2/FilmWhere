@@ -1,3 +1,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    :root {
+        /* Modo claro */
+        --color-primario: #F5F5F5; /* Ej: blanco */
+        --color-secundario: '#A78BFA';
+        --color-destacado: '#2DD4BF';
+        --color-social: '#FF8E8E';
+        --color-texto: '#0F0F15',
+    }
+
+    .dark {
+        /* Modo oscuro */
+        --color-primario: #0F0F15; /* Ej: negro */
+        --color-secundario: #6B47AE; /* Ej: gris oscuro */
+        --color-destacado: #4ECDC4; /* Ej: gris más claro */
+        --color-social: #FF6B6B;
+        --color-texto: #E0E0E0;
+    }
+    
+
+}
+div-titulo {
+    background: linear-gradient(to right, transparent 1000px, var(--color-primario)), /* Right fade */
+    linear-gradient(to left, transparent 1000px, var(--color-primario) 10px, var(--color-primario) 90%, transparent 90%); /* Left fade */
+}

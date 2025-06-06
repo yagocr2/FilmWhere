@@ -1,12 +1,17 @@
 
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text;
+using DotNetEnv;
 using FilmWhere.Context;
 using FilmWhere.Models;
+using FilmWhere.Server.Services;
+using FilmWhere.Server.Services.Local;
 using FilmWhere.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 
 namespace FilmWhere.Server
@@ -15,6 +20,7 @@ namespace FilmWhere.Server
 	{
 		public static void Main(string[] args)
 		{
+			Env.Load();
 			var builder = WebApplication.CreateBuilder(args);
 
 			// Add services to the container.
@@ -25,15 +31,23 @@ namespace FilmWhere.Server
 			//Configuración de la base de datos
 			builder.Services.AddDbContext<MyDbContext>(options =>
 				options.UseNpgsql(builder.Configuration
-					.GetConnectionString("DefaultConnection"))
+					.GetConnectionString("DefaultConnection")
+					//,opt => opt.CommandTimeout(120))
+					)
 			);
-			
+
 			// Configuración de HttpClient para servicios externos
 			ConfigureHttpClients(builder);
-			
+
 			// Servicios personalizados
+			builder.Services.AddScoped<TmdbService>();
+			builder.Services.AddScoped<WatchModeService>();
 			builder.Services.AddScoped<DataSyncService>();
-			
+			builder.Services.AddScoped<PeliculasUtilityService>();
+			builder.Services.Configure<EmailSettings>(
+				builder.Configuration.GetSection("EmailSettings"));
+			builder.Services.AddTransient<IEmailSender, EmailSender>();
+
 			// Identity + JWT
 			ConfigureIdentityAndJwt(builder);
 
@@ -80,32 +94,101 @@ namespace FilmWhere.Server
 		}
 		private static void ConfigureIdentityAndJwt(WebApplicationBuilder builder)
 		{
-			builder.Services.AddIdentity<Usuario, IdentityRole>()
+			builder.Services.AddIdentity<Usuario, IdentityRole>(options =>
+			{
+				// Configuración de usuario
+				options.User.RequireUniqueEmail = true;
+
+				// Configuración de confirmación de email
+				options.SignIn.RequireConfirmedEmail = true;
+
+				// Configuración de tokens
+				options.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
+			})
 				.AddEntityFrameworkStores<MyDbContext>()
 				.AddDefaultTokenProviders();
 
-			var jwtSettings = builder.Configuration.GetSection("Jwt");
-			var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]!);
+			// Get the JWT key from configuration
+			var secretKey = builder.Configuration["Jwt:Key"];
+
+			// Validate that the key exists
+			if (string.IsNullOrEmpty(secretKey))
+			{
+				throw new InvalidOperationException("JWT:Key is not configured. Check your appsettings.json or environment variables.");
+			}
+
+			// Convert the string to bytes properly
+			byte[] key;
+			try
+			{
+				key = Encoding.UTF8.GetBytes(secretKey);
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidOperationException($"Failed to convert JWT key to bytes: {ex.Message}", ex);
+			}
 
 			builder.Services.AddAuthentication(options =>
+			{
+				options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+				options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+			})
+			.AddJwtBearer(options =>
+			{
+				options.TokenValidationParameters = new TokenValidationParameters
 				{
-					options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-					options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-				})
-				.AddJwtBearer(options =>
+					ValidateIssuerSigningKey = true,
+					IssuerSigningKey = new SymmetricSecurityKey(key),
+					ValidateIssuer = true,
+					ValidIssuer = builder.Configuration["Jwt:Issuer"],
+					ValidateAudience = true,
+					ValidAudience = builder.Configuration["Jwt:Audience"],
+					ValidateLifetime = true,
+					ClockSkew = TimeSpan.Zero
+				};
+			});
+		}
+		private static void ConfigurarArchivoEstaticos(WebApplication builder)
+		{
+
+			var webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+			if (!Directory.Exists(webRootPath))
+			{
+				Directory.CreateDirectory(webRootPath);
+				Console.WriteLine($"Directorio wwwroot creado en: {webRootPath}");
+			}
+
+			// Crear directorios para uploads
+			var uploadsPath = Path.Combine(webRootPath, "uploads");
+			var profilePicturesPath = Path.Combine(uploadsPath, "profile-pictures");
+
+			if (!Directory.Exists(uploadsPath))
+			{
+				Directory.CreateDirectory(uploadsPath);
+				Console.WriteLine($"Directorio uploads creado en: {uploadsPath}");
+			}
+
+			if (!Directory.Exists(profilePicturesPath))
+			{
+				Directory.CreateDirectory(profilePicturesPath);
+				Console.WriteLine($"Directorio profile-pictures creado en: {profilePicturesPath}");
+			}
+
+			// Configurar archivos estáticos
+			builder.UseStaticFiles(new StaticFileOptions
+			{
+				FileProvider = new PhysicalFileProvider(webRootPath),
+				RequestPath = "/uploads",
+				OnPrepareResponse = ctx =>
 				{
-					options.TokenValidationParameters = new TokenValidationParameters
+					// Opcional: Configurar headers de cache para imágenes
+					if (ctx.File.Name.EndsWith(".jpg") || ctx.File.Name.EndsWith(".jpeg") ||
+						ctx.File.Name.EndsWith(".png") || ctx.File.Name.EndsWith(".gif"))
 					{
-						ValidateIssuerSigningKey = true,
-						IssuerSigningKey = new SymmetricSecurityKey(key),
-						ValidateIssuer = true,
-						ValidIssuer = jwtSettings["Issuer"],
-						ValidateAudience = true,
-						ValidAudience = jwtSettings["Audience"],
-						ValidateLifetime = true,
-						ClockSkew = TimeSpan.Zero
-					};
-				});
+						ctx.Context.Response.Headers.Append("Cache-Control", "public, max-age=3600");
+					}
+				}
+			});
 		}
 		private static void ConfigureMiddleware(WebApplication app)
 		{
@@ -117,10 +200,12 @@ namespace FilmWhere.Server
 				app.UseSwaggerUI();
 			}
 
+			ConfigurarArchivoEstaticos(app);
+
 			app.UseHttpsRedirection();
 			app.UseStaticFiles();
 
-			app.UseAuthentication(); 
+			app.UseAuthentication();
 			app.UseAuthorization();
 
 			app.MapControllers();

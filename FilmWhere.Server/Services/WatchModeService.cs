@@ -1,5 +1,7 @@
 ﻿using System.Net.Http.Headers;
-using FilmWhere.Models;
+using System.Text.Json;
+using FilmWhere.Server.DTOs;
+using static FilmWhere.Server.DTOs.WatchModeDTO;
 
 namespace FilmWhere.Services
 {
@@ -8,99 +10,110 @@ namespace FilmWhere.Services
 		private readonly HttpClient _httpClient;
 		private readonly string _apiKey;
 		private readonly ILogger<WatchModeService> _logger;
-		private const string BaseUrl = "https://api.watchmode.com/v1/";
+		private readonly JsonSerializerOptions _jsonOptions;
 
-		public WatchModeService(HttpClient httpClient, IConfiguration config,
-			ILogger<WatchModeService> logger)
+		public WatchModeService(HttpClient httpClient, IConfiguration config, ILogger<WatchModeService> logger)
 		{
 			_httpClient = httpClient;
 			_apiKey = config["WatchMode:ApiKey"];
 			_logger = logger;
+			_jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
-			// Configurar cliente
-			_httpClient.BaseAddress = new Uri(BaseUrl);
-			_httpClient.DefaultRequestHeaders.Accept.Add(
-				new MediaTypeWithQualityHeaderValue("application/json"));
+			_httpClient.BaseAddress = new Uri("https://api.watchmode.com/v1/");
+			_httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 		}
 
-		// Plataformas de streaming por ID de TMDB
-		public async Task<List<WatchModePlatform>> GetStreamingSourcesAsync(
-			int tmdbId,
-			string region = "ES")
+		public async Task<List<PlataformaDTO>> GetStreamingSourcesAsync(int tmdbId, string region = "ES")
 		{
 			try
 			{
-				var response = await _httpClient.GetFromJsonAsync<WatchModeSourcesResponse>(
-					$"title/{tmdbId}/sources/?apiKey={_apiKey}&regions={region}");
+				var searchResponse = await GetWatchModeIdAsync(tmdbId);
+				var watchModeId = searchResponse?.Title_Results?.FirstOrDefault()?.Id;
 
-				return response?.Sources
-					.Where(s => s.Type == "sub")
-					.ToList() ?? new List<WatchModePlatform>();
+				if (watchModeId == null) return new List<PlataformaDTO>();
+
+				var sources = await GetSourcesAsync(watchModeId.Value, region);
+				var platforms = ProcessSources(sources);
+
+				_logger.LogInformation("Encontradas {Count} plataformas para TMDB ID: {TmdbId}", platforms.Count, tmdbId);
+				return platforms;
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "Error obteniendo plataformas para ID: {TmdbId}", tmdbId);
-				return new List<WatchModePlatform>();
+				return new List<PlataformaDTO>();
 			}
 		}
 
-		//Precios por plataforma
-		public async Task<decimal?> GetPlatformPricingAsync(string platformName)
+		public async Task<WatchModePlatformDetailsDTO?> GetPlatformDetailsAsync(int platformId)
 		{
 			try
 			{
-				var response = await _httpClient.GetFromJsonAsync<WatchModePricingResponse>(
-					$"source_details/?apiKey={_apiKey}&source={Uri.EscapeDataString(platformName)}");
-
-				return response?.Price;
+				var sources = await GetAllSourcesAsync();
+				return sources.FirstOrDefault(s => s.Id == platformId)?.ToDetails();
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "Error obteniendo precios para: {Platform}", platformName);
+				_logger.LogError(ex, "Error obteniendo detalles para plataforma: {Platform}", platformId);
 				return null;
 			}
 		}
 
-		// Método 3: Disponibilidad global
-		public async Task<WatchModeAvailability> GetGlobalAvailabilityAsync(int tmdbId)
+		public async Task<List<WatchModePlatformDetailsDTO>> GetAvailablePlatformsAsync(string region = "ES")
 		{
 			try
 			{
-				return await _httpClient.GetFromJsonAsync<WatchModeAvailability>(
-					       $"title/{tmdbId}/availability/?apiKey={_apiKey}")
-				       ?? new WatchModeAvailability();
+				var sources = await GetAllSourcesAsync();
+				return sources.Where(s => s.Region == region).Select(s => s.ToDetails()).ToList();
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "Error obteniendo disponibilidad ID: {TmdbId}", tmdbId);
-				return new WatchModeAvailability();
+				_logger.LogError(ex, "Error obteniendo plataformas disponibles para región: {Region}", region);
+				return new List<WatchModePlatformDetailsDTO>();
 			}
 		}
 
-		//DTOs
-		public class WatchModeSourcesResponse
+		private async Task<WatchModeSearchResponseDTO?> GetWatchModeIdAsync(int tmdbId)
 		{
-			public List<WatchModePlatform> Sources { get; set; } = new();
+			return await _httpClient.GetFromJsonAsync<WatchModeSearchResponseDTO>(
+				$"search/?apiKey={_apiKey}&search_field=tmdb_movie_id&search_value={tmdbId}");
 		}
 
-		public class WatchModePlatform
+		private async Task<List<WatchModeSourceDTO>> GetSourcesAsync(int watchModeId, string region)
 		{
-			public string Name { get; set; } = "";
-			public string WebUrl { get; set; } = "";
-			public string Type { get; set; } = "";
+			var response = await _httpClient.GetAsync($"title/{watchModeId}/sources/?apiKey={_apiKey}&regions={region}");
+			var jsonContent = await response.Content.ReadAsStringAsync();
+
+			return JsonSerializer.Deserialize<List<WatchModeSourceDTO>>(jsonContent, _jsonOptions)
+				   ?? new List<WatchModeSourceDTO>();
 		}
 
-		public class WatchModePricingResponse
+		private async Task<List<WatchModePlatformSourceDTO>> GetAllSourcesAsync()
 		{
-			public decimal? Price { get; set; }
+			var response = await _httpClient.GetAsync($"sources/?apiKey={_apiKey}");
+			var jsonContent = await response.Content.ReadAsStringAsync();
+
+			return JsonSerializer.Deserialize<List<WatchModePlatformSourceDTO>>(jsonContent, _jsonOptions)
+				   ?? new List<WatchModePlatformSourceDTO>();
 		}
 
-		public class WatchModeAvailability
+		private List<PlataformaDTO> ProcessSources(List<WatchModeSourceDTO> sources)
 		{
-			public List<string> Countries { get; set; } = new();
-			public DateTime? First_Available { get; set; }
+			return sources
+				.Where(s => !string.IsNullOrEmpty(s.Name))
+				.GroupBy(s => s.Name)
+				.Select(g => g.OrderBy(s => GetTypePriority(s.Type)).First())
+				.Select(s => s.ToPlataformaDTO())
+				.ToList();
 		}
+
+		private static int GetTypePriority(string type) => type switch
+		{
+			"sub" => 1,
+			"free" => 2,
+			"rent" => 3,
+			"buy" => 4,
+			_ => 5
+		};
 	}
-
 }
-

@@ -1,0 +1,10 @@
+
+.carrousel-texto {
+    color: whitesmoke!important;
+    justify-content: center;
+}
+.text-shadow {
+    text-shadow: -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000, 0 -3px 0 #000, 0 3px 0 #000, -3px 0 0 #000, 3px 0 0 #000;
+    -webkit-text-stroke: 10px black;
+    text-stroke: 10px black;
+}

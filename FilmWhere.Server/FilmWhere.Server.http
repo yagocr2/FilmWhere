@@ -2,37 +2,3 @@
 @ContentType = application/json
 @AuthToken = {{login.response.body.token}}
 
-### 1. Registro de usuario
-POST {{FilmWhere.Server_HostAddress}}/api/auth/register
-Content-Type: {{ContentType}}
-
-{
-  "email": "usuario@ejemplo.com",
-  "password": "Pass123!"
-}
-
-### 2. Login de usuario
-POST {{FilmWhere.Server_HostAddress}}/api/auth/login
-Content-Type: {{ContentType}}
-
-{
-  "email": "usuario@ejemplo.com",
-  "password": "Pass123!"
-}
-
-### 3. Obtener perfil de usuario (protegido)
-GET {{FilmWhere.Server_HostAddress}}/api/auth/profile
-Authorization: Bearer {{AuthToken}}
-
-### 4. Ejemplo de endpoint protegido
-GET {{FilmWhere.Server_HostAddress}}/api/peliculas
-Authorization: Bearer {{AuthToken}}
-
-### 5. Sincronización de datos (ejemplo)
-POST {{FilmWhere.Server_HostAddress}}/api/sync/tmdb
-Authorization: Bearer {{AuthToken}}
-Content-Type: {{ContentType}}
-
-{
-  "query": "Avengers"
-}
