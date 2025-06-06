@@ -98,31 +98,29 @@ namespace FilmWhere.Server.Controllers
 		{
 			if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
 			{
-				return BadRequest(new { Message = "Parámetros de confirmación inválidos." });
+				return Redirect("/confirm-email?status=invalid");
 			}
 
 			var user = await _userManager.FindByIdAsync(userId);
 			if (user == null)
 			{
-				return BadRequest(new { Message = "Usuario no encontrado." });
+				return Redirect("/confirm-email?status=user-not-found");
 			}
 
 			if (user.EmailConfirmed)
 			{
-				return Ok(new { Message = "El email ya ha sido confirmado previamente." });
+				return Redirect("/confirm-email?status=already-confirmed");
 			}
 
 			var result = await _userManager.ConfirmEmailAsync(user, token);
 
 			if (result.Succeeded)
 			{
-				return Redirect($"/confirm-email?userId={userId}&token={token}");
-
-				//return Ok(new { Message = "Email confirmado exitosamente. Ya puedes iniciar sesión." });
+				return Redirect("/confirm-email?status=success");
 			}
 			else
 			{
-				return BadRequest(new { Message = "Error al confirmar el email. El token puede haber expirado." });
+				return Redirect("/confirm-email?status=error");
 			}
 		}
 

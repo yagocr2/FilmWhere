@@ -7,7 +7,7 @@ import ScrollVelocity from '../../TextAnimations/ScrollVelocity/ScrollVelocity';
 import { useTheme } from '../../context/ThemeContext';
 import { CheckCircle, XCircle, Mail, ArrowRight } from 'lucide-react';
 
-const EmailConfirmacion = () => {
+const EmailConfirmation = () => {
     const { theme } = useTheme();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -15,6 +15,37 @@ const EmailConfirmacion = () => {
     const [message, setMessage] = useState('');
 
     useEffect(() => {
+        const statusParam = searchParams.get('status');
+
+        // Si viene del backend con un status específico
+        if (statusParam) {
+            switch (statusParam) {
+                case 'success':
+                    setStatus('success');
+                    setMessage('¡Excelente! Tu email ha sido confirmado exitosamente. Ya puedes iniciar sesión en tu cuenta.');
+                    break;
+                case 'already-confirmed':
+                    setStatus('already-confirmed');
+                    setMessage('Tu email ya había sido confirmado anteriormente. Puedes iniciar sesión normalmente.');
+                    break;
+                case 'invalid':
+                    setStatus('error');
+                    setMessage('Enlace de confirmación inválido. Faltan parámetros necesarios.');
+                    break;
+                case 'user-not-found':
+                    setStatus('error');
+                    setMessage('Usuario no encontrado. El enlace puede ser inválido.');
+                    break;
+                case 'error':
+                default:
+                    setStatus('error');
+                    setMessage('Error al confirmar el email. El enlace puede haber expirado.');
+                    break;
+            }
+            return;
+        }
+
+        // Lógica original para cuando se accede directamente con userId y token
         const confirmEmail = async () => {
             const userId = searchParams.get('userId');
             const token = searchParams.get('token');
@@ -193,4 +224,4 @@ const EmailConfirmacion = () => {
     );
 };
 
-export default EmailConfirmacion;
+export default EmailConfirmation;
