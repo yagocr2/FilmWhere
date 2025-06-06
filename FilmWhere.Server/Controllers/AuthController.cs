@@ -10,6 +10,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using FilmWhere.Server.Services;
+using Sprache;
 
 namespace FilmWhere.Server.Controllers
 {
@@ -62,6 +63,8 @@ namespace FilmWhere.Server.Controllers
 				FechaNacimiento = model.FechaNacimiento
 			};
 
+			await _userManager.AddToRoleAsync(user, "Registrado");
+
 			var result = await _userManager.CreateAsync(user, model.Password);
 
 			if (!result.Succeeded)
@@ -74,11 +77,8 @@ namespace FilmWhere.Server.Controllers
 			var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
 			// Crear URL de confirmación
-			var confirmationUrl = Url.Action(
-				"ConfirmEmail",
-				"Auth",
-				new { userId = user.Id, token = token },
-				Request.Scheme);
+			var frontendBaseUrl = _configuration["Frontend:BaseUrl"];
+			var confirmationUrl = $"{frontendBaseUrl}/api/Auth/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
 
 			// Enviar email de confirmación
 			await _emailSender.SendEmailAsync(
@@ -147,11 +147,9 @@ namespace FilmWhere.Server.Controllers
 			// Generar nuevo token de confirmación
 			var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
-			var confirmationUrl = Url.Action(
-				"ConfirmEmail",
-				"Auth",
-				new { userId = user.Id, token = token },
-				Request.Scheme);
+			var frontendBaseUrl = _configuration["Frontend:BaseUrl"];
+			var confirmationUrl = $"{frontendBaseUrl}/api/Auth/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+
 
 			await _emailSender.SendEmailAsync(
 				user.Email,
@@ -181,6 +179,10 @@ namespace FilmWhere.Server.Controllers
 				return Unauthorized(new { Message = "Credenciales inválidas" });
 			}
 
+			if (!await _userManager.IsLockedOutAsync(user))
+			{
+				return Unauthorized(new { Message = "Tu cuenta está bloqueada. Por favor, contacta con el soporte." });
+			}
 			// Verificar si el email está confirmado
 			if (!await _userManager.IsEmailConfirmedAsync(user))
 			{
@@ -191,7 +193,6 @@ namespace FilmWhere.Server.Controllers
 					Email = user.Email
 				});
 			}
-
 			if (!await _userManager.CheckPasswordAsync(user, model.Password))
 			{
 				return Unauthorized(new { Message = "La contraseña es incorrecta" });

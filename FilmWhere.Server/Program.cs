@@ -104,6 +104,9 @@ namespace FilmWhere.Server
 
 				// Configuración de tokens
 				options.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
+				// Configuración de lockout
+				options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
+				options.Lockout.MaxFailedAccessAttempts = 5;
 			})
 				.AddEntityFrameworkStores<MyDbContext>()
 				.AddDefaultTokenProviders();

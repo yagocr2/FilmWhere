@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+锘縤mport { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import LiquidChrome from '../../Backgrounds/LiquidChrome/LiquidChrome';
 import FadeContent from '../../Animations/FadeContent/FadeContent';
@@ -17,24 +17,24 @@ const EmailConfirmation = () => {
     useEffect(() => {
         const statusParam = searchParams.get('status');
 
-        // Si viene del backend con un status espec韋ico
+        // Si viene del backend con un status espec铆fico
         if (statusParam) {
             switch (statusParam) {
                 case 'success':
                     setStatus('success');
-                    setMessage('xcelente! Tu email ha sido confirmado exitosamente. Ya puedes iniciar sesi髇 en tu cuenta.');
+                    setMessage('隆Excelente! Tu email ha sido confirmado exitosamente. Ya puedes iniciar sesi贸n en tu cuenta.');
                     break;
                 case 'already-confirmed':
                     setStatus('already-confirmed');
-                    setMessage('Tu email ya hab韆 sido confirmado anteriormente. Puedes iniciar sesi髇 normalmente.');
+                    setMessage('Tu email ya hab铆a sido confirmado anteriormente. Puedes iniciar sesi贸n normalmente.');
                     break;
                 case 'invalid':
                     setStatus('error');
-                    setMessage('Enlace de confirmaci髇 inv醠ido. Faltan par醡etros necesarios.');
+                    setMessage('Enlace de confirmaci贸n inv谩lido. Faltan par谩metros necesarios.');
                     break;
                 case 'user-not-found':
                     setStatus('error');
-                    setMessage('Usuario no encontrado. El enlace puede ser inv醠ido.');
+                    setMessage('Usuario no encontrado. El enlace puede ser inv谩lido.');
                     break;
                 case 'error':
                 default:
@@ -45,14 +45,14 @@ const EmailConfirmation = () => {
             return;
         }
 
-        // L骻ica original para cuando se accede directamente con userId y token
+        // L贸gica original para cuando se accede directamente con userId y token
         const confirmEmail = async () => {
             const userId = searchParams.get('userId');
             const token = searchParams.get('token');
 
             if (!userId || !token) {
                 setStatus('error');
-                setMessage('Enlace de confirmaci髇 inv醠ido. Faltan par醡etros necesarios.');
+                setMessage('Enlace de confirmaci贸n inv谩lido. Faltan par谩metros necesarios.');
                 return;
             }
 
@@ -69,10 +69,10 @@ const EmailConfirmation = () => {
                 if (response.ok) {
                     if (data.message && data.message.includes('ya ha sido confirmado')) {
                         setStatus('already-confirmed');
-                        setMessage('Tu email ya hab韆 sido confirmado anteriormente. Puedes iniciar sesi髇 normalmente.');
+                        setMessage('Tu email ya hab铆a sido confirmado anteriormente. Puedes iniciar sesi贸n normalmente.');
                     } else {
                         setStatus('success');
-                        setMessage('xcelente! Tu email ha sido confirmado exitosamente. Ya puedes iniciar sesi髇 en tu cuenta.');
+                        setMessage('隆Excelente! Tu email ha sido confirmado exitosamente. Ya puedes iniciar sesi贸n en tu cuenta.');
                     }
                 } else {
                     setStatus('error');
@@ -80,7 +80,7 @@ const EmailConfirmation = () => {
                 }
             } catch (error) {
                 setStatus('error');
-                setMessage('Error de conexi髇. Por favor intenta m醩 tarde.');
+                setMessage('Error de conexi贸n. Por favor intenta m谩s tarde.');
             }
         };
 
@@ -129,7 +129,7 @@ const EmailConfirmation = () => {
             case 'already-confirmed':
                 return 'Email Ya Confirmado';
             case 'error':
-                return 'Error de Confirmaci髇';
+                return 'Error de Confirmaci贸n';
             case 'loading':
             default:
                 return 'Confirmando Email';
@@ -178,7 +178,7 @@ const EmailConfirmation = () => {
                                     onClick={handleLoginRedirect}
                                     className={`w-full transform rounded-lg ${theme === 'dark' ? 'bg-primario text-texto' : 'bg-primario-dark text-texto-dark'} p-3 text-center font-bold transition duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center gap-2`}
                                 >
-                                    Iniciar Sesi髇
+                                    Iniciar Sesi贸n
                                     <ArrowRight className="h-5 w-5" />
                                 </button>
                             </ClickSpark>
@@ -196,7 +196,7 @@ const EmailConfirmation = () => {
 
                                 <Link to="/login">
                                     <button className={`w-full rounded-lg border-2 ${theme === 'dark' ? 'border-primario text-primario hover:bg-primario hover:text-texto' : 'border-primario-dark text-primario-dark hover:bg-primario-dark hover:text-texto-dark'} p-3 text-center font-bold transition duration-300`}>
-                                        Ir a Iniciar Sesi髇
+                                        Ir a Iniciar Sesi贸n
                                     </button>
                                 </Link>
                             </div>
@@ -207,7 +207,7 @@ const EmailConfirmation = () => {
                     {status === 'loading' && (
                         <div className="text-center">
                             <p className={`text-sm ${textColorClass}`}>
-                                Procesando tu confirmaci髇, por favor espera...
+                                Procesando tu confirmaci贸n, por favor espera...
                             </p>
                         </div>
                     )}
@@ -215,7 +215,7 @@ const EmailConfirmation = () => {
                     {/* Back to home link */}
                     <div className="mt-6 text-center">
                         <Link to="/" className={`text-sm ${textColorClass} hover:underline`}>
-                            Volver a la p醙ina de inicio
+                            Volver a la p谩gina de inicio
                         </Link>
                     </div>
                 </div>
