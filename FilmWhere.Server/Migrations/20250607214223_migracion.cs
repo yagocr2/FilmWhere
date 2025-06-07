@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FilmWhere.Server.Migrations
 {
     /// <inheritdoc />
-    public partial class migracion1 : Migration
+    public partial class migracion : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,7 +32,11 @@ namespace FilmWhere.Server.Migrations
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    Nombre = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Apellido = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    FechaNacimiento = table.Column<DateOnly>(type: "date", nullable: false),
                     FechaRegistro = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    FotoPerfil = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedEmail = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
@@ -70,8 +74,9 @@ namespace FilmWhere.Server.Migrations
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
                     Titulo = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Sinopsis = table.Column<string>(type: "text", nullable: false),
                     Año = table.Column<int>(type: "integer", nullable: true),
-                    Precio = table.Column<decimal>(type: "numeric", nullable: false),
+                    PosterUrl = table.Column<string>(type: "text", nullable: false),
                     IdApiTmdb = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
@@ -85,7 +90,7 @@ namespace FilmWhere.Server.Migrations
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
                     Nombre = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Enlace = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Enlace = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     Tipo = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
@@ -305,7 +310,8 @@ namespace FilmWhere.Server.Migrations
                 {
                     PeliculaId = table.Column<string>(type: "text", nullable: false),
                     PlataformaId = table.Column<string>(type: "text", nullable: false),
-                    Precio = table.Column<decimal>(type: "numeric(5,2)", nullable: false)
+                    Precio = table.Column<decimal>(type: "numeric(5,2)", nullable: true),
+                    Enlace = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {

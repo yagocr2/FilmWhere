@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FilmWhere.Server.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20250529123228_fechas2")]
-    partial class fechas2
+    [Migration("20250607214223_migracion")]
+    partial class migracion
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -70,8 +70,9 @@ namespace FilmWhere.Server.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<decimal>("Precio")
-                        .HasColumnType("numeric");
+                    b.Property<string>("Sinopsis")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Titulo")
                         .IsRequired()
@@ -106,7 +107,10 @@ namespace FilmWhere.Server.Migrations
                     b.Property<string>("PlataformaId")
                         .HasColumnType("text");
 
-                    b.Property<decimal>("Precio")
+                    b.Property<string>("Enlace")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("Precio")
                         .HasColumnType("decimal(5,2)");
 
                     b.HasKey("PeliculaId", "PlataformaId");
@@ -122,7 +126,6 @@ namespace FilmWhere.Server.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Enlace")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
@@ -198,12 +201,16 @@ namespace FilmWhere.Server.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime>("FechaNacimiento")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<DateOnly>("FechaNacimiento")
+                        .HasColumnType("date");
 
                     b.Property<DateTime>("FechaRegistro")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FotoPerfil")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");

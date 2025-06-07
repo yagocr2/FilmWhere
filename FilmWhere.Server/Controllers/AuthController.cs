@@ -35,62 +35,74 @@ namespace FilmWhere.Server.Controllers
 		[HttpPost("register")]
 		public async Task<IActionResult> Register([FromBody] RegisterModel model)
 		{
-			if (!ModelState.IsValid)
+			try
 			{
-				var errors = ModelState.Values
-					.SelectMany(v => v.Errors)
-					.Select(e => e.ErrorMessage)
-					.ToList();
-				return BadRequest(new { Errors = errors });
+
+				if (!ModelState.IsValid)
+				{
+					var errors = ModelState.Values
+						.SelectMany(v => v.Errors)
+						.Select(e => e.ErrorMessage)
+						.ToList();
+					return BadRequest(new { Errors = errors });
+				}
+
+				// Validación personalizada de contraseña
+				var passwordValidator = new PasswordValidator<Usuario>();
+				var passwordResult = await passwordValidator.ValidateAsync(_userManager, null, model.Password);
+
+				if (!passwordResult.Succeeded)
+				{
+					var errorMessages = passwordResult.Errors.Select(e => FormatPasswordError(e.Description)).ToList();
+					return BadRequest(new { Errors = errorMessages });
+				}
+
+				var user = new Usuario
+				{
+					UserName = model.UserName,
+					Nombre = model.Nombre,
+					Apellido = model.Apellidos,
+					Email = model.Email,
+					FechaNacimiento = model.FechaNacimiento
+				};
+
+				var result = await _userManager.CreateAsync(user, model.Password);
+
+
+				if (!result.Succeeded)
+				{
+					var errorMessages = result.Errors.Select(e => FormatIdentityError(e.Description)).ToList();
+					return BadRequest(new { Errors = errorMessages });
+				}
+				await _userManager.SetLockoutEnabledAsync(user, false);
+				await _userManager.AddToRoleAsync(user, "Registrado");
+
+				// Generar token de confirmación de email
+				var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+				// Crear URL de confirmación
+				var frontendBaseUrl = _configuration["Frontend:BaseUrl"];
+				var confirmationUrl = $"{frontendBaseUrl}/api/Auth/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+
+				// Enviar email de confirmación
+				await _emailSender.SendEmailAsync(
+					user.Email,
+					"Confirma tu cuenta - FilmWhere",
+					$"Por favor confirma tu cuenta haciendo clic en este enlace: <a href='{HtmlEncoder.Default.Encode(confirmationUrl)}'>Confirmar Email</a>");
+
+				return Ok(new
+				{
+					Message = "Registro exitoso. Por favor revisa tu email para confirmar tu cuenta.",
+					RequiresEmailConfirmation = true
+				});
 			}
-
-			// Validación personalizada de contraseña
-			var passwordValidator = new PasswordValidator<Usuario>();
-			var passwordResult = await passwordValidator.ValidateAsync(_userManager, null, model.Password);
-
-			if (!passwordResult.Succeeded)
+			catch (Exception ex)
 			{
-				var errorMessages = passwordResult.Errors.Select(e => FormatPasswordError(e.Description)).ToList();
-				return BadRequest(new { Errors = errorMessages });
+				return BadRequest(new
+				{
+					Message = "Registro invalido."
+				});
 			}
-
-			var user = new Usuario
-			{
-				UserName = model.UserName,
-				Nombre = model.Nombre,
-				Apellido = model.Apellidos,
-				Email = model.Email,
-				FechaNacimiento = model.FechaNacimiento
-			};
-
-			await _userManager.AddToRoleAsync(user, "Registrado");
-
-			var result = await _userManager.CreateAsync(user, model.Password);
-
-			if (!result.Succeeded)
-			{
-				var errorMessages = result.Errors.Select(e => FormatIdentityError(e.Description)).ToList();
-				return BadRequest(new { Errors = errorMessages });
-			}
-
-			// Generar token de confirmación de email
-			var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-			// Crear URL de confirmación
-			var frontendBaseUrl = _configuration["Frontend:BaseUrl"];
-			var confirmationUrl = $"{frontendBaseUrl}/api/Auth/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
-
-			// Enviar email de confirmación
-			await _emailSender.SendEmailAsync(
-				user.Email,
-				"Confirma tu cuenta - FilmWhere",
-				$"Por favor confirma tu cuenta haciendo clic en este enlace: <a href='{HtmlEncoder.Default.Encode(confirmationUrl)}'>Confirmar Email</a>");
-
-			return Ok(new
-			{
-				Message = "Registro exitoso. Por favor revisa tu email para confirmar tu cuenta.",
-				RequiresEmailConfirmation = true
-			});
 		}
 
 		[HttpGet("confirm-email")]
@@ -179,7 +191,7 @@ namespace FilmWhere.Server.Controllers
 				return Unauthorized(new { Message = "Credenciales inválidas" });
 			}
 
-			if (!await _userManager.IsLockedOutAsync(user))
+			if (await _userManager.IsLockedOutAsync(user))
 			{
 				return Unauthorized(new { Message = "Tu cuenta está bloqueada. Por favor, contacta con el soporte." });
 			}

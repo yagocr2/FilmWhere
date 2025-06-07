@@ -1,4 +1,4 @@
-
+Ôªø
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
@@ -18,7 +18,7 @@ namespace FilmWhere.Server
 {
 	public class Program
 	{
-		public static void Main(string[] args)
+		public static async Task Main(string[] args)
 		{
 			Env.Load();
 			var builder = WebApplication.CreateBuilder(args);
@@ -28,7 +28,7 @@ namespace FilmWhere.Server
 			builder.Services.AddEndpointsApiExplorer();
 			builder.Services.AddSwaggerGen();
 
-			//ConfiguraciÛn de la base de datos
+			//Configuraci√≥n de la base de datos
 			builder.Services.AddDbContext<MyDbContext>(options =>
 				options.UseNpgsql(builder.Configuration
 					.GetConnectionString("DefaultConnection")
@@ -36,7 +36,7 @@ namespace FilmWhere.Server
 					)
 			);
 
-			// ConfiguraciÛn de HttpClient para servicios externos
+			// Configuraci√≥n de HttpClient para servicios externos
 			ConfigureHttpClients(builder);
 
 			// Servicios personalizados
@@ -44,14 +44,16 @@ namespace FilmWhere.Server
 			builder.Services.AddScoped<WatchModeService>();
 			builder.Services.AddScoped<DataSyncService>();
 			builder.Services.AddScoped<PeliculasUtilityService>();
+			builder.Services.AddScoped<InicializadorRoles>();
 			builder.Services.Configure<EmailSettings>(
 				builder.Configuration.GetSection("EmailSettings"));
 			builder.Services.AddTransient<IEmailSender, EmailSender>();
 
+
 			// Identity + JWT
 			ConfigureIdentityAndJwt(builder);
 
-			// ConfiguraciÛn de CORS
+			// Configuraci√≥n de CORS
 			builder.Services.AddCors(options =>
 			{
 				options.AddPolicy("ReactPolicy", policy =>
@@ -68,13 +70,15 @@ namespace FilmWhere.Server
 
 			var app = builder.Build();
 
+			await InitializeApplicationAsync(app);
+
 			ConfigureMiddleware(app);
 
 			app.Run();
 		}
 		private static void ConfigureHttpClients(WebApplicationBuilder builder)
 		{
-			// ConfiguraciÛn para TMDB
+			// Configuraci√≥n para TMDB
 			builder.Services.AddHttpClient<TmdbService>(client =>
 			{
 				client.BaseAddress = new Uri("https://api.themoviedb.org/3/");
@@ -84,7 +88,7 @@ namespace FilmWhere.Server
 					new AuthenticationHeaderValue("Bearer", builder.Configuration["Tmdb:ApiKey"]);
 			});
 
-			// ConfiguraciÛn para WatchMode
+			// Configuraci√≥n para WatchMode
 			builder.Services.AddHttpClient<WatchModeService>(client =>
 			{
 				client.BaseAddress = new Uri("https://api.watchmode.com/v1/");
@@ -96,15 +100,15 @@ namespace FilmWhere.Server
 		{
 			builder.Services.AddIdentity<Usuario, IdentityRole>(options =>
 			{
-				// ConfiguraciÛn de usuario
+				// Configuraci√≥n de usuario
 				options.User.RequireUniqueEmail = true;
 
-				// ConfiguraciÛn de confirmaciÛn de email
+				// Configuraci√≥n de confirmaci√≥n de email
 				options.SignIn.RequireConfirmedEmail = true;
 
-				// ConfiguraciÛn de tokens
+				// Configuraci√≥n de tokens
 				options.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
-				// ConfiguraciÛn de lockout
+				// Configuraci√≥n de lockout
 				options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
 				options.Lockout.MaxFailedAccessAttempts = 5;
 			})
@@ -177,14 +181,14 @@ namespace FilmWhere.Server
 				Console.WriteLine($"Directorio profile-pictures creado en: {profilePicturesPath}");
 			}
 
-			// Configurar archivos est·ticos
+			// Configurar archivos est√°ticos
 			builder.UseStaticFiles(new StaticFileOptions
 			{
 				FileProvider = new PhysicalFileProvider(webRootPath),
 				RequestPath = "/uploads",
 				OnPrepareResponse = ctx =>
 				{
-					// Opcional: Configurar headers de cache para im·genes
+					// Opcional: Configurar headers de cache para im√°genes
 					if (ctx.File.Name.EndsWith(".jpg") || ctx.File.Name.EndsWith(".jpeg") ||
 						ctx.File.Name.EndsWith(".png") || ctx.File.Name.EndsWith(".gif"))
 					{
@@ -192,6 +196,41 @@ namespace FilmWhere.Server
 					}
 				}
 			});
+		}
+		private static async Task InicarRoles(RoleManager<IdentityRole> roleManager)
+		{
+			string[] roleNames = { "Administrador", "Registrado" };
+
+			foreach (var roleName in roleNames)
+			{
+				if (!await roleManager.RoleExistsAsync(roleName))
+				{
+					var result = await roleManager.CreateAsync(new IdentityRole(roleName));
+
+				}
+			}
+		}
+		private static async Task InitializeApplicationAsync(WebApplication app)
+		{
+			using var scope = app.Services.CreateScope();
+			var services = scope.ServiceProvider;
+
+			try
+			{
+				// Aplicar migraciones pendientes
+				var context = services.GetRequiredService<MyDbContext>();
+				await context.Database.MigrateAsync();
+
+				// Inicializar roles
+				var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+				await InicarRoles(roleManager);
+			}
+			catch (Exception ex)
+			{
+				var logger = services.GetRequiredService<ILogger<Program>>();
+				logger.LogError(ex, "Error durante la inicializaci√≥n de la aplicaci√≥n");
+				throw;
+			}
 		}
 		private static void ConfigureMiddleware(WebApplication app)
 		{
@@ -202,7 +241,6 @@ namespace FilmWhere.Server
 				app.UseSwagger();
 				app.UseSwaggerUI();
 			}
-
 			ConfigurarArchivoEstaticos(app);
 
 			app.UseHttpsRedirection();
