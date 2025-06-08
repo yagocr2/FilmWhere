@@ -96,7 +96,7 @@ export const useAdminRoles = () => {
         if (!response.ok) throw new Error('Error al actualizar el rol');
         await fetchRoles();
     };
-
+    
     const deleteRole = async (roleId) => {
         const token = localStorage.getItem('token');
         const response = await fetch(`/api/admin/roles/${roleId}`, {
@@ -179,7 +179,32 @@ export const useAdminUsers = () => {
         if (!response.ok) throw new Error('Error al cargar usuario');
         return await response.json();
     };
+    const createUser = async (userData) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/admin/usuarios', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+        });
 
+        if (!response.ok) throw new Error('Error al crear usuario');
+        await fetchUsuarios();
+    };
+    const deleteUser = async (userId) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/admin/usuarios/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) throw new Error('Error al eliminar usuario');
+        return await response.json();
+    }
     const toggleUserBlock = async (userId, isBlocked) => {
         const token = localStorage.getItem('token');
         const endpoint = isBlocked ? 'desbloquear' : 'bloquear';
@@ -244,7 +269,9 @@ export const useAdminUsers = () => {
         handleSearch,
         handlePageChange,
         handlePageSizeChange,
-        refetch: fetchUsuarios
+        refetch: fetchUsuarios,
+        deleteUser,
+        createUser
     };
 };
 

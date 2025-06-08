@@ -1,5 +1,8 @@
-﻿import React from 'react';
-import { Users, UserPlus, Eye, Lock, Unlock, MailCheck, Shield, Calendar } from 'lucide-react';
+﻿import React, { useState } from 'react';
+import {
+    Users, UserPlus, Eye, Lock, Unlock, MailCheck, Shield, Calendar,
+    Trash2, Save, X, AlertTriangle
+} from 'lucide-react';
 import {
     PageHeader,
     SearchBar,
@@ -24,6 +27,8 @@ const AdminUsuarios = () => {
         fetchUserById,
         toggleUserBlock,
         confirmUserEmail,
+        createUser,
+        deleteUser,
         handleSearch,
         handlePageChange,
         handlePageSizeChange,
@@ -32,6 +37,118 @@ const AdminUsuarios = () => {
 
     const { showModal, modalType, modalData, openModal, closeModal } = useModal();
     const { cardBgClass, textClass, textSecondaryClass, inputBgClass, borderClass } = useAdminTheme();
+
+    // Estado para el formulario de creación
+    const [createFormData, setCreateFormData] = useState({
+        userName: '',
+        email: '',
+        password: '',
+        nombre: '',
+        apellido: '',
+        fechaNacimiento: '',
+        emailConfirmed: false,
+        roles: []
+    });
+
+    const [formErrors, setFormErrors] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Roles disponibles (esto debería venir de un endpoint)
+    const availableRoles = ['Registrado', 'Administrador', 'Moderador'];
+
+    const resetCreateForm = () => {
+        setCreateFormData({
+            userName: '',
+            email: '',
+            password: '',
+            nombre: '',
+            apellido: '',
+            fechaNacimiento: '',
+            emailConfirmed: false,
+            roles: []
+        });
+        setFormErrors({});
+    };
+
+    const validateCreateForm = () => {
+        const errors = {};
+
+        if (!createFormData.userName.trim()) {
+            errors.userName = 'El nombre de usuario es obligatorio';
+        } else if (createFormData.userName.length < 2) {
+            errors.userName = 'El nombre de usuario debe tener al menos 2 caracteres';
+        }
+
+        if (!createFormData.email.trim()) {
+            errors.email = 'El email es obligatorio';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(createFormData.email)) {
+            errors.email = 'El formato del email no es válido';
+        }
+
+        if (!createFormData.password.trim()) {
+            errors.password = 'La contraseña es obligatoria';
+        } else if (createFormData.password.length < 6) {
+            errors.password = 'La contraseña debe tener al menos 6 caracteres';
+        }
+
+        if (!createFormData.nombre.trim()) {
+            errors.nombre = 'El nombre es obligatorio';
+        }
+
+        if (!createFormData.apellido.trim()) {
+            errors.apellido = 'El apellido es obligatorio';
+        }
+
+        if (!createFormData.fechaNacimiento) {
+            errors.fechaNacimiento = 'La fecha de nacimiento es obligatoria';
+        } else {
+            const birthDate = new Date(createFormData.fechaNacimiento);
+            const today = new Date();
+            const age = today.getFullYear() - birthDate.getFullYear();
+            if (age < 13) {
+                errors.fechaNacimiento = 'Debe ser mayor de 13 años';
+            }
+        }
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    const handleCreateUser = async (e) => {
+        e.preventDefault();
+
+        if (!validateCreateForm()) {
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            // Convertir fecha al formato esperado por el backend
+            const formattedData = {
+                ...createFormData,
+                fechaNacimiento: createFormData.fechaNacimiento
+            };
+
+            await createUser(formattedData);
+            resetCreateForm();
+            closeModal();
+            refetch();
+        } catch (error) {
+            console.error('Error creating user:', error);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDeleteUser = async (userId, userName) => {
+        try {
+            await deleteUser(userId);
+            closeModal();
+            refetch();
+        } catch (error) {
+            console.error('Error deleting user:', error);
+        }
+    };
 
     const handleViewUser = async (userId) => {
         try {
@@ -42,6 +159,192 @@ const AdminUsuarios = () => {
         }
     };
 
+    const handleRoleChange = (role, checked) => {
+        setCreateFormData(prev => ({
+            ...prev,
+            roles: checked
+                ? [...prev.roles, role]
+                : prev.roles.filter(r => r !== role)
+        }));
+    };
+
+    // Modal para crear usuario
+    const CreateUserModal = () => {
+        if (!showModal || modalType !== 'create') return null;
+
+        return (
+            <Modal
+                show={showModal}
+                onClose={() => {
+                    resetCreateForm();
+                    closeModal();
+                }}
+                title="Crear Nuevo Usuario"
+                icon={<UserPlus />}
+                size="max-w-2xl"
+            >
+                <form onSubmit={handleCreateUser} className="space-y-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                            <label className={`${textClass} block text-sm font-medium mb-1`}>
+                                Nombre de usuario *
+                            </label>
+                            <input
+                                type="text"
+                                value={createFormData.userName}
+                                onChange={(e) => setCreateFormData(prev => ({ ...prev, userName: e.target.value }))}
+                                className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.userName ? 'border-red-500' : ''
+                                    }`}
+                                placeholder="Ingrese nombre de usuario"
+                            />
+                            {formErrors.userName && (
+                                <p className="mt-1 text-sm text-red-500">{formErrors.userName}</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className={`${textClass} block text-sm font-medium mb-1`}>
+                                Email *
+                            </label>
+                            <input
+                                type="email"
+                                value={createFormData.email}
+                                onChange={(e) => setCreateFormData(prev => ({ ...prev, email: e.target.value }))}
+                                className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.email ? 'border-red-500' : ''
+                                    }`}
+                                placeholder="usuario@ejemplo.com"
+                            />
+                            {formErrors.email && (
+                                <p className="mt-1 text-sm text-red-500">{formErrors.email}</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className={`${textClass} block text-sm font-medium mb-1`}>
+                                Contraseña *
+                            </label>
+                            <input
+                                type="password"
+                                value={createFormData.password}
+                                onChange={(e) => setCreateFormData(prev => ({ ...prev, password: e.target.value }))}
+                                className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.password ? 'border-red-500' : ''
+                                    }`}
+                                placeholder="Mínimo 6 caracteres"
+                            />
+                            {formErrors.password && (
+                                <p className="mt-1 text-sm text-red-500">{formErrors.password}</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className={`${textClass} block text-sm font-medium mb-1`}>
+                                Fecha de Nacimiento *
+                            </label>
+                            <input
+                                type="date"
+                                value={createFormData.fechaNacimiento}
+                                onChange={(e) => setCreateFormData(prev => ({ ...prev, fechaNacimiento: e.target.value }))}
+                                className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.fechaNacimiento ? 'border-red-500' : ''
+                                    }`}
+                            />
+                            {formErrors.fechaNacimiento && (
+                                <p className="mt-1 text-sm text-red-500">{formErrors.fechaNacimiento}</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className={`${textClass} block text-sm font-medium mb-1`}>
+                                Nombre *
+                            </label>
+                            <input
+                                type="text"
+                                value={createFormData.nombre}
+                                onChange={(e) => setCreateFormData(prev => ({ ...prev, nombre: e.target.value }))}
+                                className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.nombre ? 'border-red-500' : ''
+                                    }`}
+                                placeholder="Ingrese nombre"
+                            />
+                            {formErrors.nombre && (
+                                <p className="mt-1 text-sm text-red-500">{formErrors.nombre}</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className={`${textClass} block text-sm font-medium mb-1`}>
+                                Apellido *
+                            </label>
+                            <input
+                                type="text"
+                                value={createFormData.apellido}
+                                onChange={(e) => setCreateFormData(prev => ({ ...prev, apellido: e.target.value }))}
+                                className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.apellido ? 'border-red-500' : ''
+                                    }`}
+                                placeholder="Ingrese apellido"
+                            />
+                            {formErrors.apellido && (
+                                <p className="mt-1 text-sm text-red-500">{formErrors.apellido}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className={`${textClass} block text-sm font-medium mb-2`}>
+                            Roles
+                        </label>
+                        <div className="space-y-2">
+                            {availableRoles.map((role) => (
+                                <label key={role} className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={createFormData.roles.includes(role)}
+                                        onChange={(e) => handleRoleChange(role, e.target.checked)}
+                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                    />
+                                    <span className={`${textClass} ml-2 text-sm`}>{role}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="flex items-center">
+                            <input
+                                type="checkbox"
+                                checked={createFormData.emailConfirmed}
+                                onChange={(e) => setCreateFormData(prev => ({ ...prev, emailConfirmed: e.target.checked }))}
+                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                            />
+                            <span className={`${textClass} ml-2 text-sm`}>Email confirmado</span>
+                        </label>
+                    </div>
+
+                    <div className="flex justify-end space-x-3 border-t border-gray-200 pt-6">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                resetCreateForm();
+                                closeModal();
+                            }}
+                            className={`px-4 py-2 rounded-lg ${inputBgClass} ${textClass} hover:bg-gray-200 transition-colors`}
+                            disabled={isSubmitting}
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="flex items-center space-x-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                        >
+                            <Save size={16} />
+                            <span>{isSubmitting ? 'Creando...' : 'Crear Usuario'}</span>
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+        );
+    };
+
+    // Modal para ver usuario
     const UserModal = () => {
         if (!showModal || modalType !== 'view' || !modalData) return null;
 
@@ -132,6 +435,46 @@ const AdminUsuarios = () => {
                     >
                         Cerrar
                     </button>
+                </div>
+            </Modal>
+        );
+    };
+
+    // Modal para confirmar eliminación
+    const DeleteConfirmModal = () => {
+        if (!showModal || modalType !== 'delete' || !modalData) return null;
+
+        return (
+            <Modal
+                show={showModal}
+                onClose={closeModal}
+                title="Confirmar Eliminación"
+                icon={<AlertTriangle />}
+                size="max-w-md"
+            >
+                <div>
+                    <div className="mb-4 flex items-center text-red-600">
+                        <AlertTriangle className="mr-2" size={24} />
+                        <span className="text-lg font-medium">¿Confirmar eliminación?</span>
+                    </div>
+                    <p className={`${textSecondaryClass} mb-6`}>
+                        ¿Estás seguro de que deseas eliminar al usuario "{modalData.userName}"?
+                        Esta acción no se puede deshacer y se eliminarán todos los datos asociados.
+                    </p>
+                    <div className="flex justify-end space-x-3">
+                        <button
+                            onClick={closeModal}
+                            className={`px-4 py-2 rounded-lg ${inputBgClass} ${textClass} hover:bg-gray-200 transition-colors`}
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            onClick={() => handleDeleteUser(modalData.id, modalData.userName)}
+                            className="rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
+                        >
+                            Eliminar
+                        </button>
+                    </div>
                 </div>
             </Modal>
         );
@@ -235,6 +578,13 @@ const AdminUsuarios = () => {
                                     >
                                         {user.activo ? <Lock size={16} /> : <Unlock size={16} />}
                                     </button>
+                                    <button
+                                        onClick={() => openModal('delete', user)}
+                                        className="text-red-600 hover:text-red-900 transition-colors"
+                                        title="Eliminar usuario"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -314,7 +664,9 @@ const AdminUsuarios = () => {
                 )}
             </div>
 
+            <CreateUserModal />
             <UserModal />
+            <DeleteConfirmModal />
         </div>
     );
 };
