@@ -39,49 +39,57 @@ namespace FilmWhere.Controllers
 			[FromQuery] int pageSize = 10,
 			[FromQuery] string? search = null)
 		{
-			var query = _userManager.Users.AsQueryable();
-
-			if (!string.IsNullOrEmpty(search))
+			try
 			{
-				query = query.Where(u => u.UserName.Contains(search) ||
-									   u.Email.Contains(search) ||
-									   u.Nombre.Contains(search) ||
-									   u.Apellido.Contains(search));
-			}
 
-			var totalUsers = await query.CountAsync();
-			var users = await query
-				.Skip((page - 1) * pageSize)
-				.Take(pageSize)
-				.Select(u => new UsuarioAdminDto
+				var query = _userManager.Users.AsQueryable();
+
+				if (!string.IsNullOrEmpty(search))
 				{
-					Id = u.Id,
-					UserName = u.UserName,
-					Email = u.Email,
-					Nombre = u.Nombre,
-					Apellido = u.Apellido,
-					EmailConfirmed = u.EmailConfirmed,
-					LockoutEnd = u.LockoutEnd,
-					FechaRegistro = u.FechaRegistro,
-					Activo = u.LockoutEnd == null || u.LockoutEnd < DateTimeOffset.Now
-				})
-				.ToListAsync();
+					query = query.Where(u => u.UserName.Contains(search) ||
+										   u.Email.Contains(search) ||
+										   u.Nombre.Contains(search) ||
+										   u.Apellido.Contains(search));
+				}
 
-			// Obtener roles para cada usuario
-			foreach (var user in users)
-			{
-				var userEntity = await _userManager.FindByIdAsync(user.Id);
-				user.Roles = await _userManager.GetRolesAsync(userEntity);
+				var totalUsers = await query.CountAsync();
+				var users = await query
+					.Skip((page - 1) * pageSize)
+					.Take(pageSize)
+					.Select(u => new UsuarioAdminDto
+					{
+						Id = u.Id,
+						UserName = u.UserName,
+						Email = u.Email,
+						Nombre = u.Nombre,
+						Apellido = u.Apellido,
+						EmailConfirmed = u.EmailConfirmed,
+						LockoutEnd = u.LockoutEnd,
+						FechaRegistro = u.FechaRegistro,
+						Activo = u.LockoutEnd == null || u.LockoutEnd < DateTimeOffset.UtcNow
+					})
+					.ToListAsync();
+
+				// Obtener roles para cada usuario
+				foreach (var user in users)
+				{
+					var userEntity = await _userManager.FindByIdAsync(user.Id);
+					user.Roles = await _userManager.GetRolesAsync(userEntity);
+				}
+
+				return Ok(new
+				{
+					Users = users,
+					TotalCount = totalUsers,
+					CurrentPage = page,
+					PageSize = pageSize,
+					TotalPages = (int)Math.Ceiling(totalUsers / (double)pageSize)
+				});
 			}
-
-			return Ok(new
+			catch (Exception ex)
 			{
-				Users = users,
-				TotalCount = totalUsers,
-				CurrentPage = page,
-				PageSize = pageSize,
-				TotalPages = (int)Math.Ceiling(totalUsers / (double)pageSize)
-			});
+				return BadRequest(ex.Message);
+			}
 		}
 
 		// GET: api/admin/usuarios/{id}
@@ -281,42 +289,57 @@ namespace FilmWhere.Controllers
 		[HttpPost("usuarios/{id}/bloquear")]
 		public async Task<IActionResult> BloquearUsuario(string id, [FromBody] BloqueoDto bloqueoDto)
 		{
-			var user = await _userManager.FindByIdAsync(id);
-			if (user == null)
+			try
 			{
-				return NotFound();
+				var user = await _userManager.FindByIdAsync(id);
+				if (user == null)
+				{
+					return NotFound();
+				}
+
+				var lockoutEnd = bloqueoDto.HastaCuando ?? DateTimeOffset.UtcNow.AddYears(100);
+
+				var result = await _userManager.SetLockoutEndDateAsync(user, lockoutEnd);
+
+				if (result.Succeeded)
+				{
+					return Ok(new { message = "Usuario bloqueado exitosamente" });
+				}
+
+				return BadRequest("Error al bloquear usuario");
 			}
-
-			var lockoutEnd = bloqueoDto.HastaCuando ?? DateTimeOffset.UtcNow.AddYears(100);
-
-			var result = await _userManager.SetLockoutEndDateAsync(user, lockoutEnd);
-
-			if (result.Succeeded)
+			catch (Exception ex)
 			{
-				return Ok(new { message = "Usuario bloqueado exitosamente" });
+				return BadRequest(ex.Message);
 			}
-
-			return BadRequest("Error al bloquear usuario");
 		}
 
 		// POST: api/admin/usuarios/{id}/desbloquear
 		[HttpPost("usuarios/{id}/desbloquear")]
 		public async Task<IActionResult> DesbloquearUsuario(string id)
 		{
-			var user = await _userManager.FindByIdAsync(id);
-			if (user == null)
+			try
 			{
-				return NotFound();
+
+				var user = await _userManager.FindByIdAsync(id);
+				if (user == null)
+				{
+					return NotFound();
+				}
+
+				var result = await _userManager.SetLockoutEndDateAsync(user, null);
+
+				if (result.Succeeded)
+				{
+					return Ok(new { message = "Usuario desbloqueado exitosamente" });
+				}
+
+				return BadRequest("Error al desbloquear usuario");
 			}
-
-			var result = await _userManager.SetLockoutEndDateAsync(user, null);
-
-			if (result.Succeeded)
+			catch (Exception ex)
 			{
-				return Ok(new { message = "Usuario desbloqueado exitosamente" });
+				return BadRequest(ex.Message);
 			}
-
-			return BadRequest("Error al desbloquear usuario");
 		}
 
 		// GET: api/admin/roles

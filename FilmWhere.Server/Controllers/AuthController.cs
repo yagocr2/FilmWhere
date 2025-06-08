@@ -72,8 +72,6 @@ namespace FilmWhere.Server.Controllers
 					var errorMessages = result.Errors.Select(e => FormatIdentityError(e.Description)).ToList();
 					return BadRequest(new { Errors = errorMessages });
 				}
-
-				await _userManager.SetLockoutEnabledAsync(user, false);
 				await _userManager.AddToRoleAsync(user, "Registrado");
 
 				// Generar token de confirmación de email

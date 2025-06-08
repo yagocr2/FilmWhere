@@ -18,9 +18,9 @@ import AdminLayout from './components/Layouts/AdminLayout';
 import Perfil from './modules/Perfil/Perfil';
 
 // Admin pages
-import AdminDashboard from './modules/AdminDashboard/AdminDashboard';
-//import AdminUsuarios from './modules/AdminUsuarios/AdminUsuarios';
-//import AdminRoles from './modules/AdminRoles/AdminRoles';
+import AdminDashboard from './modules/Admin/AdminDashboard/AdminDashboard';
+import AdminUsuarios from './modules/Admin/AdminUsuarios/AdminUsuarios';
+//import AdminRoles from './modules/Admin/AdminRoles/AdminRoles';
 
 function App() {
     return (
@@ -39,7 +39,7 @@ function App() {
                         {/* Admin routes - only for Administrador role */}
                         <Route element={<AdminRoute />}>
                             <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-                            {/*<Route path="/admin/usuarios" element={<AdminLayout><AdminUsuarios /></AdminLayout>} />*/}
+                            <Route path="/admin/usuarios" element={<AdminLayout><AdminUsuarios /></AdminLayout>} />
                             {/*<Route path="/admin/roles" element={<AdminLayout><AdminRoles /></AdminLayout>} />*/}
                         </Route>
 
