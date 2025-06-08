@@ -89,9 +89,9 @@ const Login = () => {
                 }
                 return;
             }
-
+            console.log('hola: ',data);
             // Login exitoso
-            login(data.token);
+            login(data.token, data.user);
             navigate('/inicio');
         } catch (err) {
             setError(err.message || 'Error al iniciar sesión');

@@ -37,7 +37,6 @@ namespace FilmWhere.Server.Controllers
 		{
 			try
 			{
-
 				if (!ModelState.IsValid)
 				{
 					var errors = ModelState.Values
@@ -68,12 +67,12 @@ namespace FilmWhere.Server.Controllers
 
 				var result = await _userManager.CreateAsync(user, model.Password);
 
-
 				if (!result.Succeeded)
 				{
 					var errorMessages = result.Errors.Select(e => FormatIdentityError(e.Description)).ToList();
 					return BadRequest(new { Errors = errorMessages });
 				}
+
 				await _userManager.SetLockoutEnabledAsync(user, false);
 				await _userManager.AddToRoleAsync(user, "Registrado");
 
@@ -162,7 +161,6 @@ namespace FilmWhere.Server.Controllers
 			var frontendBaseUrl = _configuration["Frontend:BaseUrl"];
 			var confirmationUrl = $"{frontendBaseUrl}/api/Auth/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
 
-
 			await _emailSender.SendEmailAsync(
 				user.Email,
 				"Confirma tu cuenta - FilmWhere",
@@ -195,6 +193,7 @@ namespace FilmWhere.Server.Controllers
 			{
 				return Unauthorized(new { Message = "Tu cuenta está bloqueada. Por favor, contacta con el soporte." });
 			}
+
 			// Verificar si el email está confirmado
 			if (!await _userManager.IsEmailConfirmedAsync(user))
 			{
@@ -205,26 +204,56 @@ namespace FilmWhere.Server.Controllers
 					Email = user.Email
 				});
 			}
+
 			if (!await _userManager.CheckPasswordAsync(user, model.Password))
 			{
 				return Unauthorized(new { Message = "La contraseña es incorrecta" });
 			}
 
-			var token = GenerateJwtToken(user);
-			return Ok(new { Token = token });
+			var token = await GenerateJwtToken(user);
+			var roles = await _userManager.GetRolesAsync(user);
+
+			return Ok(new
+			{
+				Token = token,
+				User = new
+				{
+					Id = user.Id,
+					UserName = user.UserName,
+					Email = user.Email,
+					Nombre = user.Nombre,
+					Apellido = user.Apellido,
+					Roles = roles
+				}
+			});
 		}
 
-		private string GenerateJwtToken(Usuario user)
+		private async Task<string> GenerateJwtToken(Usuario user)
 		{
 			var jwtSettings = _configuration.GetSection("Jwt");
 			var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]);
 
+			// Obtener roles del usuario
+			var roles = await _userManager.GetRolesAsync(user);
+
+			var claims = new List<Claim>
+			{
+				new Claim(ClaimTypes.NameIdentifier, user.Id),
+				new Claim(ClaimTypes.Email, user.Email),
+				new Claim(ClaimTypes.Name, user.UserName),
+				new Claim("nombre", user.Nombre),
+				new Claim("apellido", user.Apellido)
+			};
+
+			// Agregar claims de roles
+			foreach (var role in roles)
+			{
+				claims.Add(new Claim(ClaimTypes.Role, role));
+			}
+
 			var tokenDescriptor = new SecurityTokenDescriptor
 			{
-				Subject = new ClaimsIdentity(new[] {
-					new Claim(ClaimTypes.NameIdentifier, user.Id),
-					new Claim(ClaimTypes.Email, user.Email)
-				}),
+				Subject = new ClaimsIdentity(claims),
 				Expires = DateTime.UtcNow.AddDays(double.Parse(jwtSettings["DurationInDays"])),
 				Issuer = jwtSettings["Issuer"],
 				Audience = jwtSettings["Audience"],
@@ -232,7 +261,7 @@ namespace FilmWhere.Server.Controllers
 					new SymmetricSecurityKey(key),
 					SecurityAlgorithms.HmacSha256Signature)
 			};
-			//awdawdawdaw
+
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var token = tokenHandler.CreateToken(tokenDescriptor);
 			return tokenHandler.WriteToken(token);
