@@ -1,23 +1,9 @@
 ﻿import { useState, useEffect } from 'react';
 import { useTheme } from '../../../context/ThemeContext';
-import {
-    Users,
-    Search,
-    Filter,
-    UserPlus,
-    Edit,
-    Lock,
-    Unlock,
-    Mail,
-    MailCheck,
-    Eye,
-    Trash2,
-    ChevronLeft,
-    ChevronRight,
-    UserCheck,
-    UserX,
-    Calendar,
-    Shield
+import {Users,Search,Filter,UserPlus,
+    Edit,Lock,Unlock,Mail,MailCheck,
+    Eye,Trash2,ChevronLeft,ChevronRight,
+    UserCheck,UserX,Calendar,Shield
 } from 'lucide-react';
 
 const AdminUsuarios = () => {

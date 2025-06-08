@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+ï»¿import React, { useState } from 'react';
 import {
     Users, UserCheck, UserX, UserPlus, TrendingUp, Activity, Shield, Crown,
     Plus, Edit, Trash2, Save, X, AlertTriangle, Search, Filter,
@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useAdminTheme } from '../../hooks/useAdmin';
 
-// Componente de tarjeta de estadística
+// Componente de tarjeta de estadÃ­stica
 export const StatCard = ({ title, value, icon, color, subtitle, loading }) => {
     const { cardBgClass, textClass, textSecondaryClass } = useAdminTheme();
 
@@ -35,7 +35,7 @@ export const StatCard = ({ title, value, icon, color, subtitle, loading }) => {
     );
 };
 
-// Componente de encabezado de página
+// Componente de encabezado de pÃ¡gina
 export const PageHeader = ({ icon, title, subtitle, actionButton }) => {
     const { textClass, textSecondaryClass } = useAdminTheme();
 
@@ -88,7 +88,7 @@ export const ErrorDisplay = ({ error, onRetry, retryText = "Reintentar" }) => {
     );
 };
 
-// Componente de modal genérico
+// Componente de modal genÃ©rico
 export const Modal = ({ show, onClose, title, icon, children, size = "max-w-md" }) => {
     const { cardBgClass, textClass, textSecondaryClass } = useAdminTheme();
 
@@ -143,7 +143,7 @@ export const StatusBadge = ({ user }) => {
     );
 };
 
-// Componente de barra de búsqueda
+// Componente de barra de bÃºsqueda
 export const SearchBar = ({ searchTerm, onSearch, placeholder = "Buscar..." }) => {
     const { inputBgClass, textClass, borderClass, textSecondaryClass } = useAdminTheme();
 
@@ -161,7 +161,7 @@ export const SearchBar = ({ searchTerm, onSearch, placeholder = "Buscar..." }) =
     );
 };
 
-// Componente de paginación
+// Componente de paginaciÃ³n
 export const Pagination = ({
     currentPage,
     totalPages,
@@ -239,7 +239,7 @@ export const RoleForm = ({ formData, setFormData, onSubmit, onCancel }) => {
                 </div>
                 <div>
                     <label className={`${textClass} block text-sm font-medium mb-1`}>
-                        Descripción
+                        DescripciÃ³n
                     </label>
                     <textarea
                         value={formData.description}
@@ -269,7 +269,7 @@ export const RoleForm = ({ formData, setFormData, onSubmit, onCancel }) => {
     );
 };
 
-// Componente de confirmación de eliminación
+// Componente de confirmaciÃ³n de eliminaciÃ³n
 export const DeleteConfirmation = ({ itemName, itemType = "elemento", onConfirm, onCancel }) => {
     const { textSecondaryClass, inputBgClass, textClass } = useAdminTheme();
 
@@ -277,11 +277,11 @@ export const DeleteConfirmation = ({ itemName, itemType = "elemento", onConfirm,
         <div>
             <div className="mb-4 flex items-center text-red-600">
                 <AlertTriangle className="mr-2" size={24} />
-                <span className="text-lg font-medium">¿Confirmar eliminación?</span>
+                <span className="text-lg font-medium">Â¿Confirmar eliminaciÃ³n?</span>
             </div>
             <p className={`${textSecondaryClass} mb-6`}>
-                ¿Estás seguro de que deseas eliminar el {itemType} "{itemName}"?
-                Esta acción no se puede deshacer.
+                Â¿EstÃ¡s seguro de que deseas eliminar el {itemType} "{itemName}"?
+                Esta acciÃ³n no se puede deshacer.
             </p>
             <div className="flex justify-end space-x-3">
                 <button
@@ -301,7 +301,7 @@ export const DeleteConfirmation = ({ itemName, itemType = "elemento", onConfirm,
     );
 };
 
-// Componente de acciones rápidas
+// Componente de acciones rÃ¡pidas
 export const QuickActions = ({ actions }) => {
     const { cardBgClass, textClass } = useAdminTheme();
 
@@ -309,7 +309,7 @@ export const QuickActions = ({ actions }) => {
         <div className={`${cardBgClass} rounded-lg shadow-lg p-6`}>
             <h2 className={`${textClass} text-xl font-semibold mb-6 flex items-center`}>
                 <TrendingUp className="mr-2" size={24} />
-                Acciones Rápidas
+                Acciones RÃ¡pidas
             </h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {actions.map((action, index) => (
