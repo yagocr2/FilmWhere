@@ -483,7 +483,7 @@ const AdminUsuarios = () => {
     const UsersTable = () => (
         <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-                <thead className={`bg-gray-50 dark:bg-gray-700`}>
+                <thead className={`bg-gray-50 dark:bg-gray-800`}>
                     <tr>
                         <th className={`${textClass} px-6 py-3 text-left text-xs font-medium uppercase tracking-wider`}>
                             Usuario

@@ -89,10 +89,16 @@ const Login = () => {
                 }
                 return;
             }
-            console.log('hola: ',data);
             // Login exitoso
             login(data.token, data.user);
-            navigate('/inicio');
+            if (data.user.roles[0] === "Administrador") {
+                console.log('hola admin: ', data.user);
+                navigate('/admin');
+            } else {
+                console.log('hola normal: ', data.user);
+                navigate('/inicio');
+            }
+            
         } catch (err) {
             setError(err.message || 'Error al iniciar sesión');
         } finally {
