@@ -24,7 +24,6 @@ const Perfil = () => {
     const { userId } = useParams();
     const [activeTab, setActiveTab] = useState('reseñas');
 
-
     // Estados para el modal de edición de reseñas
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
     const [selectedMovieForReview, setSelectedMovieForReview] = useState(null);

@@ -122,6 +122,7 @@ export const AuthProvider = ({ children }) => {
             return null;
         }
     };
+    const token = getValidToken();
 
     const value = {
         user,
@@ -132,7 +133,8 @@ export const AuthProvider = ({ children }) => {
         hasRole,
         isAdmin,
         isRegistered,
-        getValidToken
+        getValidToken,
+        token
     };
 
     return (
