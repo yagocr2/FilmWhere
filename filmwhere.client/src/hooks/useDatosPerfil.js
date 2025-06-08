@@ -1,5 +1,5 @@
 ﻿// hooks/useProfileData.js
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export const useProfileData = (token, userId) => {
     const [userProfile, setUserProfile] = useState(null);
@@ -9,8 +9,6 @@ export const useProfileData = (token, userId) => {
     const [favoritesMetadata, setFavoritesMetadata] = useState({ totalCount: 0 });
     const [isPerfilP, setIsPerfilP] = useState(false);
     const [currentUserIdFromToken, setCurrentUserIdFromToken] = useState(null);
-
-    
 
     const [loading, setLoading] = useState({
         profile: true,
@@ -24,40 +22,41 @@ export const useProfileData = (token, userId) => {
         favorites: null
     });
 
-    const getUserIdFromToken = (token) => {
+    // Memoizar la función para evitar recreaciones innecesarias
+    const getUserIdFromToken = useCallback((token) => {
         try {
             if (!token) return null;
 
-            // Dividir el token en sus partes
             const parts = token.split('.');
             if (parts.length !== 3) return null;
 
-            // Decodificar la parte del payload (segunda parte)
             const payload = JSON.parse(atob(parts[1]));
-            // El ID puede estar en diferentes campos dependiendo de cómo se genere el token
-            // Comúnmente está en 'sub', 'userId', 'id', 'nameid', etc.
             return payload.sub || payload.userId || payload.id || payload.nameid || payload.user_id;
         } catch (error) {
             console.error('Error al decodificar el token:', error);
             return null;
         }
-    };
+    }, []);
+
+    // Calcular idToken una sola vez y memoizarlo
     const idToken = getUserIdFromToken(token);
 
     // Función para construir la URL completa de TMDB
-    const buildTmdbImageUrl = (posterPath, size = 'w500') => {
+    const buildTmdbImageUrl = useCallback((posterPath, size = 'w500') => {
         if (!posterPath) return '/placeholder-movie.jpg';
         if (posterPath.startsWith('http')) return posterPath;
         return `https://image.tmdb.org/t/p/${size}/${posterPath}`;
-    };
+    }, []);
 
-    const checkFollowingStatus = async () => {
+    // Verificar estado de seguimiento
+    const checkFollowingStatus = useCallback(async () => {
         if (!token || !userId) return;
 
         try {
             const response = await fetch(`/api/Seguidor/is-following/${userId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            console.log(response)
             if (response.ok) {
                 const data = await response.json();
                 console.log('checkFollowingStatus - Resultado:', data.isFollowing);
@@ -66,24 +65,28 @@ export const useProfileData = (token, userId) => {
         } catch (error) {
             console.error('Error al verificar seguimiento:', error);
         }
-    };
+    }, [token, userId]);
 
-    // Función para cargar perfil de usuario (movida fuera del useEffect)
-    const loadUserProfile = async () => {
+    // Función para cargar perfil de otro usuario
+    const loadUserProfile = useCallback(async () => {
+        if (!userId) return;
+
         try {
-            const idToken = getUserIdFromToken(token);
-            setCurrentUserIdFromToken(idToken)
-            if (userId === currentUserIdFromToken)
-                window.location.href = '/perfil';
-
             setLoading(prev => ({ ...prev, profile: true }));
+            setError(prev => ({ ...prev, profile: null }));
+
             const response = await fetch(`/api/User/profile/${userId}`);
-
-
+            console.log(response)
 
             if (response.ok) {
                 const data = await response.json();
                 setUserProfile(data);
+
+                // Verificar si es el mismo usuario logueado para redirigir
+                if (idToken && userId === idToken) {
+                    window.location.href = '/perfil';
+                    return;
+                }
             } else {
                 setError(prev => ({ ...prev, profile: 'Usuario no encontrado' }));
             }
@@ -93,9 +96,10 @@ export const useProfileData = (token, userId) => {
         } finally {
             setLoading(prev => ({ ...prev, profile: false }));
         }
-    };
+    }, [userId, idToken]);
 
-    const handleFollowToggle = async (targetUserId) => {
+    // Función para toggle de seguimiento
+    const handleFollowToggle = useCallback(async (targetUserId) => {
         if (!token || !targetUserId) {
             console.error('handleFollowToggle - Faltan token o targetUserId');
             return;
@@ -123,12 +127,11 @@ export const useProfileData = (token, userId) => {
 
             if (response.ok) {
                 console.log('handleFollowToggle - Respuesta exitosa');
-                // Actualizar el estado inmediatamente
                 const newFollowingState = !isFollowing;
                 setIsFollowing(newFollowingState);
                 console.log('handleFollowToggle - Nuevo estado isFollowing:', newFollowingState);
 
-                // Opcional: Actualizar también el conteo en el perfil
+                // Actualizar también el conteo en el perfil
                 setUserProfile(prev => {
                     if (!prev) return prev;
 
@@ -139,7 +142,7 @@ export const useProfileData = (token, userId) => {
 
                     return {
                         ...prev,
-                        seguidores: Array(newCount).fill({}) // Placeholder
+                        seguidores: Array(newCount).fill({})
                     };
                 });
             } else {
@@ -149,23 +152,124 @@ export const useProfileData = (token, userId) => {
         } catch (error) {
             console.error('handleFollowToggle - Error:', error);
         }
-    };
+    }, [token, isFollowing]);
 
-    // Cargar datos del perfil propio (cuando no hay userId en params)
+    // Función para refrescar reseñas
+    const refreshUserReviews = useCallback(async () => {
+        if (!token) return;
+
+        try {
+            setLoading(prev => ({ ...prev, reviews: true }));
+            const url = userId ? `/api/user/profile/${userId}/reviews` : '/api/reviews/usuario';
+
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setUserReviews(data);
+            }
+        } catch (err) {
+            console.error('Error refreshing user reviews:', err);
+        } finally {
+            setLoading(prev => ({ ...prev, reviews: false }));
+        }
+    }, [token, userId]);
+
+    // Eliminar reseña
+    const handleDeleteReview = useCallback(async (reviewId) => {
+        if (!window.confirm('¿Estás seguro de que deseas eliminar esta reseña?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/reviews/${reviewId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                setUserReviews(prev => prev.filter(review => review.id !== reviewId));
+            } else {
+                throw new Error('Error al eliminar la reseña');
+            }
+        } catch (err) {
+            console.error('Error deleting review:', err);
+            alert('No se pudo eliminar la reseña');
+        }
+    }, [token]);
+
+    // Eliminar de favoritos
+    const handleRemoveFromFavorites = useCallback(async (movieId) => {
+        try {
+            const response = await fetch(`/api/favoritos/${movieId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                setFavoriteMovies(prev => prev.filter(movie => movie.id !== movieId));
+                setFavoritesMetadata(prev => ({
+                    ...prev,
+                    totalCount: Math.max(0, prev.totalCount - 1)
+                }));
+            } else {
+                throw new Error('Error al eliminar de favoritos');
+            }
+        } catch (err) {
+            console.error('Error removing from favorites:', err);
+            alert('No se pudo eliminar de favoritos');
+        }
+    }, [token]);
+
+    // Effect para determinar el tipo de perfil y establecer currentUserIdFromToken
     useEffect(() => {
+        if (token) {
+            const tokenUserId = getUserIdFromToken(token);
+            setCurrentUserIdFromToken(tokenUserId);
+
+            if (userId) {
+                setIsPerfilP(true);
+                // Verificar si intenta ver su propio perfil con parámetro
+                if (tokenUserId && userId === tokenUserId) {
+                    window.location.href = '/perfil';
+                    return;
+                }
+            } else {
+                setIsPerfilP(false);
+            }
+        }
+    }, [token, userId, getUserIdFromToken]);
+
+    // Effect para cargar perfil propio (sin userId)
+    useEffect(() => {
+        if (!token) return;
+        if (userId) return; // Solo para perfil propio
+
         const fetchUserProfile = async () => {
             try {
+                setLoading(prev => ({ ...prev, profile: true }));
+                setError(prev => ({ ...prev, profile: null }));
+
                 const response = await fetch('/api/user/profile', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 });
+                console.log(response)
 
                 if (response.ok) {
                     const data = await response.json();
                     setUserProfile(data);
-                    setIsPerfilP(false);
                 } else {
                     throw new Error('Error al cargar el perfil');
                 }
@@ -177,37 +281,34 @@ export const useProfileData = (token, userId) => {
             }
         };
 
-        // Solo ejecutar si hay token pero NO hay userId (perfil propio)
-        if (token && !userId) {
-            fetchUserProfile();
-        }
+        fetchUserProfile();
     }, [token, userId]);
 
-    // Cargar perfil de otro usuario y verificar seguimiento
+    // Effect para cargar perfil de otro usuario
     useEffect(() => {
-        if (userId) {
+        if (userId && token) {
             loadUserProfile();
-            setIsPerfilP(true);
         }
-    }, [userId]); // Solo depende de userId
+    }, [userId, token, loadUserProfile]);
 
-    // Verificar estado de seguimiento por separado
+    // Effect para verificar estado de seguimiento
     useEffect(() => {
-        if (userId && token && userProfile) {
+        if (userId && token && userProfile?.id) {
             checkFollowingStatus();
         }
-    }, [userId, token, userProfile?.id]); // Depende de userId, token y el id del perfil cargado
+    }, [userId, token, userProfile?.id, checkFollowingStatus]);
 
-    // Cargar reseñas del usuario
+    // Effect para cargar reseñas del usuario
     useEffect(() => {
+        if (!token) return;
+
         const fetchUserReviews = async () => {
             try {
-
                 setLoading(prev => ({ ...prev, reviews: true }));
                 setError(prev => ({ ...prev, reviews: null }));
 
-                const url = (userId) ? `/api/user/profile/${userId}/reviews` : '/api/reviews/usuario'
-                
+                const url = userId ? `/api/user/profile/${userId}/reviews` : '/api/reviews/usuario';
+
                 const response = await fetch(url, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -229,14 +330,20 @@ export const useProfileData = (token, userId) => {
             }
         };
 
-        if (token) fetchUserReviews();
+        fetchUserReviews();
     }, [token, userId]);
 
-    // Cargar películas favoritas
+    // Effect para cargar películas favoritas
     useEffect(() => {
+        if (!token) return;
+
         const fetchFavoriteMovies = async () => {
             try {
-                const url = (userId) ? `/api/user/profile/${userId}/favorites` : '/api/favoritos'
+                setLoading(prev => ({ ...prev, favorites: true }));
+                setError(prev => ({ ...prev, favorites: null }));
+
+                const url = userId ? `/api/user/profile/${userId}/favorites` : '/api/favoritos';
+
                 const response = await fetch(url, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -265,80 +372,8 @@ export const useProfileData = (token, userId) => {
             }
         };
 
-        if (token) fetchFavoriteMovies();
+        fetchFavoriteMovies();
     }, [token, userId]);
-
-    // Función para refrescar reseñas (para usar después de editar/eliminar)
-    const refreshUserReviews = async () => {
-        try {
-            setLoading(prev => ({ ...prev, reviews: true }));
-            const response = await fetch('/api/reviews/usuario', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setUserReviews(data);
-            }
-        } catch (err) {
-            console.error('Error refreshing user reviews:', err);
-        } finally {
-            setLoading(prev => ({ ...prev, reviews: false }));
-        }
-    };
-
-    // Eliminar reseña
-    const handleDeleteReview = async (reviewId) => {
-        if (!window.confirm('¿Estás seguro de que deseas eliminar esta reseña?')) {
-            return;
-        }
-
-        try {
-            const response = await fetch(`/api/reviews/${reviewId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.ok) {
-                setUserReviews(prev => prev.filter(review => review.id !== reviewId));
-            } else {
-                throw new Error('Error al eliminar la reseña');
-            }
-        } catch (err) {
-            console.error('Error deleting review:', err);
-            alert('No se pudo eliminar la reseña');
-        }
-    };
-
-    // Eliminar de favoritos
-    const handleRemoveFromFavorites = async (movieId) => {
-        try {
-            const response = await fetch(`/api/favoritos/${movieId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.ok) {
-                setFavoriteMovies(prev => prev.filter(movie => movie.id !== movieId));
-                setFavoritesMetadata(prev => ({
-                    ...prev,
-                    totalCount: Math.max(0, prev.totalCount - 1)
-                }));
-            } else {
-                throw new Error('Error al eliminar de favoritos');
-            }
-        } catch (err) {
-            console.error('Error removing from favorites:', err);
-            alert('No se pudo eliminar de favoritos');
-        }
-    };
 
     return {
         userProfile,
