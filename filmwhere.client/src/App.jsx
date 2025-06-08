@@ -14,7 +14,6 @@ import EmailConfirmacion from './components/EmailConfirmacion/EmailConfirmacion'
 // Protected pages
 import Inicio from './modules/Inicio/Inicio';
 import Layout from './components/Layouts/Layout';
-import AuthLayout from './components/Layouts/AuthLayout';
 import AdminLayout from './components/Layouts/AdminLayout';
 import Perfil from './modules/Perfil/Perfil';
 
@@ -44,19 +43,19 @@ function App() {
                             {/*<Route path="/admin/roles" element={<AdminLayout><AdminRoles /></AdminLayout>} />*/}
                         </Route>
 
-                        {/* Protected routes - accessible only when authenticated */}
+                        {/* Protected routes - Layout automatically assigned based on user role */}
                         <Route element={<ProtectedRoute />}>
-                            <Route path="/inicio" element={<AuthLayout><Inicio /></AuthLayout>} />
-                            <Route path="/buscar" element={<AuthLayout><Search /></AuthLayout>} />
-                            <Route path="/perfil" element={<AuthLayout><Perfil /></AuthLayout>} />
-                            <Route path="/perfil/:userId" element={<AuthLayout><Perfil /></AuthLayout>} />
+                            <Route path="/inicio" element={<Inicio />} />
+                            <Route path="/buscar" element={<Search />} />
+                            <Route path="/perfil" element={<Perfil />} />
+                            <Route path="/perfil/:userId" element={<Perfil />} />
 
                             {/* Movie detail route */}
-                            <Route path="/pelicula/:id" element={<AuthLayout><DetallePeli /></AuthLayout>} />
+                            <Route path="/pelicula/:id" element={<DetallePeli />} />
 
                             {/* Add more protected routes here as needed */}
-                            {/* <Route path="/favoritos" element={<AuthLayout><Favorites /></AuthLayout>} /> */}
-                            {/* <Route path="/ver-ahora" element={<AuthLayout><WatchNow /></AuthLayout>} /> */}
+                            {/* <Route path="/favoritos" element={<Favorites />} /> */}
+                            {/* <Route path="/ver-ahora" element={<WatchNow />} /> */}
                         </Route>
 
                         {/* Special case - public access with different layout for non-registered users */}

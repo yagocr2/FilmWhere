@@ -33,7 +33,7 @@ const AdminDashboard = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Error al cargar las estad�sticas');
+                throw new Error('Error al cargar las estadísticas');
             }
 
             const data = await response.json();
@@ -99,7 +99,7 @@ const AdminDashboard = () => {
                     <Crown className="text-white" size={32} />
                 </div>
                 <div>
-                    <h1 className={`${textClass} text-3xl font-bold`}>Panel de Administraci�n</h1>
+                    <h1 className={`${textClass} text-3xl font-bold`}>Panel de Administración</h1>
                     <p className={`${textSecondaryClass} text-lg`}>
                         Bienvenido al centro de control de FilmWhere
                     </p>
@@ -133,7 +133,7 @@ const AdminDashboard = () => {
                 />
 
                 <StatCard
-                    title="Nuevos (30 d�as)"
+                    title="Nuevos (30 días)"
                     value={stats?.registrosUltimos30Dias || 0}
                     icon={<UserPlus className="text-purple-600" size={24} />}
                     color="border-l-purple-500"
@@ -145,7 +145,7 @@ const AdminDashboard = () => {
             <div className={`${cardBgClass} rounded-lg shadow-lg p-6`}>
                 <h2 className={`${textClass} text-xl font-semibold mb-6 flex items-center`}>
                     <TrendingUp className="mr-2" size={24} />
-                    Acciones R�pidas
+                    Acciones Rápidas
                 </h2>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -184,7 +184,7 @@ const AdminDashboard = () => {
 
                 <div className={`${textSecondaryClass} text-center py-8`}>
                     <Activity size={48} className="mx-auto mb-4 opacity-50" />
-                    <p>La funcionalidad de actividad reciente estar� disponible pr�ximamente</p>
+                    <p>La funcionalidad de actividad reciente estará disponible próximamente</p>
                 </div>
             </div>
         </div>

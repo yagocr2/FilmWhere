@@ -1,9 +1,11 @@
 ﻿import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import AdminLayout from '../components/Layouts/AdminLayout';
+import AuthLayout from '../components/Layouts/AuthLayout';
 
 // Component for routes that require authentication
 export const ProtectedRoute = () => {
-    const { isAuthenticated, loading } = useAuth();
+    const { isAuthenticated, isAdmin, loading } = useAuth();
 
     // Show loading state while checking authentication
     if (loading) {
@@ -19,8 +21,14 @@ export const ProtectedRoute = () => {
         return <Navigate to="/login" />;
     }
 
-    // Render the child routes if authenticated
-    return <Outlet />;
+    // Use AdminLayout for administrators, AuthLayout for regular users
+    const Layout = isAdmin() ? AdminLayout : AuthLayout;
+
+    return (
+        <Layout>
+            <Outlet />
+        </Layout>
+    );
 };
 
 // Component for routes that should redirect logged-in users

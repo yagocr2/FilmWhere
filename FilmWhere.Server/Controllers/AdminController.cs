@@ -331,21 +331,28 @@ namespace FilmWhere.Controllers
 		[HttpGet("estadisticas")]
 		public async Task<ActionResult<EstadisticasDto>> GetEstadisticas()
 		{
-			var totalUsuarios = await _userManager.Users.CountAsync();
-			var usuariosConfirmados = await _userManager.Users.CountAsync(u => u.EmailConfirmed);
-			var usuariosBloqueados = await _userManager.Users
-				.CountAsync(u => u.LockoutEnd != null && u.LockoutEnd > DateTimeOffset.Now);
-
-			var registrosUltimos30Dias = await _userManager.Users
-				.CountAsync(u => u.FechaRegistro >= DateTime.UtcNow.AddDays(-30));
-
-			return Ok(new EstadisticasDto
+			try
 			{
-				TotalUsuarios = totalUsuarios,
-				UsuariosConfirmados = usuariosConfirmados,
-				UsuariosBloqueados = usuariosBloqueados,
-				RegistrosUltimos30Dias = registrosUltimos30Dias
-			});
+				var totalUsuarios = await _userManager.Users.CountAsync();
+				var usuariosConfirmados = await _userManager.Users.CountAsync(u => u.EmailConfirmed);
+				var usuariosBloqueados = await _userManager.Users
+					.CountAsync(u => u.LockoutEnd != null && u.LockoutEnd > DateTimeOffset.UtcNow);
+
+				var registrosUltimos30Dias = await _userManager.Users
+					.CountAsync(u => u.FechaRegistro >= DateTime.UtcNow.AddDays(-30));
+
+				return Ok(new EstadisticasDto
+				{
+					TotalUsuarios = totalUsuarios,
+					UsuariosConfirmados = usuariosConfirmados,
+					UsuariosBloqueados = usuariosBloqueados,
+					RegistrosUltimos30Dias = registrosUltimos30Dias
+				});
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(ex.Message);
+			}
 		}
 	}
 

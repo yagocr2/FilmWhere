@@ -31,7 +31,7 @@ const AdminLayout = ({ children }) => {
         { name: 'Dashboard', icon: <BarChart3 size={20} />, path: '/admin' },
         { name: 'Usuarios', icon: <Users size={20} />, path: '/admin/usuarios' },
         { name: 'Roles', icon: <Shield size={20} />, path: '/admin/roles' },
-        { name: 'Configuraci�n', icon: <Settings size={20} />, path: '/admin/configuracion' },
+        { name: 'Configuración', icon: <Settings size={20} />, path: '/admin/configuracion' },
     ];
 
     const isActiveRoute = (path) => {
@@ -106,7 +106,7 @@ const AdminLayout = ({ children }) => {
                                 className={`${navbarTextClass} ${hoverClass} px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 transition-colors`}
                             >
                                 <LogOut size={20} />
-                                <span>Cerrar sesi�n</span>
+                                <span>Cerrar sesión</span>
                             </button>
                         </div>
 
@@ -167,7 +167,7 @@ const AdminLayout = ({ children }) => {
                                 className={`${navbarTextClass} ${hoverClass} w-full block px-3 py-2 rounded-md text-base font-medium flex items-center space-x-2`}
                             >
                                 <LogOut size={20} />
-                                <span>Cerrar sesi�n</span>
+                                <span>Cerrar sesión</span>
                             </button>
                         </div>
                     </div>
@@ -185,7 +185,7 @@ const AdminLayout = ({ children }) => {
             <footer className={`${navbarBgClass} backdrop-blur-lg py-4 shadow-inner border-t border-red-600`}>
                 <div className="container mx-auto px-4 text-center">
                     <p className={`${navbarTextClass} text-sm`}>
-                        � {new Date().getFullYear()} FilmWhere Admin Panel - Panel de Administraci�n
+                        � {new Date().getFullYear()} FilmWhere Admin Panel - Panel de Administración
                     </p>
                 </div>
             </footer>
