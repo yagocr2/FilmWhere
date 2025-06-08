@@ -222,6 +222,7 @@ namespace FilmWhere.Controllers
 			var result = await _userManager.UpdateAsync(user);
 
 			if (result.Succeeded)
+			if (result.Succeeded)
 			{
 				return Ok(new { message = "Email confirmado exitosamente" });
 			}

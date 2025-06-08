@@ -20,7 +20,8 @@ import Perfil from './modules/Perfil/Perfil';
 // Admin pages
 import AdminDashboard from './modules/Admin/AdminDashboard/AdminDashboard';
 import AdminUsuarios from './modules/Admin/AdminUsuarios/AdminUsuarios';
-//import AdminRoles from './modules/Admin/AdminRoles/AdminRoles';
+import AdminRoles from './modules/Admin/AdminRoles/AdminRoles';
+//import AdminRoles from './modules/Admin/AdminConfiguracion/AdminConfiguracion';
 
 function App() {
     return (
@@ -40,7 +41,7 @@ function App() {
                         <Route element={<AdminRoute />}>
                             <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
                             <Route path="/admin/usuarios" element={<AdminLayout><AdminUsuarios /></AdminLayout>} />
-                            {/*<Route path="/admin/roles" element={<AdminLayout><AdminRoles /></AdminLayout>} />*/}
+                            <Route path="/admin/roles" element={<AdminLayout><AdminRoles /></AdminLayout>} />
                         </Route>
 
                         {/* Protected routes - Layout automatically assigned based on user role */}
