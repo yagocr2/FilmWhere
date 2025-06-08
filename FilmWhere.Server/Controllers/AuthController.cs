@@ -232,7 +232,7 @@ namespace FilmWhere.Server.Controllers
 					new SymmetricSecurityKey(key),
 					SecurityAlgorithms.HmacSha256Signature)
 			};
-
+			//awdawdawdaw
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var token = tokenHandler.CreateToken(tokenDescriptor);
 			return tokenHandler.WriteToken(token);
