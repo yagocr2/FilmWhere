@@ -122,8 +122,76 @@ namespace FilmWhere.Controllers
 
 			return Ok(userDto);
 		}
+		// DELETE: api/admin/usuarios/{id} - NUEVO
+		[HttpDelete("usuarios/{id}")]
+		public async Task<IActionResult> DeleteUsuario(string id)
+		{
+			try
+			{
+				var user = await _userManager.FindByIdAsync(id);
+				if (user == null)
+				{
+					return NotFound(new { message = "Usuario no encontrado" });
+				}
 
-		// POST: api/admin/usuarios
+				// Verificar que no sea el usuario actual
+				var currentUserId = _userManager.GetUserId(User);
+				if (user.Id == currentUserId)
+				{
+					return BadRequest(new { message = "No puedes eliminar tu propia cuenta" });
+				}
+
+				// Verificar si es el único administrador
+				var adminUsers = await _userManager.GetUsersInRoleAsync("Administrador");
+				var isUserAdmin = await _userManager.IsInRoleAsync(user, "Administrador");
+
+				if (isUserAdmin && adminUsers.Count <= 1)
+				{
+					return BadRequest(new { message = "No se puede eliminar al único administrador del sistema" });
+				}
+
+				using var transaction = await _context.Database.BeginTransactionAsync();
+				try
+				{
+					// Eliminar relaciones del usuario
+					var favoritos = _context.Favoritos.Where(f => f.UsuarioId == id);
+					_context.Favoritos.RemoveRange(favoritos);
+
+					var reseñas = _context.Reseñas.Where(r => r.UsuarioId == id);
+					_context.Reseñas.RemoveRange(reseñas);
+
+					var seguidores = _context.UsuarioSeguidor.Where(us => us.SeguidorId == id || us.SeguidoId == id);
+					_context.UsuarioSeguidor.RemoveRange(seguidores);
+
+					await _context.SaveChangesAsync();
+
+					// Eliminar el usuario
+					var result = await _userManager.DeleteAsync(user);
+					if (!result.Succeeded)
+					{
+						await transaction.RollbackAsync();
+						return BadRequest(new
+						{
+							message = "Error al eliminar usuario",
+							errors = result.Errors.Select(e => e.Description)
+						});
+					}
+
+					await transaction.CommitAsync();
+					return Ok(new { message = "Usuario eliminado exitosamente" });
+				}
+				catch (Exception)
+				{
+					await transaction.RollbackAsync();
+					throw;
+				}
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { message = $"Error al eliminar usuario: {ex.Message}" });
+			}
+		}
+
 		[HttpPost("usuarios")]
 		public async Task<ActionResult<UsuarioAdminDto>> CreateUsuario(CreateUsuarioDto createDto)
 		{
@@ -132,45 +200,82 @@ namespace FilmWhere.Controllers
 				return BadRequest(ModelState);
 			}
 
-			var user = new Usuario
+			try
 			{
-				UserName = createDto.UserName,
-				Email = createDto.Email,
-				Nombre = createDto.Nombre,
-				Apellido = createDto.Apellido,
-				FechaNacimiento = createDto.FechaNacimiento,
-				EmailConfirmed = createDto.EmailConfirmed
-			};
-
-			var result = await _userManager.CreateAsync(user, createDto.Password);
-
-			if (!result.Succeeded)
-			{
-				foreach (var error in result.Errors)
+				// Verificar si el email ya existe
+				var existingUserByEmail = await _userManager.FindByEmailAsync(createDto.Email);
+				if (existingUserByEmail != null)
 				{
-					ModelState.AddModelError(string.Empty, error.Description);
+					ModelState.AddModelError("Email", "Ya existe un usuario con este email");
+					return BadRequest(ModelState);
 				}
-				return BadRequest(ModelState);
-			}
 
-			// Asignar rol por defecto
-			await _userManager.AddToRoleAsync(user, "Registrado");
-
-			// Asignar roles adicionales si se especifican
-			if (createDto.Roles?.Any() == true)
-			{
-				var validRoles = createDto.Roles.Where(r => _roleManager.Roles.Any(role => role.Name == r));
-				foreach (var role in validRoles)
+				// Verificar si el username ya existe
+				var existingUserByUsername = await _userManager.FindByNameAsync(createDto.UserName);
+				if (existingUserByUsername != null)
 				{
-					if (role != "Registrado") // Ya asignado por defecto
+					ModelState.AddModelError("UserName", "Ya existe un usuario con este nombre de usuario");
+					return BadRequest(ModelState);
+				}
+
+				// Validar que la fecha de nacimiento sea válida
+				var today = DateOnly.FromDateTime(DateTime.Today);
+				var age = today.Year - createDto.FechaNacimiento.Year;
+				if (createDto.FechaNacimiento > today.AddYears(-age)) age--;
+
+				var user = new Usuario
+				{
+					UserName = createDto.UserName,
+					Email = createDto.Email,
+					Nombre = createDto.Nombre,
+					Apellido = createDto.Apellido,
+					FechaNacimiento = createDto.FechaNacimiento,
+					EmailConfirmed = createDto.EmailConfirmed,
+					FechaRegistro = DateTime.UtcNow
+				};
+
+				var result = await _userManager.CreateAsync(user, createDto.Password);
+
+				if (!result.Succeeded)
+				{
+					foreach (var error in result.Errors)
 					{
-						await _userManager.AddToRoleAsync(user, role);
+						ModelState.AddModelError(string.Empty, error.Description);
+					}
+					return BadRequest(ModelState);
+				}
+
+				// Asignar rol por defecto
+				await _userManager.AddToRoleAsync(user, "Registrado");
+
+				// Asignar roles adicionales si se especifican
+				if (createDto.Roles?.Any() == true)
+				{
+					var validRoles = new List<string>();
+					foreach (var roleName in createDto.Roles)
+					{
+						var roleExists = await _roleManager.RoleExistsAsync(roleName);
+						if (roleExists && roleName != "Registrado") // Ya asignado por defecto
+						{
+							validRoles.Add(roleName);
+						}
+					}
+
+					if (validRoles.Any())
+					{
+						await _userManager.AddToRolesAsync(user, validRoles);
 					}
 				}
-			}
 
-			return CreatedAtAction(nameof(GetUsuario), new { id = user.Id },
-				await GetUsuario(user.Id));
+				// Obtener el usuario creado con sus roles
+				var createdUser = await GetUsuarioDto(user.Id);
+
+				return CreatedAtAction(nameof(GetUsuario), new { id = user.Id }, createdUser);
+			}
+			catch (Exception ex)
+			{
+				return BadRequest($"Error al crear usuario: {ex.Message}");
+			}
 		}
 
 		// PUT: api/admin/usuarios/{id}
@@ -378,8 +483,80 @@ namespace FilmWhere.Controllers
 				return BadRequest(ex.Message);
 			}
 		}
+		[HttpPut("usuarios/{id}/cambiar-password")]
+		public async Task<IActionResult> CambiarPassword(string id, CambiarPasswordDto passwordDto)
+		{
+			if (!ModelState.IsValid)
+			{
+				return BadRequest(ModelState);
+			}
+
+			try
+			{
+				var user = await _userManager.FindByIdAsync(id);
+				if (user == null)
+				{
+					return NotFound(new { message = "Usuario no encontrado" });
+				}
+
+				// Generar token para cambio de contraseña
+				var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+				var result = await _userManager.ResetPasswordAsync(user, token, passwordDto.NuevaPassword);
+
+				if (!result.Succeeded)
+				{
+					foreach (var error in result.Errors)
+					{
+						ModelState.AddModelError(string.Empty, error.Description);
+					}
+					return BadRequest(ModelState);
+				}
+
+				return Ok(new { message = "Contraseña cambiada exitosamente" });
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { message = $"Error al cambiar contraseña: {ex.Message}" });
+			}
+		}
+
+		// Método auxiliar para obtener DTO del usuario
+		private async Task<UsuarioAdminDto> GetUsuarioDto(string userId)
+		{
+			var user = await _userManager.FindByIdAsync(userId);
+			if (user == null) return null;
+
+			var roles = await _userManager.GetRolesAsync(user);
+
+			return new UsuarioAdminDto
+			{
+				Id = user.Id,
+				UserName = user.UserName,
+				Email = user.Email,
+				Nombre = user.Nombre,
+				Apellido = user.Apellido,
+				EmailConfirmed = user.EmailConfirmed,
+				LockoutEnd = user.LockoutEnd,
+				FechaRegistro = user.FechaRegistro,
+				FechaNacimiento = user.FechaNacimiento,
+				FotoPerfil = user.FotoPerfil,
+				Roles = roles,
+				Activo = user.LockoutEnd == null || user.LockoutEnd < DateTimeOffset.UtcNow
+			};
+		}
 	}
 
+
+	public class CambiarPasswordDto
+	{
+		[Required(ErrorMessage = "La nueva contraseña es obligatoria")]
+		[MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
+		public string NuevaPassword { get; set; }
+
+		[Required(ErrorMessage = "La confirmación de contraseña es obligatoria")]
+		[Compare("NuevaPassword", ErrorMessage = "Las contraseñas no coinciden")]
+		public string ConfirmarPassword { get; set; }
+	}
 	// DTOs
 	public class UsuarioAdminDto
 	{
@@ -399,30 +576,34 @@ namespace FilmWhere.Controllers
 
 	public class CreateUsuarioDto
 	{
-		[Required]
-		[MinLength(2)]
-		[MaxLength(50)]
+		[Required(ErrorMessage = "El nombre de usuario es obligatorio")]
+		[MinLength(2, ErrorMessage = "El nombre de usuario debe tener al menos 2 caracteres")]
+		[MaxLength(50, ErrorMessage = "El nombre de usuario no puede exceder 50 caracteres")]
+		[RegularExpression(@"^[a-zA-Z0-9_.-]+$", ErrorMessage = "El nombre de usuario solo puede contener letras, números, puntos, guiones y guiones bajos")]
 		public string UserName { get; set; }
 
-		[Required]
-		[EmailAddress]
+		[Required(ErrorMessage = "El email es obligatorio")]
+		[EmailAddress(ErrorMessage = "El formato del email no es válido")]
+		[MaxLength(256, ErrorMessage = "El email no puede exceder 256 caracteres")]
 		public string Email { get; set; }
 
-		[Required]
-		[MinLength(6)]
+		[Required(ErrorMessage = "La contraseña es obligatoria")]
+		[MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
+		[RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$",
+			ErrorMessage = "La contraseña debe contener al menos una letra minúscula, una mayúscula, un número y un carácter especial")]
 		public string Password { get; set; }
 
-		[Required]
-		[MinLength(2)]
-		[MaxLength(50)]
+		[Required(ErrorMessage = "El nombre es obligatorio")]
+		[MinLength(2, ErrorMessage = "El nombre debe tener al menos 2 caracteres")]
+		[MaxLength(50, ErrorMessage = "El nombre no puede exceder 50 caracteres")]
 		public string Nombre { get; set; }
 
-		[Required]
-		[MinLength(2)]
-		[MaxLength(50)]
+		[Required(ErrorMessage = "El apellido es obligatorio")]
+		[MinLength(2, ErrorMessage = "El apellido debe tener al menos 2 caracteres")]
+		[MaxLength(50, ErrorMessage = "El apellido no puede exceder 50 caracteres")]
 		public string Apellido { get; set; }
 
-		[Required]
+		[Required(ErrorMessage = "La fecha de nacimiento es obligatoria")]
 		public DateOnly FechaNacimiento { get; set; }
 
 		public bool EmailConfirmed { get; set; } = false;
