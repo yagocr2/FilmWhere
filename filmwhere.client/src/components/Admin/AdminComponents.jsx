@@ -118,7 +118,7 @@ export const Modal = ({ show, onClose, title, icon, children, size = "max-w-md" 
 };
 
 // Componente de badge de estado
-export const StatusBadge = ({ user }) => {
+export const StatusBadge = ({ user, handle }) => {
     if (!user.activo) {
         return (
             <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
@@ -129,10 +129,13 @@ export const StatusBadge = ({ user }) => {
     }
     if (!user.emailConfirmed) {
         return (
-            <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
-                <Mail size={12} className="mr-1" />
-                Sin confirmar
-            </span>
+            <button onClick={() => handle}>
+                <span
+                    className="text-yellow-800, inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium">
+                    <Mail size={12} className="mr-1" />
+                    Sin confirmar
+                </span>
+            </button>
         );
     }
     return (

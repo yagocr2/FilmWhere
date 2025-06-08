@@ -222,6 +222,20 @@ export const useAdminUsers = () => {
         await fetchUsuarios();
     };
 
+    const resendEmail = async (userId) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/admin/usuarios/${userId}/enviar-confirmacion`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) throw new Error('Error al reenviar email');
+        await fetchUsuarios();
+    }
+
     const confirmUserEmail = async (userId) => {
         const token = localStorage.getItem('token');
         const response = await fetch(`/api/admin/usuarios/${userId}/confirmar-email`, {
@@ -271,7 +285,8 @@ export const useAdminUsers = () => {
         handlePageSizeChange,
         refetch: fetchUsuarios,
         deleteUser,
-        createUser
+        createUser,
+        resendEmail
     };
 };
 

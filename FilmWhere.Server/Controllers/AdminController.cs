@@ -352,7 +352,7 @@ namespace FilmWhere.Controllers
 
 			var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 			// Aquí implementarías el envío del email
-			// await _emailSender.SendConfirmationEmailAsync(user.Email, token);
+		    //await _emailSender.SendEmailAsync(user.Email, token);
 
 			return Ok(new { message = "Email de confirmación enviado" });
 		}

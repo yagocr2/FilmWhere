@@ -32,7 +32,8 @@ const AdminUsuarios = () => {
         handleSearch,
         handlePageChange,
         handlePageSizeChange,
-        refetch
+        refetch,
+        resendEmail
     } = useAdminUsers();
 
     const { showModal, modalType, modalData, openModal, closeModal } = useModal();
@@ -49,6 +50,10 @@ const AdminUsuarios = () => {
         emailConfirmed: false,
         roles: []
     });
+
+    const handleResendEmail = async (userId) => {
+        resendEmail(userId);
+    }
 
     const [formErrors, setFormErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -406,7 +411,7 @@ const AdminUsuarios = () => {
                             <label className={`${textSecondaryClass} text-sm font-medium block mb-1`}>
                                 Estado
                             </label>
-                            <StatusBadge user={modalData} />
+                            <StatusBadge user={modalData}  />
                         </div>
                     </div>
 
