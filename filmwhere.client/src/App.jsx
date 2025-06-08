@@ -1,7 +1,7 @@
 ﻿import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
-import { ProtectedRoute, AnonymousRoute } from './utils/ProtectedRoute';
+import { ProtectedRoute, AnonymousRoute, AdminRoute, RegisteredRoute } from './utils/ProtectedRoute';
 
 // Public pages
 import Home from './modules/Home/Home';
@@ -11,18 +11,17 @@ import Search from './modules/Search/Search';
 import DetallePeli from './modules/DetallePelicula/DetallePelicula';
 import EmailConfirmacion from './components/EmailConfirmacion/EmailConfirmacion';
 
-
 // Protected pages
 import Inicio from './modules/Inicio/Inicio';
 import Layout from './components/Layouts/Layout';
 import AuthLayout from './components/Layouts/AuthLayout';
+import AdminLayout from './components/Layouts/AdminLayout';
 import Perfil from './modules/Perfil/Perfil';
 
-// Other pages that need to be added to your application
-// import Profile from './modules/Profile/Profile';
-// import Search from './modules/Search/Search';
-// import Favorites from './modules/Favorites/Favorites';
-// import WatchNow from './modules/WatchNow/WatchNow';
+// Admin pages
+import AdminDashboard from './modules/AdminDashboard/AdminDashboard';
+//import AdminUsuarios from './modules/AdminUsuarios/AdminUsuarios';
+//import AdminRoles from './modules/AdminRoles/AdminRoles';
 
 function App() {
     return (
@@ -38,6 +37,13 @@ function App() {
                             <Route path="/confirm-email" element={<EmailConfirmacion />} />
                         </Route>
 
+                        {/* Admin routes - only for Administrador role */}
+                        <Route element={<AdminRoute />}>
+                            <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+                            {/*<Route path="/admin/usuarios" element={<AdminLayout><AdminUsuarios /></AdminLayout>} />*/}
+                            {/*<Route path="/admin/roles" element={<AdminLayout><AdminRoles /></AdminLayout>} />*/}
+                        </Route>
+
                         {/* Protected routes - accessible only when authenticated */}
                         <Route element={<ProtectedRoute />}>
                             <Route path="/inicio" element={<AuthLayout><Inicio /></AuthLayout>} />
@@ -45,22 +51,38 @@ function App() {
                             <Route path="/perfil" element={<AuthLayout><Perfil /></AuthLayout>} />
                             <Route path="/perfil/:userId" element={<AuthLayout><Perfil /></AuthLayout>} />
 
-                            {/* Add more protected routes here, using AuthLayout */}
+                            {/* Movie detail route */}
+                            <Route path="/pelicula/:id" element={<AuthLayout><DetallePeli /></AuthLayout>} />
+
+                            {/* Add more protected routes here as needed */}
                             {/* <Route path="/favoritos" element={<AuthLayout><Favorites /></AuthLayout>} /> */}
                             {/* <Route path="/ver-ahora" element={<AuthLayout><WatchNow /></AuthLayout>} /> */}
-
-                            {/* You can also create routes for individual movie pages */}
-                            <Route path="/pelicula/:id" element={<AuthLayout><DetallePeli /></AuthLayout>} />
                         </Route>
 
-                        {/* Special case - public access with different layout */}
+                        {/* Special case - public access with different layout for non-registered users */}
                         <Route path="/inicio-publico" element={<Layout><Inicio /></Layout>} />
                         <Route path="/buscar-publico" element={<Layout><Search /></Layout>} />
                         <Route path="/pelicula-publica/:id" element={<Layout><DetallePeli /></Layout>} />
 
-
                         {/* Fallback route for any other URL */}
-                        <Route path="*" element={<div className="text-bg-primario bg-primario rounded p-12 text-center dark:bg-primario-dark dark:text-bg-primario-dark">Página no encontrada</div>} />
+                        <Route path="*" element={
+                            <div className="flex min-h-screen items-center justify-center">
+                                <div className="text-center">
+                                    <h1 className="mb-4 text-4xl font-bold text-gray-800 dark:text-gray-200">
+                                        404 - Página no encontrada
+                                    </h1>
+                                    <p className="mb-8 text-gray-600 dark:text-gray-400">
+                                        La página que buscas no existe.
+                                    </p>
+                                    <a
+                                        href="/"
+                                        className="rounded-lg bg-red-600 px-6 py-3 text-white transition-colors hover:bg-red-700"
+                                    >
+                                        Volver al inicio
+                                    </a>
+                                </div>
+                            </div>
+                        } />
                     </Routes>
                 </Router>
             </AuthProvider>

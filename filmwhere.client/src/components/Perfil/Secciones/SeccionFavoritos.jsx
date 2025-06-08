@@ -1,4 +1,4 @@
-// components/FavoritesTab.jsx
+ï»¿// components/FavoritesTab.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
@@ -61,8 +61,8 @@ const FavoritesTab = ({ favoriteMovies, loading, error, onRemoveFromFavorites, b
         return (
             <EmptyState
                 icon={Heart}
-                title="No tienes películas favoritas aún"
-                subtitle="¡Explora y agrega películas a tus favoritos!"
+                title="No tienes pelÃ­culas favoritas aÃºn"
+                subtitle="Â¡Explora y agrega pelÃ­culas a tus favoritos!"
             />
         );
     }

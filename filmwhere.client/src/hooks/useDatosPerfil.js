@@ -26,21 +26,17 @@ export const useProfileData = (token, userId) => {
     const getUserIdFromToken = useCallback((token) => {
         try {
             if (!token) {
-                console.log('getUserIdFromToken: No hay token');
                 return null;
             }
 
             const parts = token.split('.');
             if (parts.length !== 3) {
-                console.log('getUserIdFromToken: Token inválido - no tiene 3 partes');
                 return null;
             }
 
             const payload = JSON.parse(atob(parts[1]));
-            console.log('getUserIdFromToken: Payload del token:', payload);
 
             const userId = payload.sub || payload.userId || payload.id || payload.nameid || payload.user_id;
-            console.log('getUserIdFromToken: ID extraído:', userId);
 
             return userId;
         } catch (error) {
@@ -70,7 +66,6 @@ export const useProfileData = (token, userId) => {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log('checkFollowingStatus - Resultado:', data.isFollowing);
                 setIsFollowing(data.isFollowing);
             }
         } catch (error) {
@@ -82,23 +77,19 @@ export const useProfileData = (token, userId) => {
     const loadUserProfile = useCallback(async () => {
         if (!userId) return;
 
-        console.log('loadUserProfile: Cargando perfil para userId:', userId);
 
         try {
             setLoading(prev => ({ ...prev, profile: true }));
             setError(prev => ({ ...prev, profile: null }));
 
             const response = await fetch(`/api/User/profile/${userId}`);
-            console.log('loadUserProfile: Response status:', response.status);
 
             if (response.ok) {
                 const data = await response.json();
-                console.log('loadUserProfile: Datos recibidos:', data);
                 setUserProfile(data);
 
                 // Verificar si es el mismo usuario logueado
                 if (idToken && userId === idToken) {
-                    console.log('loadUserProfile: Redirigiendo a perfil propio');
                     window.location.href = '/perfil';
                     return;
                 }
@@ -239,21 +230,14 @@ export const useProfileData = (token, userId) => {
 
     // Effect para determinar tipo de perfil - SIMPLIFICADO
     useEffect(() => {
-        console.log('Effect 1: Determinando tipo de perfil');
-        console.log('Token existe:', !!token);
-        console.log('UserId:', userId);
 
         if (token) {
             const tokenUserId = getUserIdFromToken(token);
-            console.log('TokenUserId extraído:', tokenUserId);
             setCurrentUserIdFromToken(tokenUserId);
 
             if (userId) {
-                console.log('Es perfil público (con userId)');
                 setIsPerfilP(true);
-                // NO redirigir aquí - dejar que se maneje en loadUserProfile
             } else {
-                console.log('Es perfil propio (sin userId)');
                 setIsPerfilP(false);
             }
         }
@@ -261,26 +245,18 @@ export const useProfileData = (token, userId) => {
 
     // Effect para cargar perfil propio - CON DEBUGGING
     useEffect(() => {
-        console.log('Effect 2: Cargar perfil propio');
-        console.log('Token:', !!token);
-        console.log('UserId:', userId);
-        console.log('Condición para ejecutar:', !token ? 'No token' : userId ? 'Tiene userId (skip)' : 'Proceder');
 
         if (!token) {
-            console.log('No hay token, retornando');
             return;
         }
 
         if (userId) {
-            console.log('Hay userId, este effect es solo para perfil propio, retornando');
             return;
         }
 
-        console.log('Ejecutando fetch para perfil propio');
 
         const fetchUserProfile = async () => {
             try {
-                console.log('fetchUserProfile: Iniciando carga de perfil propio');
                 setLoading(prev => ({ ...prev, profile: true }));
                 setError(prev => ({ ...prev, profile: null }));
 
@@ -291,12 +267,8 @@ export const useProfileData = (token, userId) => {
                     }
                 });
 
-                console.log('fetchUserProfile: Response status:', response.status);
-                console.log('fetchUserProfile: Response ok:', response.ok);
-
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('fetchUserProfile: Datos recibidos:', data);
                     setUserProfile(data);
                 } else {
                     const errorText = await response.text();
@@ -307,7 +279,6 @@ export const useProfileData = (token, userId) => {
                 console.error('fetchUserProfile: Error:', err);
                 setError(prev => ({ ...prev, profile: 'No se pudieron cargar los datos del perfil' }));
             } finally {
-                console.log('fetchUserProfile: Finalizando carga');
                 setLoading(prev => ({ ...prev, profile: false }));
             }
         };
@@ -317,16 +288,9 @@ export const useProfileData = (token, userId) => {
 
     // Effect para cargar perfil de otro usuario
     useEffect(() => {
-        console.log('Effect 3: Cargar perfil de otro usuario');
-        console.log('UserId:', userId);
-        console.log('Token:', !!token);
 
-        if (userId && token) {
-            console.log('Ejecutando loadUserProfile');
+        if (userId && token)
             loadUserProfile();
-        } else {
-            console.log('No se ejecuta loadUserProfile - userId:', userId, 'token:', !!token);
-        }
     }, [userId, token, loadUserProfile]);
 
     // Effect para verificar seguimiento
@@ -338,12 +302,8 @@ export const useProfileData = (token, userId) => {
 
     // Effect para cargar reseñas - SOLO CUANDO SE TENGA EL PERFIL
     useEffect(() => {
-        console.log('Effect 5: Cargar reseñas');
-        console.log('Token:', !!token);
-        console.log('UserProfile:', !!userProfile);
 
         if (!token || !userProfile) {
-            console.log('No cargar reseñas - falta token o userProfile');
             return;
         }
 
@@ -353,7 +313,6 @@ export const useProfileData = (token, userId) => {
                 setError(prev => ({ ...prev, reviews: null }));
 
                 const url = userId ? `/api/user/profile/${userId}/reviews` : '/api/reviews/usuario';
-                console.log('fetchUserReviews: URL:', url);
 
                 const response = await fetch(url, {
                     headers: {
@@ -364,7 +323,6 @@ export const useProfileData = (token, userId) => {
 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('fetchUserReviews: Datos recibidos:', data);
                     setUserReviews(data);
                 } else {
                     throw new Error('Error al cargar las reseñas');
@@ -382,12 +340,8 @@ export const useProfileData = (token, userId) => {
 
     // Effect para cargar favoritos - SOLO CUANDO SE TENGA EL PERFIL
     useEffect(() => {
-        console.log('Effect 6: Cargar favoritos');
-        console.log('Token:', !!token);
-        console.log('UserProfile:', !!userProfile);
 
         if (!token || !userProfile) {
-            console.log('No cargar favoritos - falta token o userProfile');
             return;
         }
 
@@ -397,7 +351,6 @@ export const useProfileData = (token, userId) => {
                 setError(prev => ({ ...prev, favorites: null }));
 
                 const url = userId ? `/api/user/profile/${userId}/favorites` : '/api/favoritos';
-                console.log('fetchFavoriteMovies: URL:', url);
 
                 const response = await fetch(url, {
                     headers: {
@@ -408,7 +361,6 @@ export const useProfileData = (token, userId) => {
 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('fetchFavoriteMovies: Datos recibidos:', data);
                     setFavoriteMovies(data.movies || []);
                     setFavoritesMetadata({
                         totalCount: data.totalCount || 0,
