@@ -1,7 +1,7 @@
 ﻿import React, { useCallback, useState } from 'react';
 import {
     Users, UserPlus, Eye, Lock, Unlock, MailCheck, Shield, Calendar,
-    Trash2, Save, X, AlertTriangle
+    Trash2, Save, X, AlertTriangle, Edit
 } from 'lucide-react';
 import { DeleteUserModal, ViewUserModal } from '../../../components/Admin/UsersModal/UsersModal';
 import CreateUserModal from '../../../components/Admin/CreateUserModal/CreateUserModal';
@@ -47,7 +47,6 @@ const AdminUsuarios = () => {
     const { showModal, modalType, modalData, openModal, closeModal } = useModal();
     const { cardBgClass, textClass, textSecondaryClass, inputBgClass, borderClass } = useAdminTheme();
 
-
     // Roles disponibles (esto debería venir de un endpoint)
     const rolesDisponibles = ['Registrado', 'Administrador'];
 
@@ -61,13 +60,23 @@ const AdminUsuarios = () => {
             throw error; // Re-throw para que el modal pueda manejarlo
         }
     };
-    const handleEditUser = async (formData) => {
+
+    const handleEditUser = async (userId, formData) => {
         try {
-            await editUser(formData);
+            // Separar datos básicos de usuario y roles
+            const { roles, ...userBasicData } = formData;
+
+            // Actualizar datos básicos del usuario
+            await editUser(userId, userBasicData);
+
+            // Actualizar roles si han cambiado
+            if (roles && roles.length > 0) {
+                await updateUserRoles(userId, { roles });
+            }
             closeModal();
             refetch();
         } catch (error) {
-            console.error('Error creating user:', error);
+            console.error('Error editing user:', error);
             throw error; // Re-throw para que el modal pueda manejarlo
         }
     };
@@ -86,6 +95,16 @@ const AdminUsuarios = () => {
         try {
             const userData = await fetchUserById(userId);
             openModal('view', userData);
+        } catch (err) {
+            console.error('Error fetching user details:', err);
+        }
+    };
+
+    // Nueva función para abrir el modal de edición
+    const handleOpenEditUser = async (userId) => {
+        try {
+            const userData = await fetchUserById(userId);
+            openModal('edit', userData);
         } catch (err) {
             console.error('Error fetching user details:', err);
         }
@@ -139,12 +158,13 @@ const AdminUsuarios = () => {
                     <>
                         <UsersTable
                             usuarios={usuarios}
-                            onViewUser={handleViewUser}//Funciona
-                            onConfirmEmail={confirmUserEmail}//Funciona
-                            onToggleBlock={toggleUserBlock}//Funciona
+                            onViewUser={handleViewUser}
+                            onEditUser={handleOpenEditUser} // Agregar esta nueva prop
+                            onConfirmEmail={confirmUserEmail}
+                            onToggleBlock={toggleUserBlock}
                             onResendEmail={resendConfirmationEmail}
                             isResendingEmail={isResendingEmail}
-                            onDeleteUser={(user) => openModal('delete', user)}//Funciona
+                            onDeleteUser={(user) => openModal('delete', user)}
                             cardBgClass={cardBgClass}
                             textClass={textClass}
                             textSecondaryClass={textSecondaryClass}
@@ -178,17 +198,22 @@ const AdminUsuarios = () => {
                     textClass={textClass}
                 />
             )}
+
+            {/* Modal para editar usuario - CORREGIDO */}
             {showModal && modalType === 'edit' && modalData && (
                 <EditUserModal
                     show={showModal}
                     onClose={closeModal}
                     user={modalData}
-                    onSubmit={handleCreateUser}
+                    onSubmit={handleEditUser} // Cambiar de handleCreateUser a handleEditUser
+                    availableRoles={rolesDisponibles} // Agregar esta prop que faltaba
                     textSecondaryClass={textSecondaryClass}
                     inputBgClass={inputBgClass}
                     textClass={textClass}
+                    borderClass={borderClass} // Agregar esta prop que faltaba
                 />
             )}
+
             {/* Modal para confirmar eliminación */}
             {showModal && modalType === 'delete' && modalData && (
                 <DeleteUserModal

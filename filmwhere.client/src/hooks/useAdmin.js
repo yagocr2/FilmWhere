@@ -232,7 +232,7 @@ export const useAdminUsers = () => {
             throw error; // Re-throw para que el componente pueda manejarlo
         }
     };
-    const createUser = async (userData) => {
+    const editUser = async (userData) => {
         try {
             const token = localStorage.getItem('token');
             const response = await fetch(`/api/admin/usuarios/${userData.id}`, {
@@ -386,6 +386,7 @@ export const useAdminUsers = () => {
         refetch: fetchUsuarios,
         deleteUser,
         createUser,
+        editUser,
         resendConfirmationEmail,
         isResendingEmail,
         rolesDisponibles

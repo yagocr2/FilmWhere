@@ -191,7 +191,7 @@ const UserActions = ({
                 <Eye size={16} />
             </button>
             <button
-                onClick={() => onEditUser(user)}
+                onClick={() => onEditUser(user.id)}
                 className="text-green-600 hover:text-green-900 transition-colors"
                 title="Editar usuario"
             >
