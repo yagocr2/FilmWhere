@@ -158,8 +158,6 @@ namespace FilmWhere.Server.Controllers
 					return BadRequest("El término de búsqueda no puede estar vacío");
 				}
 
-				if (page > 2) page = 2;
-
 				// Verificar disponibilidad de la base de datos
 				bool dbAvailable = await _utilityService.IsDatabaseAvailableAsync();
 
@@ -312,7 +310,6 @@ namespace FilmWhere.Server.Controllers
 		{
 			try
 			{
-				if (page > 2) page = 2;
 
 				bool dbAvailable = await _utilityService.IsDatabaseAvailableAsync();
 

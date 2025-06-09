@@ -30,7 +30,7 @@ const useSearchMovies = () => {
                 // Solo filtro por género
                 const genreName = selectedGenres[0]; // Por simplicidad, usar el primer género
                 url = `/api/pelicula/genero/${encodeURIComponent(genreName)}`;
-                searchParams.append('cantidad', '20');
+                searchParams.append('cantidad', '48');
             } else if (query.trim() && selectedGenres.length === 0) {
                 // Solo búsqueda por texto
                 url = '/api/pelicula/buscar';
@@ -46,7 +46,7 @@ const useSearchMovies = () => {
                 // Búsqueda general si no hay criterios específicos
                 url = '/api/pelicula/populares';
                 searchParams.append('page', page.toString());
-                searchParams.append('cantidad', '20');
+                searchParams.append('cantidad', '48');
             }
 
             const fullUrl = `${url}?${searchParams.toString()}`;
