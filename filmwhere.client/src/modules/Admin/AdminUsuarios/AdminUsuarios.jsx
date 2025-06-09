@@ -33,7 +33,8 @@ const AdminUsuarios = () => {
         handlePageChange,
         handlePageSizeChange,
         refetch,
-        resendEmail
+        resendEmail,
+        //rolesDisponibles
     } = useAdminUsers();
 
     const { showModal, modalType, modalData, openModal, closeModal } = useModal();
@@ -59,7 +60,7 @@ const AdminUsuarios = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Roles disponibles (esto debería venir de un endpoint)
-    const availableRoles = ['Registrado', 'Administrador'];
+    const rolesDisponibles = ['Registrado', 'Administrador'];
 
     const resetCreateForm = useCallback(() => {
         setCreateFormData({
@@ -487,7 +488,7 @@ const AdminUsuarios = () => {
                                 Roles
                             </label>
                             <div className="space-y-2">
-                                {availableRoles.map((role) => (
+                                {rolesDisponibles.map((role) => (
                                     <label key={role} className="flex items-center">
                                         <input
                                             type="checkbox"

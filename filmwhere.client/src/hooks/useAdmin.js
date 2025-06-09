@@ -166,7 +166,27 @@ export const useAdminUsers = () => {
             setLoading(false);
         }
     };
+    const fetchRoles = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/admin/roles`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+            console.log('Respuesta', response.json());
+            return await response.json();
+        } catch (error) {
+            console.log('Error al cargar roles')
+        }
+    }
+    const rolesDisponibles = async () => {
+        const promesa = await fetchRoles();
+        const resultado = promesa
+        return resultado;
 
+    }
     const fetchUserById = async (userId) => {
         const token = localStorage.getItem('token');
         const response = await fetch(`/api/admin/usuarios/${userId}`, {
@@ -286,7 +306,8 @@ export const useAdminUsers = () => {
         refetch: fetchUsuarios,
         deleteUser,
         createUser,
-        resendEmail
+        resendEmail,
+        rolesDisponibles
     };
 };
 
