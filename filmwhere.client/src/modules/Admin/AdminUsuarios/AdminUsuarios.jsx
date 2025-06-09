@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useCallback, useState } from 'react';
 import {
     Users, UserPlus, Eye, Lock, Unlock, MailCheck, Shield, Calendar,
     Trash2, Save, X, AlertTriangle
@@ -59,9 +59,9 @@ const AdminUsuarios = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Roles disponibles (esto debería venir de un endpoint)
-    const availableRoles = ['Registrado', 'Administrador', 'Moderador'];
+    const availableRoles = ['Registrado', 'Administrador'];
 
-    const resetCreateForm = () => {
+    const resetCreateForm = useCallback(() => {
         setCreateFormData({
             userName: '',
             email: '',
@@ -73,9 +73,9 @@ const AdminUsuarios = () => {
             roles: []
         });
         setFormErrors({});
-    };
+    }, []);
 
-    const validateCreateForm = () => {
+    const validateCreateForm = useCallback(() => {
         const errors = {};
 
         if (!createFormData.userName.trim()) {
@@ -117,9 +117,9 @@ const AdminUsuarios = () => {
 
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
-    };
+    }, [createFormData]);
 
-    const handleCreateUser = async (e) => {
+    const handleCreateUser = useCallback(async (e) => {
         e.preventDefault();
 
         if (!validateCreateForm()) {
@@ -143,7 +143,7 @@ const AdminUsuarios = () => {
         } finally {
             setIsSubmitting(false);
         }
-    };
+    }, [createFormData, validateCreateForm, createUser, resetCreateForm, closeModal, refetch]);
 
     const handleDeleteUser = async (userId, userName) => {
         try {
@@ -164,327 +164,27 @@ const AdminUsuarios = () => {
         }
     };
 
-    const handleRoleChange = (role, checked) => {
+    const handleRoleChange = useCallback((role, checked) => {
         setCreateFormData(prev => ({
             ...prev,
             roles: checked
                 ? [...prev.roles, role]
                 : prev.roles.filter(r => r !== role)
         }));
-    };
+    }, []);
+
+    const handleInputChange = useCallback((field, value) => {
+        setCreateFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    }, []);
+    const handleCloseCreateModal = useCallback(() => {
+        resetCreateForm();
+        closeModal();
+    }, [resetCreateForm, closeModal]);
 
     // Modal para crear usuario
-    const CreateUserModal = () => {
-        if (!showModal || modalType !== 'create') return null;
-
-        return (
-            <Modal
-                show={showModal}
-                onClose={() => {
-                    resetCreateForm();
-                    closeModal();
-                }}
-                title="Crear Nuevo Usuario"
-                icon={<UserPlus />}
-                size="max-w-2xl"
-            >
-                <form onSubmit={handleCreateUser} className="space-y-4">
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div>
-                            <label className={`${textClass} block text-sm font-medium mb-1`}>
-                                Nombre de usuario *
-                            </label>
-                            <input
-                                type="text"
-                                value={createFormData.userName}
-                                onChange={(e) => setCreateFormData(prev => ({ ...prev, userName: e.target.value }))}
-                                className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.userName ? 'border-red-500' : ''
-                                    }`}
-                                placeholder="Ingrese nombre de usuario"
-                            />
-                            {formErrors.userName && (
-                                <p className="mt-1 text-sm text-red-500">{formErrors.userName}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className={`${textClass} block text-sm font-medium mb-1`}>
-                                Email *
-                            </label>
-                            <input
-                                type="email"
-                                value={createFormData.email}
-                                onChange={(e) => setCreateFormData(prev => ({ ...prev, email: e.target.value }))}
-                                className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.email ? 'border-red-500' : ''
-                                    }`}
-                                placeholder="usuario@ejemplo.com"
-                            />
-                            {formErrors.email && (
-                                <p className="mt-1 text-sm text-red-500">{formErrors.email}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className={`${textClass} block text-sm font-medium mb-1`}>
-                                Contraseña *
-                            </label>
-                            <input
-                                type="password"
-                                value={createFormData.password}
-                                onChange={(e) => setCreateFormData(prev => ({ ...prev, password: e.target.value }))}
-                                className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.password ? 'border-red-500' : ''
-                                    }`}
-                                placeholder="Mínimo 6 caracteres"
-                            />
-                            {formErrors.password && (
-                                <p className="mt-1 text-sm text-red-500">{formErrors.password}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className={`${textClass} block text-sm font-medium mb-1`}>
-                                Fecha de Nacimiento *
-                            </label>
-                            <input
-                                type="date"
-                                value={createFormData.fechaNacimiento}
-                                onChange={(e) => setCreateFormData(prev => ({ ...prev, fechaNacimiento: e.target.value }))}
-                                className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.fechaNacimiento ? 'border-red-500' : ''
-                                    }`}
-                            />
-                            {formErrors.fechaNacimiento && (
-                                <p className="mt-1 text-sm text-red-500">{formErrors.fechaNacimiento}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className={`${textClass} block text-sm font-medium mb-1`}>
-                                Nombre *
-                            </label>
-                            <input
-                                type="text"
-                                value={createFormData.nombre}
-                                onChange={(e) => setCreateFormData(prev => ({ ...prev, nombre: e.target.value }))}
-                                className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.nombre ? 'border-red-500' : ''
-                                    }`}
-                                placeholder="Ingrese nombre"
-                            />
-                            {formErrors.nombre && (
-                                <p className="mt-1 text-sm text-red-500">{formErrors.nombre}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className={`${textClass} block text-sm font-medium mb-1`}>
-                                Apellido *
-                            </label>
-                            <input
-                                type="text"
-                                value={createFormData.apellido}
-                                onChange={(e) => setCreateFormData(prev => ({ ...prev, apellido: e.target.value }))}
-                                className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.apellido ? 'border-red-500' : ''
-                                    }`}
-                                placeholder="Ingrese apellido"
-                            />
-                            {formErrors.apellido && (
-                                <p className="mt-1 text-sm text-red-500">{formErrors.apellido}</p>
-                            )}
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className={`${textClass} block text-sm font-medium mb-2`}>
-                            Roles
-                        </label>
-                        <div className="space-y-2">
-                            {availableRoles.map((role) => (
-                                <label key={role} className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        checked={createFormData.roles.includes(role)}
-                                        onChange={(e) => handleRoleChange(role, e.target.checked)}
-                                        className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                                    />
-                                    <span className={`${textClass} ml-2 text-sm`}>{role}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="flex items-center">
-                            <input
-                                type="checkbox"
-                                checked={createFormData.emailConfirmed}
-                                onChange={(e) => setCreateFormData(prev => ({ ...prev, emailConfirmed: e.target.checked }))}
-                                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                            />
-                            <span className={`${textClass} ml-2 text-sm`}>Email confirmado</span>
-                        </label>
-                    </div>
-
-                    <div className="flex justify-end space-x-3 border-t border-gray-200 pt-6">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                resetCreateForm();
-                                closeModal();
-                            }}
-                            className={`px-4 py-2 rounded-lg ${inputBgClass} ${textClass} hover:bg-gray-200 transition-colors`}
-                            disabled={isSubmitting}
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="flex items-center space-x-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-                        >
-                            <Save size={16} />
-                            <span>{isSubmitting ? 'Creando...' : 'Crear Usuario'}</span>
-                        </button>
-                    </div>
-                </form>
-            </Modal>
-        );
-    };
-
-    // Modal para ver usuario
-    const UserModal = () => {
-        if (!showModal || modalType !== 'view' || !modalData) return null;
-
-        return (
-            <Modal
-                show={showModal}
-                onClose={closeModal}
-                title="Detalles del Usuario"
-                icon={<Eye />}
-                size="max-w-2xl"
-            >
-                <div className="space-y-4">
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div>
-                            <label className={`${textSecondaryClass} text-sm font-medium block mb-1`}>
-                                Nombre de usuario
-                            </label>
-                            <p className={`${textClass} font-medium`}>{modalData.userName}</p>
-                        </div>
-                        <div>
-                            <label className={`${textSecondaryClass} text-sm font-medium block mb-1`}>
-                                Email
-                            </label>
-                            <p className={`${textClass} font-medium flex items-center`}>
-                                {modalData.email}
-                                {modalData.emailConfirmed && (
-                                    <MailCheck size={16} className="ml-2 text-green-600" />
-                                )}
-                            </p>
-                        </div>
-                        <div>
-                            <label className={`${textSecondaryClass} text-sm font-medium block mb-1`}>
-                                Nombre completo
-                            </label>
-                            <p className={`${textClass} font-medium`}>
-                                {modalData.nombre} {modalData.apellido}
-                            </p>
-                        </div>
-                        <div>
-                            <label className={`${textSecondaryClass} text-sm font-medium block mb-1`}>
-                                Fecha de registro
-                            </label>
-                            <p className={`${textClass} font-medium flex items-center`}>
-                                <Calendar size={16} className="mr-2" />
-                                {new Date(modalData.fechaRegistro).toLocaleDateString()}
-                            </p>
-                        </div>
-                        {modalData.fechaNacimiento && (
-                            <div>
-                                <label className={`${textSecondaryClass} text-sm font-medium block mb-1`}>
-                                    Fecha de nacimiento
-                                </label>
-                                <p className={`${textClass} font-medium`}>
-                                    {new Date(modalData.fechaNacimiento).toLocaleDateString()}
-                                </p>
-                            </div>
-                        )}
-                        <div>
-                            <label className={`${textSecondaryClass} text-sm font-medium block mb-1`}>
-                                Estado
-                            </label>
-                            <StatusBadge user={modalData}  />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className={`${textSecondaryClass} text-sm font-medium block mb-2`}>
-                            Roles
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                            {modalData.roles?.map((role) => (
-                                <span
-                                    key={role}
-                                    className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800"
-                                >
-                                    <Shield size={12} className="mr-1" />
-                                    {role}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mt-6 flex justify-end space-x-3 border-t border-gray-200 pt-6">
-                    <button
-                        onClick={closeModal}
-                        className={`px-4 py-2 rounded-lg ${inputBgClass} ${textClass} hover:bg-gray-200 transition-colors`}
-                    >
-                        Cerrar
-                    </button>
-                </div>
-            </Modal>
-        );
-    };
-
-    // Modal para confirmar eliminación
-    const DeleteConfirmModal = () => {
-        if (!showModal || modalType !== 'delete' || !modalData) return null;
-
-        return (
-            <Modal
-                show={showModal}
-                onClose={closeModal}
-                title="Confirmar Eliminación"
-                icon={<AlertTriangle />}
-                size="max-w-md"
-            >
-                <div>
-                    <div className="mb-4 flex items-center text-red-600">
-                        <AlertTriangle className="mr-2" size={24} />
-                        <span className="text-lg font-medium">¿Confirmar eliminación?</span>
-                    </div>
-                    <p className={`${textSecondaryClass} mb-6`}>
-                        ¿Estás seguro de que deseas eliminar al usuario "{modalData.userName}"?
-                        Esta acción no se puede deshacer y se eliminarán todos los datos asociados.
-                    </p>
-                    <div className="flex justify-end space-x-3">
-                        <button
-                            onClick={closeModal}
-                            className={`px-4 py-2 rounded-lg ${inputBgClass} ${textClass} hover:bg-gray-200 transition-colors`}
-                        >
-                            Cancelar
-                        </button>
-                        <button
-                            onClick={() => handleDeleteUser(modalData.id, modalData.userName)}
-                            className="rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
-                        >
-                            Eliminar
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-        );
-    };
-
     const UsersTable = () => (
         <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -513,7 +213,7 @@ const AdminUsuarios = () => {
                 <tbody className={`${cardBgClass} divide-y divide-gray-200`}>
                     {usuarios.map((user) => (
                         <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td className="whitespace-nowrap px-6 py-4">
+                            <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center">
                                     <div className="h-10 w-10 flex-shrink-0">
                                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300">
@@ -530,13 +230,13 @@ const AdminUsuarios = () => {
                                     </div>
                                 </div>
                             </td>
-                            <td className="whitespace-nowrap px-6 py-4">
+                            <td className="px-6 py-4 whitespace-nowrap">
                                 <div className={`${textClass} text-sm`}>{user.email}</div>
                             </td>
-                            <td className="whitespace-nowrap px-6 py-4">
+                            <td className="px-6 py-4 whitespace-nowrap">
                                 <StatusBadge user={user} />
                             </td>
-                            <td className="whitespace-nowrap px-6 py-4">
+                            <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex flex-wrap gap-1">
                                     {user.roles?.slice(0, 2).map((role) => (
                                         <span
@@ -553,12 +253,12 @@ const AdminUsuarios = () => {
                                     )}
                                 </div>
                             </td>
-                            <td className="whitespace-nowrap px-6 py-4">
+                            <td className="px-6 py-4 whitespace-nowrap">
                                 <div className={`${textSecondaryClass} text-sm`}>
                                     {new Date(user.fechaRegistro).toLocaleDateString()}
                                 </div>
                             </td>
-                            <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                            <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
                                 <div className="flex items-center justify-end space-x-2">
                                     <button
                                         onClick={() => handleViewUser(user.id)}
@@ -669,9 +369,299 @@ const AdminUsuarios = () => {
                 )}
             </div>
 
-            <CreateUserModal />
-            <UserModal />
-            <DeleteConfirmModal />
+            {/* Modal para crear usuario */}
+            {showModal && modalType === 'create' && (
+                <Modal
+                    show={showModal}
+                    onClose={handleCloseCreateModal}
+                    title="Crear Nuevo Usuario"
+                    icon={<UserPlus />}
+                    size="max-w-2xl"
+                >
+                    <form onSubmit={handleCreateUser} className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div>
+                                <label className={`${textClass} block text-sm font-medium mb-1`}>
+                                    Nombre de usuario *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={createFormData.userName}
+                                    onChange={(e) => handleInputChange('userName', e.target.value)}
+                                    className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.userName ? 'border-red-500' : ''
+                                        }`}
+                                    placeholder="Ingrese nombre de usuario"
+                                />
+                                {formErrors.userName && (
+                                    <p className="mt-1 text-sm text-red-500">{formErrors.userName}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className={`${textClass} block text-sm font-medium mb-1`}>
+                                    Email *
+                                </label>
+                                <input
+                                    type="email"
+                                    value={createFormData.email}
+                                    onChange={(e) => handleInputChange('email', e.target.value)}
+                                    className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.email ? 'border-red-500' : ''
+                                        }`}
+                                    placeholder="usuario@ejemplo.com"
+                                />
+                                {formErrors.email && (
+                                    <p className="mt-1 text-sm text-red-500">{formErrors.email}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className={`${textClass} block text-sm font-medium mb-1`}>
+                                    Contraseña *
+                                </label>
+                                <input
+                                    type="password"
+                                    value={createFormData.password}
+                                    onChange={(e) => handleInputChange('password', e.target.value)}
+                                    className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.password ? 'border-red-500' : ''
+                                        }`}
+                                    placeholder="Mínimo 6 caracteres"
+                                />
+                                {formErrors.password && (
+                                    <p className="mt-1 text-sm text-red-500">{formErrors.password}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className={`${textClass} block text-sm font-medium mb-1`}>
+                                    Fecha de Nacimiento *
+                                </label>
+                                <input
+                                    type="date"
+                                    value={createFormData.fechaNacimiento}
+                                    onChange={(e) => handleInputChange('fechaNacimiento', e.target.value)}
+                                    className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.fechaNacimiento ? 'border-red-500' : ''
+                                        }`}
+                                />
+                                {formErrors.fechaNacimiento && (
+                                    <p className="mt-1 text-sm text-red-500">{formErrors.fechaNacimiento}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className={`${textClass} block text-sm font-medium mb-1`}>
+                                    Nombre *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={createFormData.nombre}
+                                    onChange={(e) => handleInputChange('nombre', e.target.value)}
+                                    className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.nombre ? 'border-red-500' : ''
+                                        }`}
+                                    placeholder="Ingrese nombre"
+                                />
+                                {formErrors.nombre && (
+                                    <p className="mt-1 text-sm text-red-500">{formErrors.nombre}</p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className={`${textClass} block text-sm font-medium mb-1`}>
+                                    Apellido *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={createFormData.apellido}
+                                    onChange={(e) => handleInputChange('apellido', e.target.value)}
+                                    className={`${inputBgClass} ${textClass} ${borderClass} w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${formErrors.apellido ? 'border-red-500' : ''
+                                        }`}
+                                    placeholder="Ingrese apellido"
+                                />
+                                {formErrors.apellido && (
+                                    <p className="mt-1 text-sm text-red-500">{formErrors.apellido}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={`${textClass} block text-sm font-medium mb-2`}>
+                                Roles
+                            </label>
+                            <div className="space-y-2">
+                                {availableRoles.map((role) => (
+                                    <label key={role} className="flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={createFormData.roles.includes(role)}
+                                            onChange={(e) => handleRoleChange(role, e.target.checked)}
+                                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                        />
+                                        <span className={`${textClass} ml-2 text-sm`}>{role}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    checked={createFormData.emailConfirmed}
+                                    onChange={(e) => handleInputChange('emailConfirmed', e.target.checked)}
+                                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                />
+                                <span className={`${textClass} ml-2 text-sm`}>Email confirmado</span>
+                            </label>
+                        </div>
+
+                        <div className="flex justify-end space-x-3 border-t border-gray-200 pt-6">
+                            <button
+                                type="button"
+                                onClick={handleCloseCreateModal}
+                                className={`px-4 py-2 rounded-lg ${inputBgClass} ${textClass} hover:bg-gray-200 transition-colors`}
+                                disabled={isSubmitting}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="flex items-center space-x-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                            >
+                                <Save size={16} />
+                                <span>{isSubmitting ? 'Creando...' : 'Crear Usuario'}</span>
+                            </button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
+
+            {/* Modal para ver usuario */}
+            {showModal && modalType === 'view' && modalData && (
+                <Modal
+                    show={showModal}
+                    onClose={closeModal}
+                    title="Detalles del Usuario"
+                    icon={<Eye />}
+                    size="max-w-2xl"
+                >
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div>
+                                <label className={`${textSecondaryClass} text-sm font-medium block mb-1`}>
+                                    Nombre de usuario
+                                </label>
+                                <p className={`${textClass} font-medium`}>{modalData.userName}</p>
+                            </div>
+                            <div>
+                                <label className={`${textSecondaryClass} text-sm font-medium block mb-1`}>
+                                    Email
+                                </label>
+                                <p className={`${textClass} font-medium flex items-center`}>
+                                    {modalData.email}
+                                    {modalData.emailConfirmed && (
+                                        <MailCheck size={16} className="ml-2 text-green-600" />
+                                    )}
+                                </p>
+                            </div>
+                            <div>
+                                <label className={`${textSecondaryClass} text-sm font-medium block mb-1`}>
+                                    Nombre completo
+                                </label>
+                                <p className={`${textClass} font-medium`}>
+                                    {modalData.nombre} {modalData.apellido}
+                                </p>
+                            </div>
+                            <div>
+                                <label className={`${textSecondaryClass} text-sm font-medium block mb-1`}>
+                                    Fecha de registro
+                                </label>
+                                <p className={`${textClass} font-medium flex items-center`}>
+                                    <Calendar size={16} className="mr-2" />
+                                    {new Date(modalData.fechaRegistro).toLocaleDateString()}
+                                </p>
+                            </div>
+                            {modalData.fechaNacimiento && (
+                                <div>
+                                    <label className={`${textSecondaryClass} text-sm font-medium block mb-1`}>
+                                        Fecha de nacimiento
+                                    </label>
+                                    <p className={`${textClass} font-medium`}>
+                                        {new Date(modalData.fechaNacimiento).toLocaleDateString()}
+                                    </p>
+                                </div>
+                            )}
+                            <div>
+                                <label className={`${textSecondaryClass} text-sm font-medium block mb-1`}>
+                                    Estado
+                                </label>
+                                <StatusBadge user={modalData} />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className={`${textSecondaryClass} text-sm font-medium block mb-2`}>
+                                Roles
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                                {modalData.roles?.map((role) => (
+                                    <span
+                                        key={role}
+                                        className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800"
+                                    >
+                                        <Shield size={12} className="mr-1" />
+                                        {role}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-end space-x-3 border-t border-gray-200 pt-6">
+                        <button
+                            onClick={closeModal}
+                            className={`px-4 py-2 rounded-lg ${inputBgClass} ${textClass} hover:bg-gray-200 transition-colors`}
+                        >
+                            Cerrar
+                        </button>
+                    </div>
+                </Modal>
+            )}
+
+            {/* Modal para confirmar eliminación */}
+            {showModal && modalType === 'delete' && modalData && (
+                <Modal
+                    show={showModal}
+                    onClose={closeModal}
+                    title="Confirmar Eliminación"
+                    icon={<AlertTriangle />}
+                    size="max-w-md"
+                >
+                    <div>
+                        <div className="mb-4 flex items-center text-red-600">
+                            <AlertTriangle className="mr-2" size={24} />
+                            <span className="text-lg font-medium">¿Confirmar eliminación?</span>
+                        </div>
+                        <p className={`${textSecondaryClass} mb-6`}>
+                            ¿Estás seguro de que deseas eliminar al usuario "{modalData.userName}"?
+                            Esta acción no se puede deshacer y se eliminarán todos los datos asociados.
+                        </p>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={closeModal}
+                                className={`px-4 py-2 rounded-lg ${inputBgClass} ${textClass} hover:bg-gray-200 transition-colors`}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={() => handleDeleteUser(modalData.id, modalData.userName)}
+                                className="rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
+                            >
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 };
