@@ -327,7 +327,6 @@ namespace FilmWhere.Controllers
 			var result = await _userManager.UpdateAsync(user);
 
 			if (result.Succeeded)
-			if (result.Succeeded)
 			{
 				return Ok(new { message = "Email confirmado exitosamente" });
 			}
@@ -352,7 +351,7 @@ namespace FilmWhere.Controllers
 
 			var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 			// Aquí implementarías el envío del email
-		    //await _emailSender.SendEmailAsync(user.Email, token);
+			//await _emailSender.SendEmailAsync(user.Email, token);
 
 			return Ok(new { message = "Email de confirmación enviado" });
 		}

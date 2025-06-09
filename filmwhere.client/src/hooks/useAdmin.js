@@ -200,17 +200,35 @@ export const useAdminUsers = () => {
         return await response.json();
     };
     const createUser = async (userData) => {
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/admin/usuarios', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(userData),
-        });
-        if (!response.ok) throw new Error('Error al crear usuario');
-        await fetchUsuarios();
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/admin/usuarios', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`, // Si usas autenticación
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+
+                // Crear un error personalizado que incluya la información de respuesta
+                const error = new Error('Error al crear usuario');
+                error.response = {
+                    status: response.status,
+                    data: errorData
+                };
+                throw error;
+            }
+
+            const result = await response.json();
+            return result;
+        } catch (error) {
+            console.error('Error in createUser:', error);
+            throw error; // Re-throw para que el componente pueda manejarlo
+        }
     };
     const deleteUser = async (userId) => {
         const token = localStorage.getItem('token');

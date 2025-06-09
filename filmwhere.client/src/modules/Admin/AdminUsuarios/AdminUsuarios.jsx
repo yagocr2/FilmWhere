@@ -44,111 +44,24 @@ const AdminUsuarios = () => {
     const { showModal, modalType, modalData, openModal, closeModal } = useModal();
     const { cardBgClass, textClass, textSecondaryClass, inputBgClass, borderClass } = useAdminTheme();
 
-    // Estado para el formulario de creación
-    const [createFormData, setCreateFormData] = useState({
-        userName: '',
-        email: '',
-        password: '',
-        nombre: '',
-        apellido: '',
-        fechaNacimiento: '',
-        emailConfirmed: false,
-        roles: []
-    });
-
     const handleResendEmail = async (userId) => {
         resendEmail(userId);
     }
 
-    const [formErrors, setFormErrors] = useState({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
     // Roles disponibles (esto debería venir de un endpoint)
     const rolesDisponibles = ['Registrado', 'Administrador'];
 
-    const resetCreateForm = useCallback(() => {
-        setCreateFormData({
-            userName: '',
-            email: '',
-            password: '',
-            nombre: '',
-            apellido: '',
-            fechaNacimiento: '',
-            emailConfirmed: false,
-            roles: []
-        });
-        setFormErrors({});
-    }, []);
-
-    const validateCreateForm = useCallback(() => {
-        const errors = {};
-
-        if (!createFormData.userName.trim()) {
-            errors.userName = 'El nombre de usuario es obligatorio';
-        } else if (createFormData.userName.length < 2) {
-            errors.userName = 'El nombre de usuario debe tener al menos 2 caracteres';
-        }
-
-        if (!createFormData.email.trim()) {
-            errors.email = 'El email es obligatorio';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(createFormData.email)) {
-            errors.email = 'El formato del email no es válido';
-        }
-
-        if (!createFormData.password.trim()) {
-            errors.password = 'La contraseña es obligatoria';
-        } else if (createFormData.password.length < 6) {
-            errors.password = 'La contraseña debe tener al menos 6 caracteres';
-        }
-
-        if (!createFormData.nombre.trim()) {
-            errors.nombre = 'El nombre es obligatorio';
-        }
-
-        if (!createFormData.apellido.trim()) {
-            errors.apellido = 'El apellido es obligatorio';
-        }
-
-        if (!createFormData.fechaNacimiento) {
-            errors.fechaNacimiento = 'La fecha de nacimiento es obligatoria';
-        } else {
-            const birthDate = new Date(createFormData.fechaNacimiento);
-            const today = new Date();
-            const age = today.getFullYear() - birthDate.getFullYear();
-            if (age < 13) {
-                errors.fechaNacimiento = 'Debe ser mayor de 13 años';
-            }
-        }
-
-        setFormErrors(errors);
-        return Object.keys(errors).length === 0;
-    }, [createFormData]);
-
-    const handleCreateUser = useCallback(async (e) => {
-        e.preventDefault();
-
-        if (!validateCreateForm()) {
-            return;
-        }
-
-        setIsSubmitting(true);
+    const handleCreateUser = async (formData) => {
         try {
-            // Convertir fecha al formato esperado por el backend
-            const formattedData = {
-                ...createFormData,
-                fechaNacimiento: createFormData.fechaNacimiento
-            };
-
-            await createUser(formattedData);
-            resetCreateForm();
+            await createUser(formData);
             closeModal();
             refetch();
         } catch (error) {
             console.error('Error creating user:', error);
-        } finally {
-            setIsSubmitting(false);
+            throw error; // Re-throw para que el modal pueda manejarlo
         }
-    }, [createFormData, validateCreateForm, createUser, resetCreateForm, closeModal, refetch]);
+    };
+
 
     const handleDeleteUser = async (userId) => {
         try {
@@ -234,8 +147,8 @@ const AdminUsuarios = () => {
                 <CreateUserModal
                     show={showModal}
                     onClose={closeModal}
-                    onSubmit={createUser}
-                    avalibleRoles={rolesDisponibles}
+                    onSubmit={handleCreateUser}
+                    availableRoles={rolesDisponibles}
                     textSecondaryClass={textSecondaryClass}
                     inputBgClass={inputBgClass}
                     textClass={textClass}
