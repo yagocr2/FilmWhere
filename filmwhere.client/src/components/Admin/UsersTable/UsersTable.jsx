@@ -1,10 +1,12 @@
 ﻿import React from 'react';
-import { Users, Eye, Lock, Unlock, MailCheck, Trash2 } from 'lucide-react';
+import { Users, Eye, Lock, Unlock, MailCheck, Trash2, Edit, Shield } from 'lucide-react';
 import { StatusBadge } from '../../../components/Admin/AdminComponents';
 
 const UsersTable = ({
     usuarios,
     onViewUser,
+    onEditUser,
+    onManageRoles,
     onConfirmEmail,
     onToggleBlock,
     onDeleteUser,
@@ -45,6 +47,8 @@ const UsersTable = ({
                             key={user.id}
                             user={user}
                             onViewUser={onViewUser}
+                            onEditUser={onEditUser}
+                            onManageRoles={onManageRoles}
                             onConfirmEmail={onConfirmEmail}
                             onToggleBlock={onToggleBlock}
                             onDeleteUser={onDeleteUser}
@@ -63,6 +67,8 @@ const UsersTable = ({
 const UserTableRow = ({
     user,
     onViewUser,
+    onEditUser,
+    onManageRoles,
     onConfirmEmail,
     onToggleBlock,
     onDeleteUser,
@@ -70,7 +76,6 @@ const UserTableRow = ({
     textSecondaryClass,
     onResendEmail,
     isResendingEmail
-
 }) => {
     return (
         <tr className="hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -103,21 +108,10 @@ const UserTableRow = ({
                 />
             </td>
             <td className="whitespace-nowrap px-6 py-4">
-                <div className="flex flex-wrap gap-1">
-                    {user.roles?.slice(0, 2).map((role) => (
-                        <span
-                            key={role}
-                            className="inline-flex items-center rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800"
-                        >
-                            {role}
-                        </span>
-                    ))}
-                    {user.roles?.length > 2 && (
-                        <span className="text-xs text-gray-500">
-                            +{user.roles.length - 2}
-                        </span>
-                    )}
-                </div>
+                <RolesBadges
+                    roles={user.roles}
+                    onManageRoles={() => onManageRoles(user)}
+                />
             </td>
             <td className="whitespace-nowrap px-6 py-4">
                 <div className={`${textSecondaryClass} text-sm`}>
@@ -128,6 +122,7 @@ const UserTableRow = ({
                 <UserActions
                     user={user}
                     onViewUser={onViewUser}
+                    onEditUser={onEditUser}
                     onConfirmEmail={onConfirmEmail}
                     onToggleBlock={onToggleBlock}
                     onDeleteUser={onDeleteUser}
@@ -137,7 +132,55 @@ const UserTableRow = ({
     );
 };
 
-const UserActions = ({ user, onViewUser, onConfirmEmail, onToggleBlock, onDeleteUser }) => {
+const RolesBadges = ({ roles, onManageRoles }) => {
+    const handleRolesClick = (e) => {
+        e.stopPropagation();
+        onManageRoles();
+    };
+
+    return (
+        <div className="flex flex-wrap gap-1">
+            {roles?.slice(0, 2).map((role) => (
+                <span
+                    key={role}
+                    onClick={handleRolesClick}
+                    className="inline-flex cursor-pointer items-center rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 transition-colors hover:bg-blue-200"
+                    title="Click para gestionar roles"
+                >
+                    {role}
+                </span>
+            ))}
+            {roles?.length > 2 && (
+                <span
+                    onClick={handleRolesClick}
+                    className="cursor-pointer rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500 transition-colors hover:text-gray-700"
+                    title="Click para gestionar todos los roles"
+                >
+                    +{roles.length - 2}
+                </span>
+            )}
+            {(!roles || roles.length === 0) && (
+                <button
+                    onClick={handleRolesClick}
+                    className="inline-flex cursor-pointer items-center rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200"
+                    title="Click para asignar roles"
+                >
+                    <Shield size={12} className="mr-1" />
+                    Sin roles
+                </button>
+            )}
+        </div>
+    );
+};
+
+const UserActions = ({
+    user,
+    onViewUser,
+    onEditUser,
+    onConfirmEmail,
+    onToggleBlock,
+    onDeleteUser
+}) => {
     return (
         <div className="flex items-center justify-end space-x-2">
             <button
@@ -147,10 +190,17 @@ const UserActions = ({ user, onViewUser, onConfirmEmail, onToggleBlock, onDelete
             >
                 <Eye size={16} />
             </button>
+            <button
+                onClick={() => onEditUser(user)}
+                className="text-green-600 hover:text-green-900 transition-colors"
+                title="Editar usuario"
+            >
+                <Edit size={16} />
+            </button>
             {!user.emailConfirmed && (
                 <button
                     onClick={() => onConfirmEmail(user.id)}
-                    className="text-green-600 hover:text-green-900 transition-colors"
+                    className="text-indigo-600 hover:text-indigo-900 transition-colors"
                     title="Confirmar email"
                 >
                     <MailCheck size={16} />
@@ -158,7 +208,7 @@ const UserActions = ({ user, onViewUser, onConfirmEmail, onToggleBlock, onDelete
             )}
             <button
                 onClick={() => onToggleBlock(user.id, !user.activo)}
-                className={`${user.activo ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'} transition-colors`}
+                className={`${user.activo ? 'text-red-600 hover:text-red-900' : 'text-orange-600 hover:text-orange-900'} transition-colors`}
                 title={user.activo ? 'Bloquear usuario' : 'Desbloquear usuario'}
             >
                 {user.activo ? <Lock size={16} /> : <Unlock size={16} />}

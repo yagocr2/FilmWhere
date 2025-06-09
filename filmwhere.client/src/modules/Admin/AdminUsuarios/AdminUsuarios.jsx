@@ -17,6 +17,7 @@ import {
     Modal
 } from '../../../components/Admin/AdminComponents';
 import { useAdminUsers, useModal, useAdminTheme } from '../../../hooks/useAdmin';
+import EditUserModal from '../../../components/Admin/EditUserModal/EditUserModal';
 
 const AdminUsuarios = () => {
     const {
@@ -39,6 +40,7 @@ const AdminUsuarios = () => {
         refetch,
         resendConfirmationEmail,
         isResendingEmail,
+        editUser,
         //rolesDisponibles
     } = useAdminUsers();
 
@@ -52,6 +54,16 @@ const AdminUsuarios = () => {
     const handleCreateUser = async (formData) => {
         try {
             await createUser(formData);
+            closeModal();
+            refetch();
+        } catch (error) {
+            console.error('Error creating user:', error);
+            throw error; // Re-throw para que el modal pueda manejarlo
+        }
+    };
+    const handleEditUser = async (formData) => {
+        try {
+            await editUser(formData);
             closeModal();
             refetch();
         } catch (error) {
@@ -166,7 +178,17 @@ const AdminUsuarios = () => {
                     textClass={textClass}
                 />
             )}
-
+            {showModal && modalType === 'edit' && modalData && (
+                <EditUserModal
+                    show={showModal}
+                    onClose={closeModal}
+                    user={modalData}
+                    onSubmit={handleCreateUser}
+                    textSecondaryClass={textSecondaryClass}
+                    inputBgClass={inputBgClass}
+                    textClass={textClass}
+                />
+            )}
             {/* Modal para confirmar eliminación */}
             {showModal && modalType === 'delete' && modalData && (
                 <DeleteUserModal
