@@ -2,7 +2,7 @@ import React from 'react';
 import { Users, Eye, Lock, Unlock, MailCheck, Trash2 } from 'lucide-react';
 import { StatusBadge } from '../../../components/Admin/AdminComponents';
 
-const UserTable = ({
+const UsersTable = ({
     usuarios,
     onViewUser,
     onConfirmEmail,
@@ -162,4 +162,4 @@ const UserActions = ({ user, onViewUser, onConfirmEmail, onToggleBlock, onDelete
     );
 };
 
-export default UserTable;
+export default UsersTable;

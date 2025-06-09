@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Eye, Calendar, MailCheck, Shield, AlertTriangle } from 'lucide-react';
 import { Modal, StatusBadge } from '../../../components/Admin/AdminComponents';
 
@@ -7,8 +7,8 @@ export const ViewUserModal = ({
     onClose,
     user,
     textClass,
-    textSecondaryClass,
-    inputBgClass
+    inputBgClass,
+    textSecondaryClass
 }) => {
     if (!user) return null;
 
@@ -108,18 +108,18 @@ export const DeleteUserModal = ({
         <Modal
             show={show}
             onClose={onClose}
-            title="Confirmar Eliminaci�n"
+            title="Confirmar Eliminación"
             icon={<AlertTriangle />}
             size="max-w-md"
         >
             <div>
                 <div className="mb-4 flex items-center text-red-600">
                     <AlertTriangle className="mr-2" size={24} />
-                    <span className="text-lg font-medium">�Confirmar eliminaci�n?</span>
+                    <span className="text-lg font-medium">¿Confirmar eliminación?</span>
                 </div>
                 <p className={`${textSecondaryClass} mb-6`}>
-                    �Est�s seguro de que deseas eliminar al usuario "{user.userName}"?
-                    Esta acci�n no se puede deshacer y se eliminar�n todos los datos asociados.
+                    ¿Estás seguro de que deseas eliminar al usuario "{user.userName}"?
+                    Esta acción no se puede deshacer y se eliminarán todos los datos asociados.
                 </p>
                 <div className="flex justify-end space-x-3">
                     <button

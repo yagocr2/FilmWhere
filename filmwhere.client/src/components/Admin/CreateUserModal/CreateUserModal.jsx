@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+﻿import React, { useState, useCallback, useEffect } from 'react';
 import { UserPlus, Save } from 'lucide-react';
 import { Modal } from '../../../components/Admin/AdminComponents';
 
@@ -58,13 +58,13 @@ const CreateUserModal = ({
         if (!formData.email.trim()) {
             errors.email = 'El email es obligatorio';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            errors.email = 'El formato del email no es v�lido';
+            errors.email = 'El formato del email no es válido';
         }
 
         if (!formData.password.trim()) {
-            errors.password = 'La contrase�a es obligatoria';
+            errors.password = 'La contraseña es obligatoria';
         } else if (formData.password.length < 6) {
-            errors.password = 'La contrase�a debe tener al menos 6 caracteres';
+            errors.password = 'La contraseña debe tener al menos 6 caracteres';
         }
 
         if (!formData.nombre.trim()) {
@@ -82,7 +82,7 @@ const CreateUserModal = ({
             const today = new Date();
             const age = today.getFullYear() - birthDate.getFullYear();
             if (age < 13) {
-                errors.fechaNacimiento = 'Debe ser mayor de 13 a�os';
+                errors.fechaNacimiento = 'Debe ser mayor de 13 años';
             }
         }
 
@@ -92,8 +92,8 @@ const CreateUserModal = ({
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
         if (!validateForm()) {
+            console.error('Form validation failed');
             return;
         }
 
@@ -164,11 +164,11 @@ const CreateUserModal = ({
                     />
 
                     <FormField
-                        label="Contrase�a *"
+                        label="Contraseña *"
                         type="password"
                         value={formData.password}
                         onChange={(value) => handleInputChange('password', value)}
-                        placeholder="M�nimo 6 caracteres"
+                        placeholder="Mínimo 6 caracteres"
                         error={formErrors.password}
                         textClass={textClass}
                         inputBgClass={inputBgClass}
