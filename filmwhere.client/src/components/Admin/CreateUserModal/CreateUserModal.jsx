@@ -90,7 +90,7 @@ const CreateUserModal = ({
         return Object.keys(errors).length === 0;
     }, [formData]);
 
-    const handleSubmit = useCallback(async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm()) {
             console.error('Form validation failed');
@@ -110,7 +110,7 @@ const CreateUserModal = ({
         } finally {
             setIsSubmitting(false);
         }
-    });
+    };
 
     const handleInputChange = useCallback((field, value) => {
         setFormData(prev => ({

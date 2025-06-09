@@ -122,7 +122,7 @@ namespace FilmWhere.Controllers
 
 			return Ok(userDto);
 		}
-		// DELETE: api/admin/usuarios/{id} - NUEVO
+		// DELETE: api/admin/usuarios/{id}
 		[HttpDelete("usuarios/{id}")]
 		public async Task<IActionResult> DeleteUsuario(string id)
 		{
@@ -274,7 +274,7 @@ namespace FilmWhere.Controllers
 			}
 			catch (Exception ex)
 			{
-				return BadRequest($"Error al crear usuario: {ex.Message}");
+				return BadRequest($"Error al crear usuarioooooo: {ex.Message}");
 			}
 		}
 
