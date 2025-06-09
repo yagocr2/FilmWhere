@@ -1,6 +1,7 @@
 ﻿import React from 'react';
 import { Users, UserCheck, UserX, UserPlus, Shield, Crown, Activity } from 'lucide-react';
-import { useAdminStats, useAdminTheme } from '../../../hooks/useAdmin';
+import { useAdminStats } from '../../../hooks/Admin/useAdminStats';
+import { useAdminTheme } from '../../../hooks/Admin/useAdminTheme';
 import {
     StatCard,
     PageHeader,

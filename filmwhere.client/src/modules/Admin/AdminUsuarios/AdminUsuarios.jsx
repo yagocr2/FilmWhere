@@ -1,5 +1,4 @@
-﻿import React, { useCallback, useState } from 'react';
-import {
+﻿import {
     Users, UserPlus, Eye, Lock, Unlock, MailCheck, Shield, Calendar,
     Trash2, Save, X, AlertTriangle, Edit
 } from 'lucide-react';
@@ -16,7 +15,9 @@ import {
     Pagination,
     Modal
 } from '../../../components/Admin/AdminComponents';
-import { useAdminUsers, useModal, useAdminTheme } from '../../../hooks/useAdmin';
+import { useAdminUsers } from '../../../hooks/Admin/useAdminUsers';
+import { useAdminTheme } from '../../../hooks/Admin/useAdminTheme';
+import { useModal } from '../../../hooks/useModal';
 import EditUserModal from '../../../components/Admin/EditUserModal/EditUserModal';
 
 const AdminUsuarios = () => {
@@ -41,6 +42,7 @@ const AdminUsuarios = () => {
         resendConfirmationEmail,
         isResendingEmail,
         editUser,
+        updateUserRoles
         //rolesDisponibles
     } = useAdminUsers();
 
@@ -63,21 +65,35 @@ const AdminUsuarios = () => {
 
     const handleEditUser = async (userId, formData) => {
         try {
+            // Debug: Log the data being sent
+            console.log('handleEditUser called with:', { userId, formData });
+
+            // Validate userId
+            if (!userId || userId === 'undefined') {
+                throw new Error('ID de usuario es requerido');
+            }
+
             // Separar datos básicos de usuario y roles
             const { roles, ...userBasicData } = formData;
 
             // Actualizar datos básicos del usuario
+            console.log('Updating basic user data:', userBasicData);
             await editUser(userId, userBasicData);
 
             // Actualizar roles si han cambiado
-            if (roles && roles.length > 0) {
+            if (roles && Array.isArray(roles)) {
+                console.log('Updating user roles:', roles);
+                // Make sure you have the updateUserRoles function available
                 await updateUserRoles(userId, { roles });
             }
+
             closeModal();
             refetch();
         } catch (error) {
             console.error('Error editing user:', error);
-            throw error; // Re-throw para que el modal pueda manejarlo
+            // Don't re-throw here, let the modal handle the error display
+            // Show user-friendly error message
+            alert(`Error al actualizar usuario: ${error.message}`);
         }
     };
 

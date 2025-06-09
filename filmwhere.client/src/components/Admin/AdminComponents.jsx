@@ -5,7 +5,7 @@ import {
     Lock, Unlock, Mail, MailCheck, Eye, Calendar,
     ChevronLeft, ChevronRight
 } from 'lucide-react';
-import { useAdminTheme } from '../../hooks/useAdmin';
+import { useAdminTheme } from '../../hooks/Admin/useAdminTheme';
 
 // Componente de tarjeta de estadística
 export const StatCard = ({ title, value, icon, color, subtitle, loading }) => {

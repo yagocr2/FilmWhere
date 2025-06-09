@@ -8,7 +8,9 @@ import {
     RoleForm,
     DeleteConfirmation,
 } from '../../../components/Admin/AdminComponents';
-import { useAdminRoles, useModal } from '../../../hooks/useAdmin';
+import { useAdminRoles } from '../../../hooks/Admin/useAdminRoles';
+import { useModal } from '../../../hooks/useModal';
+
 
 const AdminRoles = () => {
     const { roles, loading, error, createRole, updateRole, deleteRole, refetch } = useAdminRoles();

@@ -281,7 +281,7 @@ namespace FilmWhere.Controllers
 			}
 			catch (Exception ex)
 			{
-				return BadRequest($"Error al crear usuarioooooo: {ex.Message}");
+				return BadRequest($"Error al crear usuario: {ex.Message}");
 			}
 		}
 
@@ -289,35 +289,57 @@ namespace FilmWhere.Controllers
 		[HttpPut("usuarios/{id}")]
 		public async Task<IActionResult> UpdateUsuario(string id, UpdateUsuarioDto updateDto)
 		{
-			var user = await _userManager.FindByIdAsync(id);
-			if (user == null)
+			try
 			{
-				return NotFound();
-			}
-
-			user.UserName = updateDto.UserName ?? user.UserName;
-			user.Email = updateDto.Email ?? user.Email;
-			user.Nombre = updateDto.Nombre ?? user.Nombre;
-			user.Apellido = updateDto.Apellido ?? user.Apellido;
-			user.EmailConfirmed = updateDto.EmailConfirmed ?? user.EmailConfirmed;
-
-			if (updateDto.FechaNacimiento.HasValue)
-			{
-				user.FechaNacimiento = updateDto.FechaNacimiento.Value;
-			}
-
-			var result = await _userManager.UpdateAsync(user);
-
-			if (!result.Succeeded)
-			{
-				foreach (var error in result.Errors)
+				if (string.IsNullOrEmpty(id))
 				{
-					ModelState.AddModelError(string.Empty, error.Description);
+					return BadRequest("ID de usuario es requerido");
 				}
-				return BadRequest(ModelState);
-			}
 
-			return NoContent();
+				var user = await _userManager.FindByIdAsync(id);
+				if (user == null)
+				{
+					return NotFound("Usuario no encontrado");
+				}
+
+				// Actualizar campos solo si no son null
+				if (!string.IsNullOrEmpty(updateDto.UserName))
+					user.UserName = updateDto.UserName;
+
+				if (!string.IsNullOrEmpty(updateDto.Email))
+					user.Email = updateDto.Email;
+
+				if (!string.IsNullOrEmpty(updateDto.Nombre))
+					user.Nombre = updateDto.Nombre;
+
+				if (!string.IsNullOrEmpty(updateDto.Apellido))
+					user.Apellido = updateDto.Apellido;
+
+				if (updateDto.EmailConfirmed.HasValue)
+					user.EmailConfirmed = updateDto.EmailConfirmed.Value;
+
+				if (updateDto.FechaNacimiento.HasValue)
+					user.FechaNacimiento = updateDto.FechaNacimiento.Value;
+
+				var result = await _userManager.UpdateAsync(user);
+
+				if (!result.Succeeded)
+				{
+					return BadRequest(new
+					{
+						message = "Error al actualizar usuario",
+						errors = result.Errors.Select(e => e.Description)
+					});
+				}
+
+				// Devolver el usuario actualizado
+				var updatedUser = await GetUsuarioDto(user.Id);
+				return Ok(updatedUser);
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { message = $"Error al actualizar usuario: {ex.Message}" });
+			}
 		}
 
 		// POST: api/admin/usuarios/{id}/confirmar-email
