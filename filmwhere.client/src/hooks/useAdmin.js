@@ -136,6 +136,8 @@ export const useAdminUsers = () => {
     const [pageSize, setPageSize] = useState(10);
     const [totalPages, setTotalPages] = useState(0);
     const [totalCount, setTotalCount] = useState(0);
+    const [resendingEmails, setResendingEmails] = useState(new Set());
+
 
     const fetchUsuarios = async () => {
         try {
@@ -259,19 +261,49 @@ export const useAdminUsers = () => {
         await fetchUsuarios();
     };
 
-    const resendEmail = async (userId) => {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/admin/usuarios/${userId}/enviar-confirmacion`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-        });
+    const resendConfirmationEmail = async (userId) => {
+        try {
+            const token = localStorage.getItem('token');
+            setResendingEmails(prev => new Set([...prev, userId]));
 
-        if (!response.ok) throw new Error('Error al reenviar email');
-        await fetchUsuarios();
-    }
+            const response = await fetch(`/api/admin/usuarios/${userId}/enviar-confirmacion`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al reenviar email de confirmación');
+            }
+
+            const result = await response.json();
+
+            // Mostrar notificación de éxito (puedes usar tu sistema de notificaciones)
+            console.log('Email reenviado exitosamente:', result.message);
+
+            // Opcional: Mostrar toast o notificación
+            // showSuccessToast('Email de confirmación reenviado exitosamente');
+
+            return result;
+        } catch (error) {
+            console.error('Error al reenviar email:', error);
+            // Opcional: Mostrar toast de error
+            // showErrorToast(error.message);
+            throw error;
+        } finally {
+            setResendingEmails(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(userId);
+                return newSet;
+            });
+        }
+    };
+    const isResendingEmail = (userId) => {
+        return resendingEmails.has(userId);
+    };
 
     const confirmUserEmail = async (userId) => {
         const token = localStorage.getItem('token');
@@ -323,7 +355,8 @@ export const useAdminUsers = () => {
         refetch: fetchUsuarios,
         deleteUser,
         createUser,
-        resendEmail,
+        resendConfirmationEmail,
+        isResendingEmail,
         rolesDisponibles
     };
 };

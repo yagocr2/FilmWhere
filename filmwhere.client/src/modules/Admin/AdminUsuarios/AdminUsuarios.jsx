@@ -37,16 +37,14 @@ const AdminUsuarios = () => {
         handlePageChange,
         handlePageSizeChange,
         refetch,
-        resendEmail,
+        resendConfirmationEmail,
+        isResendingEmail,
         //rolesDisponibles
     } = useAdminUsers();
 
     const { showModal, modalType, modalData, openModal, closeModal } = useModal();
     const { cardBgClass, textClass, textSecondaryClass, inputBgClass, borderClass } = useAdminTheme();
 
-    const handleResendEmail = async (userId) => {
-        resendEmail(userId);
-    }
 
     // Roles disponibles (esto debería venir de un endpoint)
     const rolesDisponibles = ['Registrado', 'Administrador'];
@@ -61,7 +59,6 @@ const AdminUsuarios = () => {
             throw error; // Re-throw para que el modal pueda manejarlo
         }
     };
-
 
     const handleDeleteUser = async (userId) => {
         try {
@@ -133,6 +130,8 @@ const AdminUsuarios = () => {
                             onViewUser={handleViewUser}//Funciona
                             onConfirmEmail={confirmUserEmail}//Funciona
                             onToggleBlock={toggleUserBlock}//Funciona
+                            onResendEmail={resendConfirmationEmail}
+                            isResendingEmail={isResendingEmail}
                             onDeleteUser={(user) => openModal('delete', user)}//Funciona
                             cardBgClass={cardBgClass}
                             textClass={textClass}

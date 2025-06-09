@@ -7,6 +7,8 @@ using FilmWhere.Models;
 using System.ComponentModel.DataAnnotations;
 using FilmWhere.Context;
 using FilmWhere.Server.Services;
+using System.Text.Encodings.Web;
+using Microsoft.Extensions.Configuration;
 
 namespace FilmWhere.Controllers
 {
@@ -19,17 +21,22 @@ namespace FilmWhere.Controllers
 		private readonly RoleManager<IdentityRole> _roleManager;
 		private readonly MyDbContext _context;
 		private readonly IEmailSender _emailSender;
+		private readonly IConfiguration _configuration;
+
 
 		public AdminController(
 			UserManager<Usuario> userManager,
 			RoleManager<IdentityRole> roleManager,
 			MyDbContext context,
-			IEmailSender emailSender)
+			IEmailSender emailSender,
+			IConfiguration configuration)
 		{
 			_userManager = userManager;
 			_roleManager = roleManager;
 			_context = context;
+			_configuration = configuration;
 			_emailSender = emailSender;
+			_configuration = configuration;
 		}
 
 		// GET: api/admin/usuarios
@@ -338,22 +345,38 @@ namespace FilmWhere.Controllers
 		[HttpPost("usuarios/{id}/enviar-confirmacion")]
 		public async Task<IActionResult> EnviarConfirmacionEmail(string id)
 		{
-			var user = await _userManager.FindByIdAsync(id);
-			if (user == null)
+			try
 			{
-				return NotFound();
-			}
+				var user = await _userManager.FindByIdAsync(id);
+				if (user == null)
+				{
+					return NotFound(new { message = "Usuario no encontrado" });
+				}
 
-			if (user.EmailConfirmed)
+				if (user.EmailConfirmed)
+				{
+					return BadRequest(new { message = "El email ya está confirmado" });
+				}
+
+				// Generar token de confirmación
+				var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+				// Crear URL de confirmación
+				var frontendBaseUrl = _configuration["Frontend:BaseUrl"];
+				var confirmationUrl = $"{frontendBaseUrl}/api/Auth/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+
+				// Enviar email de confirmación
+				await _emailSender.SendEmailAsync(
+					user.Email,
+					"Confirma tu cuenta - FilmWhere",
+					$"Por favor confirma tu cuenta haciendo clic en este enlace: <a href='{HtmlEncoder.Default.Encode(confirmationUrl)}'>Confirmar Email</a>");
+
+				return Ok(new { message = "Email de confirmación reenviado exitosamente" });
+			}
+			catch (Exception ex)
 			{
-				return BadRequest("El email ya está confirmado");
+				return BadRequest(new { message = $"Error al reenviar email de confirmación: {ex.Message}" });
 			}
-
-			var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-			// Aquí implementarías el envío del email
-			//await _emailSender.SendEmailAsync(user.Email, token);
-
-			return Ok(new { message = "Email de confirmación enviado" });
 		}
 
 		// PUT: api/admin/usuarios/{id}/roles

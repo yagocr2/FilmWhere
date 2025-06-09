@@ -118,7 +118,20 @@ export const Modal = ({ show, onClose, title, icon, children, size = "max-w-md" 
 };
 
 // Componente de badge de estado
-export const StatusBadge = ({ user, handle }) => {
+export const StatusBadge = ({ user, onResendEmail, isResending }) => {
+    const handleResendClick = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (onResendEmail && !isResending) {
+            try {
+                await onResendEmail(user.id);
+            } catch (error) {
+                console.error('Error al reenviar email:', error);
+            }
+        }
+    };
+
     if (!user.activo) {
         return (
             <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
@@ -127,17 +140,21 @@ export const StatusBadge = ({ user, handle }) => {
             </span>
         );
     }
+
     if (!user.emailConfirmed) {
         return (
-            <button onClick={() => handle}>
-                <span
-                    className="text-yellow-800, inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium">
-                    <Mail size={12} className="mr-1" />
-                    Sin confirmar
-                </span>
+            <button
+                onClick={handleResendClick}
+                disabled={isResending}
+                className="inline-flex cursor-pointer items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 transition-colors hover:bg-yellow-200 disabled:cursor-not-allowed disabled:opacity-50"
+                title="Click para reenviar email de confirmación"
+            >
+                <Mail size={12} className="mr-1" />
+                {isResending ? 'Enviando...' : 'Sin confirmar'}
             </button>
         );
     }
+
     return (
         <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
             <UserCheck size={12} className="mr-1" />

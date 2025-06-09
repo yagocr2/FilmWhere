@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Users, Eye, Lock, Unlock, MailCheck, Trash2 } from 'lucide-react';
 import { StatusBadge } from '../../../components/Admin/AdminComponents';
 
@@ -8,6 +8,8 @@ const UsersTable = ({
     onConfirmEmail,
     onToggleBlock,
     onDeleteUser,
+    onResendEmail,
+    isResendingEmail,
     cardBgClass,
     textClass,
     textSecondaryClass
@@ -48,6 +50,8 @@ const UsersTable = ({
                             onDeleteUser={onDeleteUser}
                             textClass={textClass}
                             textSecondaryClass={textSecondaryClass}
+                            onResendEmail={onResendEmail}
+                            isResendingEmail={isResendingEmail}
                         />
                     ))}
                 </tbody>
@@ -63,11 +67,14 @@ const UserTableRow = ({
     onToggleBlock,
     onDeleteUser,
     textClass,
-    textSecondaryClass
+    textSecondaryClass,
+    onResendEmail,
+    isResendingEmail
+
 }) => {
     return (
         <tr className="hover:bg-gray-50 dark:hover:bg-gray-700">
-            <td className="px-6 py-4 whitespace-nowrap">
+            <td className="whitespace-nowrap px-6 py-4">
                 <div className="flex items-center">
                     <div className="h-10 w-10 flex-shrink-0">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300">
@@ -84,13 +91,18 @@ const UserTableRow = ({
                     </div>
                 </div>
             </td>
-            <td className="px-6 py-4 whitespace-nowrap">
+            <td className="whitespace-nowrap px-6 py-4">
                 <div className={`${textClass} text-sm`}>{user.email}</div>
             </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-                <StatusBadge user={user} />
+            <td className="whitespace-nowrap px-6 py-4">
+                <StatusBadge
+                    user={user}
+                    onResendEmail={onResendEmail}
+                    isResendingEmail={isResendingEmail}
+                    isResending={isResendingEmail ? isResendingEmail(user.id) : false}
+                />
             </td>
-            <td className="px-6 py-4 whitespace-nowrap">
+            <td className="whitespace-nowrap px-6 py-4">
                 <div className="flex flex-wrap gap-1">
                     {user.roles?.slice(0, 2).map((role) => (
                         <span
@@ -107,12 +119,12 @@ const UserTableRow = ({
                     )}
                 </div>
             </td>
-            <td className="px-6 py-4 whitespace-nowrap">
+            <td className="whitespace-nowrap px-6 py-4">
                 <div className={`${textSecondaryClass} text-sm`}>
                     {new Date(user.fechaRegistro).toLocaleDateString()}
                 </div>
             </td>
-            <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
+            <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                 <UserActions
                     user={user}
                     onViewUser={onViewUser}
