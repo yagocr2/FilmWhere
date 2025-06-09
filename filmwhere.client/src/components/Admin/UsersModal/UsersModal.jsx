@@ -129,7 +129,7 @@ export const DeleteUserModal = ({
                         Cancelar
                     </button>
                     <button
-                        onClick={() => onConfirm(user.id, user.userName)}
+                        onClick={() => onConfirm(user.id)}
                         className="rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
                     >
                         Eliminar

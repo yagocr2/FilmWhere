@@ -209,8 +209,9 @@ export const useAdminUsers = () => {
             },
             body: JSON.stringify(userData),
         });
+        console.log(response)
 
-        if (!response.ok) throw new Error('Error al crear usuario');
+        if (!response.ok) throw new Error('Error al crear usuario', response.message);
         await fetchUsuarios();
     };
     const deleteUser = async (userId) => {

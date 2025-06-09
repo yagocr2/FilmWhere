@@ -90,7 +90,7 @@ const CreateUserModal = ({
         return Object.keys(errors).length === 0;
     }, [formData]);
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
         if (!validateForm()) {
             console.error('Form validation failed');
@@ -99,14 +99,18 @@ const CreateUserModal = ({
 
         setIsSubmitting(true);
         try {
-            await onSubmit(formData);
+            const formattedData = {
+                ...formData,
+                fechaNacimiento: formData.fechaNacimiento
+            };
+            await onSubmit(formattedData);
             resetForm();
         } catch (error) {
             console.error('Error creating user:', error);
         } finally {
             setIsSubmitting(false);
         }
-    };
+    });
 
     const handleInputChange = useCallback((field, value) => {
         setFormData(prev => ({

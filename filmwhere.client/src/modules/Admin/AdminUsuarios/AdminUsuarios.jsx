@@ -6,6 +6,7 @@ import {
 import { DeleteUserModal, ViewUserModal } from '../../../components/Admin/UsersModal/UsersModal';
 import CreateUserModal from '../../../components/Admin/CreateUserModal/CreateUserModal';
 import UsersTable from '../../../components/Admin/UsersTable/UsersTable';
+import UserFilters from '../../../components/Admin/UserFilters/UserFilters';
 import {
     PageHeader,
     SearchBar,
@@ -149,7 +150,7 @@ const AdminUsuarios = () => {
         }
     }, [createFormData, validateCreateForm, createUser, resetCreateForm, closeModal, refetch]);
 
-    const handleDeleteUser = async (userId, userName) => {
+    const handleDeleteUser = async (userId) => {
         try {
             await deleteUser(userId);
             closeModal();
@@ -167,121 +168,6 @@ const AdminUsuarios = () => {
             console.error('Error fetching user details:', err);
         }
     };
-
-    //// Modal para crear usuario
-    //const UsersTable = () => (
-    //    <div className="overflow-x-auto">
-    //        <table className="min-w-full divide-y divide-gray-200">
-    //            <thead className={`bg-gray-50 dark:bg-gray-800`}>
-    //                <tr>
-    //                    <th className={`${textClass} px-6 py-3 text-left text-xs font-medium uppercase tracking-wider`}>
-    //                        Usuario
-    //                    </th>
-    //                    <th className={`${textClass} px-6 py-3 text-left text-xs font-medium uppercase tracking-wider`}>
-    //                        Email
-    //                    </th>
-    //                    <th className={`${textClass} px-6 py-3 text-left text-xs font-medium uppercase tracking-wider`}>
-    //                        Estado
-    //                    </th>
-    //                    <th className={`${textClass} px-6 py-3 text-left text-xs font-medium uppercase tracking-wider`}>
-    //                        Roles
-    //                    </th>
-    //                    <th className={`${textClass} px-6 py-3 text-left text-xs font-medium uppercase tracking-wider`}>
-    //                        Fecha Registro
-    //                    </th>
-    //                    <th className={`${textClass} px-6 py-3 text-right text-xs font-medium uppercase tracking-wider`}>
-    //                        Acciones
-    //                    </th>
-    //                </tr>
-    //            </thead>
-    //            <tbody className={`${cardBgClass} divide-y divide-gray-200`}>
-    //                {usuarios.map((user) => (
-    //                    <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-    //                        <td className="px-6 py-4 whitespace-nowrap">
-    //                            <div className="flex items-center">
-    //                                <div className="h-10 w-10 flex-shrink-0">
-    //                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300">
-    //                                        <Users size={20} className="text-gray-600" />
-    //                                    </div>
-    //                                </div>
-    //                                <div className="ml-4">
-    //                                    <div className={`${textClass} text-sm font-medium`}>
-    //                                        {user.userName}
-    //                                    </div>
-    //                                    <div className={`${textSecondaryClass} text-sm`}>
-    //                                        {user.nombre} {user.apellido}
-    //                                    </div>
-    //                                </div>
-    //                            </div>
-    //                        </td>
-    //                        <td className="px-6 py-4 whitespace-nowrap">
-    //                            <div className={`${textClass} text-sm`}>{user.email}</div>
-    //                        </td>
-    //                        <td className="px-6 py-4 whitespace-nowrap">
-    //                            <StatusBadge user={user} />
-    //                        </td>
-    //                        <td className="px-6 py-4 whitespace-nowrap">
-    //                            <div className="flex flex-wrap gap-1">
-    //                                {user.roles?.slice(0, 2).map((role) => (
-    //                                    <span
-    //                                        key={role}
-    //                                        className="inline-flex items-center rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800"
-    //                                    >
-    //                                        {role}
-    //                                    </span>
-    //                                ))}
-    //                                {user.roles?.length > 2 && (
-    //                                    <span className="text-xs text-gray-500">
-    //                                        +{user.roles.length - 2}
-    //                                    </span>
-    //                                )}
-    //                            </div>
-    //                        </td>
-    //                        <td className="px-6 py-4 whitespace-nowrap">
-    //                            <div className={`${textSecondaryClass} text-sm`}>
-    //                                {new Date(user.fechaRegistro).toLocaleDateString()}
-    //                            </div>
-    //                        </td>
-    //                        <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
-    //                            <div className="flex items-center justify-end space-x-2">
-    //                                <button
-    //                                    onClick={() => handleViewUser(user.id)}
-    //                                    className="text-blue-600 hover:text-blue-900 transition-colors"
-    //                                    title="Ver detalles"
-    //                                >
-    //                                    <Eye size={16} />
-    //                                </button>
-    //                                {!user.emailConfirmed && (
-    //                                    <button
-    //                                        onClick={() => confirmUserEmail(user.id)}
-    //                                        className="text-green-600 hover:text-green-900 transition-colors"
-    //                                        title="Confirmar email"
-    //                                    >
-    //                                        <MailCheck size={16} />
-    //                                    </button>
-    //                                )}
-    //                                <button
-    //                                    onClick={() => toggleUserBlock(user.id, !user.activo)}
-    //                                    className={`${user.activo ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'} transition-colors`}
-    //                                    title={user.activo ? 'Bloquear usuario' : 'Desbloquear usuario'}
-    //                                >
-    //                                    {user.activo ? <Lock size={16} /> : <Unlock size={16} />}
-    //                                </button>
-    //                                <button
-    //                                    onClick={() => openModal('delete', user)}
-    //                                    className="text-red-600 hover:text-red-900 transition-colors"
-    //                                    title="Eliminar usuario"
-    //                                >
-    //                                    <Trash2 size={16} />
-    //                                </button>
-    //                            </div>
-    //                        </td>
-    //                    </tr>
-    //                ))}
-    //            </tbody>
-    //        </table>
-    //    </div>
-    //);
 
     return (
         <div className="space-y-6">
@@ -305,28 +191,17 @@ const AdminUsuarios = () => {
             />
 
             {/* Filters */}
-            <div className={`${cardBgClass} rounded-lg shadow-lg p-6`}>
-                <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-                    <SearchBar
-                        searchTerm={searchTerm}
-                        onSearch={handleSearch}
-                        placeholder="Buscar usuarios..."
-                    />
-                    <div className="flex items-center space-x-2">
-                        <span className={`${textSecondaryClass} text-sm`}>Mostrar:</span>
-                        <select
-                            value={pageSize}
-                            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                            className={`${inputBgClass} ${textClass} ${borderClass} border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                        >
-                            <option value={10}>10</option>
-                            <option value={25}>25</option>
-                            <option value={50}>50</option>
-                            <option value={100}>100</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+            <UserFilters
+                searchTerm={searchTerm}
+                onSearch={handleSearch}
+                pageSize={pageSize}
+                onPageSizeChange={handlePageSizeChange}
+                cardBgClass={cardBgClass}
+                textClass={textClass}
+                textSecondaryClass={textSecondaryClass}
+                inputBgClass={inputBgClass}
+                borderClass={borderClass}
+            />
 
             {/* Users Table */}
             <div className={`${cardBgClass} rounded-lg shadow-lg overflow-hidden`}>
@@ -344,19 +219,11 @@ const AdminUsuarios = () => {
                             usuarios={usuarios}
                             onViewUser={handleViewUser}//Funciona
                             onConfirmEmail={confirmUserEmail}//Funciona
-                            onToggleUserBlock={toggleUserBlock}
-                            onDeleteUser={handleDeleteUser}
+                            onToggleBlock={toggleUserBlock}//Funciona
+                            onDeleteUser={(user) => openModal('delete', user)}//Funciona
                             cardBgClass={cardBgClass}
                             textClass={textClass}
                             textSecondaryClass={textSecondaryClass}
-                        />
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            totalCount={totalCount}
-                            pageSize={pageSize}
-                            onPageChange={handlePageChange}
-                            itemName="usuarios"
                         />
                     </>
                 )}
@@ -367,14 +234,13 @@ const AdminUsuarios = () => {
                 <CreateUserModal
                     show={showModal}
                     onClose={closeModal}
-                    onSubmit={handleCreateUser}
+                    onSubmit={createUser}
                     avalibleRoles={rolesDisponibles}
                     textSecondaryClass={textSecondaryClass}
                     inputBgClass={inputBgClass}
                     textClass={textClass}
                     borderClass={borderClass}
                 />
-
             )}
 
             {/* Modal para ver usuario */}
