@@ -11,7 +11,9 @@ import {
     Shield,
     Settings,
     Home,
-    Crown
+    Crown,
+    Search,
+    User
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -31,6 +33,11 @@ const AdminLayout = ({ children }) => {
         { name: 'Dashboard', icon: <BarChart3 size={20} />, path: '/admin' },
         { name: 'Usuarios', icon: <Users size={20} />, path: '/admin/usuarios' },
         { name: 'Roles', icon: <Shield size={20} />, path: '/admin/roles' },
+    ];
+
+    const userNavItems = [
+        { name: 'Buscar', icon: <Search size={20} />, path: '/buscar' },
+        { name: 'Perfil', icon: <User size={20} />, path: '/perfil' },
     ];
 
     const isActiveRoute = (path) => {
@@ -61,6 +68,7 @@ const AdminLayout = ({ children }) => {
 
                         {/* Desktop navigation */}
                         <div className="hidden items-center space-x-4 md:flex">
+                            {/* Admin navigation */}
                             {navItems.map((item) => (
                                 <Link
                                     key={item.name}
@@ -76,7 +84,23 @@ const AdminLayout = ({ children }) => {
                             {/* Separador */}
                             <div className="mx-2 h-6 border-l border-red-600"></div>
 
-                            {/* Volver a la aplicaci�n */}
+                            {/* User navigation */}
+                            {userNavItems.map((item) => (
+                                <Link
+                                    key={item.name}
+                                    to={item.path}
+                                    className={`${navbarTextClass} ${isActiveRoute(item.path) ? activeClass : hoverClass
+                                        } px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 transition-colors`}
+                                >
+                                    {item.icon}
+                                    <span>{item.name}</span>
+                                </Link>
+                            ))}
+
+                            {/* Separador */}
+                            <div className="mx-2 h-6 border-l border-red-600"></div>
+
+                            {/* Volver a la aplicación */}
                             <Link
                                 to="/inicio"
                                 className={`${navbarTextClass} ${hoverClass} px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 transition-colors`}
@@ -130,44 +154,72 @@ const AdminLayout = ({ children }) => {
                 {/* Mobile menu */}
                 {isMenuOpen && (
                     <div className={`md:hidden ${navbarBgClass} backdrop-blur-lg shadow-lg border-t border-red-600`}>
-                        <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3">
-                            {navItems.map((item) => (
+                        <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
+                            {/* Admin navigation mobile */}
+                            <div className="mb-3">
+                                <p className="px-3 text-xs font-semibold uppercase tracking-wider text-red-300">
+                                    Administración
+                                </p>
+                                {navItems.map((item) => (
+                                    <Link
+                                        key={item.name}
+                                        to={item.path}
+                                        className={`${navbarTextClass} ${isActiveRoute(item.path) ? activeClass : hoverClass
+                                            } block px-3 py-2 rounded-md text-base font-medium flex items-center space-x-2 transition-colors`}
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        {item.icon}
+                                        <span>{item.name}</span>
+                                    </Link>
+                                ))}
+                            </div>
+
+                            {/* User navigation mobile */}
+                            <div className="mb-3">
+                                <p className="px-3 text-xs font-semibold uppercase tracking-wider text-red-300">
+                                    Usuario
+                                </p>
+                                {userNavItems.map((item) => (
+                                    <Link
+                                        key={item.name}
+                                        to={item.path}
+                                        className={`${navbarTextClass} ${isActiveRoute(item.path) ? activeClass : hoverClass
+                                            } block px-3 py-2 rounded-md text-base font-medium flex items-center space-x-2 transition-colors`}
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        {item.icon}
+                                        <span>{item.name}</span>
+                                    </Link>
+                                ))}
+                            </div>
+
+                            {/* Other options mobile */}
+                            <div className="border-t border-red-600 pt-3">
                                 <Link
-                                    key={item.name}
-                                    to={item.path}
-                                    className={`${navbarTextClass} ${isActiveRoute(item.path) ? activeClass : hoverClass
-                                        } block px-3 py-2 rounded-md text-base font-medium flex items-center space-x-2 transition-colors`}
+                                    to="/inicio"
+                                    className={`${navbarTextClass} ${hoverClass} block px-3 py-2 rounded-md text-base font-medium flex items-center space-x-2`}
                                     onClick={() => setIsMenuOpen(false)}
                                 >
-                                    {item.icon}
-                                    <span>{item.name}</span>
+                                    <Home size={20} />
+                                    <span>Ver App</span>
                                 </Link>
-                            ))}
 
-                            <Link
-                                to="/inicio"
-                                className={`${navbarTextClass} ${hoverClass} block px-3 py-2 rounded-md text-base font-medium flex items-center space-x-2`}
-                                onClick={() => setIsMenuOpen(false)}
-                            >
-                                <Home size={20} />
-                                <span>Ver App</span>
-                            </Link>
+                                <button
+                                    onClick={toggleTheme}
+                                    className={`${navbarTextClass} ${hoverClass} w-full block px-3 py-2 rounded-md text-base font-medium flex items-center space-x-2`}
+                                >
+                                    {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                                    <span>Cambiar tema</span>
+                                </button>
 
-                            <button
-                                onClick={toggleTheme}
-                                className={`${navbarTextClass} ${hoverClass} w-full block px-3 py-2 rounded-md text-base font-medium flex items-center space-x-2`}
-                            >
-                                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                                <span>Cambiar tema</span>
-                            </button>
-
-                            <button
-                                onClick={handleLogout}
-                                className={`${navbarTextClass} ${hoverClass} w-full block px-3 py-2 rounded-md text-base font-medium flex items-center space-x-2`}
-                            >
-                                <LogOut size={20} />
-                                <span>Cerrar sesión</span>
-                            </button>
+                                <button
+                                    onClick={handleLogout}
+                                    className={`${navbarTextClass} ${hoverClass} w-full block px-3 py-2 rounded-md text-base font-medium flex items-center space-x-2`}
+                                >
+                                    <LogOut size={20} />
+                                    <span>Cerrar sesión</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -184,7 +236,7 @@ const AdminLayout = ({ children }) => {
             <footer className={`${navbarBgClass} backdrop-blur-lg py-4 shadow-inner border-t border-red-600`}>
                 <div className="container mx-auto px-4 text-center">
                     <p className={`${navbarTextClass} text-sm`}>
-                        � {new Date().getFullYear()} FilmWhere Admin Panel - Panel de Administración
+                        © {new Date().getFullYear()} FilmWhere Admin Panel - Panel de Administración
                     </p>
                 </div>
             </footer>
