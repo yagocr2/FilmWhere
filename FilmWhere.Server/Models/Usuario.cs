@@ -37,7 +37,8 @@ namespace FilmWhere.Models
 		public string? FotoPerfil { get; set; }
 
 		// Propiedades de navegación
-		public ICollection<Denuncia> Denuncias { get; set; } = new List<Denuncia>();
+		public ICollection<Denuncia> DenunciasRecibidas { get; set; } = new List<Denuncia>();
+		public ICollection<Denuncia> DenunciasRealizadas { get; set; } = new List<Denuncia>();
 		public ICollection<Reseña> Reseñas { get; set; } = new List<Reseña>();
 		public ICollection<Favorito> Favoritos { get; set; } = new List<Favorito>();
 		public ICollection<UsuarioSeguidor> Seguidores { get; set; } = new List<UsuarioSeguidor>();

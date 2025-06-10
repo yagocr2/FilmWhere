@@ -670,12 +670,12 @@ namespace FilmWhere.Controllers
 						fecha = d.Fecha,
 						Usuario = new
 						{
-							id = d.Usuario.Id,
-							userName = d.Usuario.UserName,
-							email = d.Usuario.Email,
-							nombre = d.Usuario.Nombre,
-							apellido = d.Usuario.Apellido,
-							cantidad =  (d.Usuario.Denuncias.Count > 0) ? d.Usuario.Denuncias.Count : 0
+							id = d.UsuarioDenunciado.Id,
+							userName = d.UsuarioDenunciado.UserName,
+							email = d.UsuarioDenunciado.Email,
+							nombre = d.UsuarioDenunciado.Nombre,
+							apellido = d.UsuarioDenunciado.Apellido,
+							cantidad =  (d.UsuarioDenunciado.DenunciasRecibidas.Count > 0) ? d.UsuarioDenunciado.DenunciasRecibidas.Count : 0
 						}
 					})
 					.ToListAsync();

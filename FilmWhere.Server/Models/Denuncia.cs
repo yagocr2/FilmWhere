@@ -6,6 +6,13 @@ namespace FilmWhere.Server.Models
 	{
 		public int Id { get; set; }
 		public DateTime Fecha { get; set; } = DateTime.UtcNow;
-		public Usuario Usuario { get; set; }
+
+		// Usuario denunciado (el que recibe la denuncia)
+		public string UsuarioDenunciadoId { get; set; }
+		public Usuario UsuarioDenunciado { get; set; }
+
+		// Usuario denunciante (el que realiza la denuncia)
+		public string UsuarioDenuncianteId { get; set; }
+		public Usuario UsuarioDenunciante { get; set; }
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using FilmWhere.Context;
 using FilmWhere.Models;
+using FilmWhere.Server.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -528,20 +529,55 @@ namespace FilmWhere.Server.Controllers
 				return StatusCode(500, new { Message = "Error interno del servidor", Details = ex.Message });
 			}
 		}
-		//[HttpGet("denunciar/{userId}")]
-		//[Authorize]
-		//public async Task<IActionResult> Denunciar(string userId)
-		//{
-		//	try
-		//	{
+		[HttpPost("denunciar/{userId}")]
+		[Authorize]
+		public async Task<IActionResult> Denunciar(string userId)
+		{
+			try
+			{
+				var denuncianteId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-		//	}
-		//	catch (Exception ex)
-		//	{
-		//		_logger.LogError(ex, "Error al verificar disponibilidad de username");
-		//		return StatusCode(500, new { Message = "Error interno del servidor", Details = ex.Message });
-		//	}
-		//}
+				// Verificar que no se está denunciando a sí mismo
+				if (denuncianteId == userId)
+				{
+					return BadRequest(new { Message = "No puedes denunciarte a ti mismo" });
+				}
+				// Verificar que el usuario a denunciar existe
+				var usuarioDenunciado = await _context.Users.FindAsync(userId);
+				if (usuarioDenunciado == null)
+				{
+					return NotFound(new { Message = "Usuario no encontrado" });
+				}
+
+				// Verificar si ya existe una denuncia previa del mismo usuario
+				bool denunciaExistente = await _context.Denuncias
+					.AnyAsync(d => d.UsuarioDenunciadoId == userId && d.UsuarioDenuncianteId == denuncianteId);
+
+				if (denunciaExistente)
+				{
+					return BadRequest(new { Message = "Ya has denunciado a este usuario anteriormente" });
+				}
+
+				// Crear nueva denuncia
+				var denuncia = new Denuncia
+				{
+					Fecha = DateTime.UtcNow,
+					UsuarioDenunciadoId = userId,
+					UsuarioDenuncianteId = denuncianteId
+				};
+
+				// Guardar en la base de datos
+				_context.Denuncias.Add(denuncia);
+				await _context.SaveChangesAsync();
+
+				return Ok(new { Message = "Denuncia registrada correctamente", DenunciaId = denuncia.Id });
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Error al registrar denuncia");
+				return StatusCode(500, new { Message = "Error interno del servidor", Details = ex.Message });
+			}
+		}
 
 		// Método helper para obtener WebRootPath de forma robusta
 		private string GetWebRootPath()

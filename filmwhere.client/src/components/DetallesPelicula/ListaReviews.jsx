@@ -47,7 +47,20 @@ const ListaReviews = ({ reviews }) => {
             console.error('Error al verificar estado de seguimiento:', error);
         }
     };
-
+    const handleDenunciar = async (userId) => {
+        const response = await fetch(`/api/user/denunciar/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        if (response.ok) {
+            alert('Review denunciada');
+        } else {
+            alert('Error al denunciar la review');
+        }
+    };
     const handleFollowToggle = async (userId) => {
         if (!token) return;
 
@@ -119,6 +132,17 @@ const ListaReviews = ({ reviews }) => {
             </button>
         );
     };
+    const DenunciarButton = ({ userId }) => {
+        if (userId === userProfile?.id) {return null }
+        return (
+            <button
+                onClick={() => handleDenunciar(userId)}
+                className="text-sm font-medium text-red-500 hover:text-red-700"
+            >
+                Denunciar
+            </button>
+        );
+    };
 
     return (
         <div className="space-y-4">
@@ -146,6 +170,7 @@ const ListaReviews = ({ reviews }) => {
                             <span className="text-sm text-gray-500">
                                 {new Date(review.date).toLocaleDateString()}
                             </span>
+                            <DenunciarButton userId={review.userId} />
                         </div>
                     </div>
                     {review.comment && (

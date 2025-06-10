@@ -15,6 +15,7 @@ import {
     Search,
     User
 } from 'lucide-react';
+import ReviewButton from './ReviewButton';
 import { useState } from 'react';
 
 const AdminLayout = ({ children }) => {
@@ -205,6 +206,7 @@ const AdminLayout = ({ children }) => {
             <main className={`flex-grow pt-16 ${theme === 'dark' ? 'bg-primario-dark' : 'bg-primario'} min-h-screen`}>
                 <div className="container mx-auto px-4 py-8">
                     {children}
+                    <ReviewButton />
                 </div>
             </main>
 

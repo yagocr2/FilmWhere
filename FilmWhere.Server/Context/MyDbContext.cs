@@ -97,6 +97,19 @@ namespace FilmWhere.Context
 				.WithMany(g => g.Peliculas)
 				.HasForeignKey(pg => pg.GeneroId);
 
+			// ---- Configuración de Denuncias ----
+			modelBuilder.Entity<Denuncia>()
+				.HasOne(d => d.UsuarioDenunciado)
+				.WithMany(u => u.DenunciasRecibidas)
+				.HasForeignKey(d => d.UsuarioDenunciadoId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			modelBuilder.Entity<Denuncia>()
+				.HasOne(d => d.UsuarioDenunciante)
+				.WithMany(u => u.DenunciasRealizadas)
+				.HasForeignKey(d => d.UsuarioDenuncianteId)
+				.OnDelete(DeleteBehavior.Restrict);
+
 			// Configuración de eliminación para Favorito
 			modelBuilder.Entity<Favorito>()
 				.HasOne(f => f.Usuario)
