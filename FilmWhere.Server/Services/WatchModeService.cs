@@ -65,12 +65,12 @@ namespace FilmWhere.Services
 		/// </summary>
 		/// <param name="platformId">ID de la plataforma en WatchMode</param>
 		/// <returns>Detalles de la plataforma o null si no se encuentra</returns>
-		public async Task<WatchModePlatformDetailsDTO?> GetPlatformDetailsAsync(int platformId)
+		public async Task<PlataformaDTO?> GetPlatformDetailsAsync(int platformId)
 		{
-			var sources = await GetAsync<List<WatchModePlatformSourceDTO>>("sources/",
+			var sources = await GetAsync<List<WatchModeSourceDTO>>("sources/",
 				$"Error obteniendo detalles para plataforma: {platformId}");
 
-			return sources?.FirstOrDefault(s => s.Id == platformId)?.ToDetails();
+			return sources?.FirstOrDefault(s => s.Source_Id == platformId)?.ToPlataformaDTO();
 		}
 		/// <summary>
 		/// Obtiene las fuentes de streaming para un título específico de WatchMode en una región determinada.

@@ -76,9 +76,9 @@ namespace FilmWhere.Server.Controllers
 								Platforms = localMovie.Plataformas.Select(pp => new PlataformaDTO
 								{
 									Name = pp.Plataforma.Nombre,
-									Type = pp.Plataforma.Tipo.ToString(),
+									Type = pp.Tipo.ToString(),
 									Price = pp.Precio,
-									Url = pp.Plataforma.Enlace
+									Url = pp.Enlace
 								}).ToList(),
 								Reviews = localMovie.Reseñas.OrderByDescending(r => r.Fecha).Take(5).Select(r => new ReviewDTO
 								{

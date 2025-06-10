@@ -2,6 +2,7 @@
 using FilmWhere.Models;
 using FilmWhere.Server.DTOs;
 using Microsoft.EntityFrameworkCore;
+using static FilmWhere.Models.PeliculaPlataforma;
 using static FilmWhere.Models.Plataforma;
 using static FilmWhere.Server.DTOs.TmdbDTO;
 
@@ -238,9 +239,7 @@ namespace FilmWhere.Services
 				newPlatforms.Add(new Plataforma
 				{
 					Id = platform.Id.ToString(),
-					Nombre = platform.Name,
-					Enlace = platform.Url ?? platformDetails?.WebUrl ?? "",
-					Tipo = MapPlatformType(platform.Type)
+					Nombre = platform.Name
 				});
 			}
 
@@ -274,6 +273,8 @@ namespace FilmWhere.Services
 				if (dbPlatform == null) continue;
 
 				var newPrice = platform.Price ?? await GetPlatformPriceAsync(platform.Id, platform.Type);
+				_logger.LogInformation("Procesando plataforma {Platform} de tipo {Type}",
+					platform.Name, platform.Type);
 
 				if (!existingRelations.ContainsKey(dbPlatform.Id))
 				{
@@ -282,7 +283,8 @@ namespace FilmWhere.Services
 						PeliculaId = pelicula.Id,
 						PlataformaId = dbPlatform.Id,
 						Precio = newPrice,
-						Enlace = platform.Url ?? dbPlatform.Enlace
+						Enlace = platform.Url,
+						Tipo = MapPlatformType(platform.Type)
 					});
 				}
 				else
@@ -389,10 +391,10 @@ namespace FilmWhere.Services
 		private TipoPlataforma MapPlatformType(string watchModeType) =>
 			watchModeType switch
 			{
-				"free" => TipoPlataforma.Gratis,
-				"sub" => TipoPlataforma.Suscripción,
-				"rent" => TipoPlataforma.Alquiler,
-				"buy" => TipoPlataforma.Compra,
+				"Gratis" => TipoPlataforma.Gratis,
+				"Suscripción" => TipoPlataforma.Suscripción,
+				"Alquiler" => TipoPlataforma.Alquiler,
+				"Compra" => TipoPlataforma.Compra,
 				_ => TipoPlataforma.Otro
 			};
 

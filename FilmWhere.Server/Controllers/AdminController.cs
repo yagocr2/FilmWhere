@@ -40,6 +40,13 @@ namespace FilmWhere.Controllers
 		}
 
 		// GET: api/admin/usuarios
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="page"></param>
+		/// <param name="pageSize"></param>
+		/// <param name="search"></param>
+		/// <returns></returns>
 		[HttpGet("usuarios")]
 		public async Task<ActionResult<IEnumerable<UsuarioAdminDto>>> GetUsuarios(
 			[FromQuery] int page = 1,
@@ -100,6 +107,11 @@ namespace FilmWhere.Controllers
 		}
 
 		// GET: api/admin/usuarios/{id}
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="id"></param>
+		/// <returns></returns>
 		[HttpGet("usuarios/{id}")]
 		public async Task<ActionResult<UsuarioAdminDto>> GetUsuario(string id)
 		{
@@ -130,6 +142,11 @@ namespace FilmWhere.Controllers
 			return Ok(userDto);
 		}
 		// DELETE: api/admin/usuarios/{id}
+		/// <summary>
+		/// Elimina un usuario del sistema, incluyendo sus relaciones y datos asociados.
+		/// </summary>
+		/// <param name="id"></param>
+		/// <returns></returns>
 		[HttpDelete("usuarios/{id}")]
 		public async Task<IActionResult> DeleteUsuario(string id)
 		{
@@ -198,7 +215,11 @@ namespace FilmWhere.Controllers
 				return BadRequest(new { message = $"Error al eliminar usuario: {ex.Message}" });
 			}
 		}
-
+		/// <summary>
+		/// Crea un nuevo usuario en el sistema, validando que no exista previamente y asignando roles.
+		/// </summary>
+		/// <param name="createDto"></param>
+		/// <returns></returns>
 		[HttpPost("usuarios")]
 		public async Task<ActionResult<UsuarioAdminDto>> CreateUsuario(CreateUsuarioDto createDto)
 		{
@@ -286,6 +307,12 @@ namespace FilmWhere.Controllers
 		}
 
 		// PUT: api/admin/usuarios/{id}
+		/// <summary>
+		/// Actualiza los datos de un usuario existente, permitiendo modificar campos específicos como nombre, email, etc.
+		/// </summary>
+		/// <param name="id"></param>
+		/// <param name="updateDto"></param>
+		/// <returns></returns>
 		[HttpPut("usuarios/{id}")]
 		public async Task<IActionResult> UpdateUsuario(string id, UpdateUsuarioDto updateDto)
 		{
@@ -343,6 +370,11 @@ namespace FilmWhere.Controllers
 		}
 
 		// POST: api/admin/usuarios/{id}/confirmar-email
+		/// <summary>
+		/// Confirma el email de un usuario específico, actualizando su estado de confirmación.
+		/// </summary>
+		/// <param name="id"></param>
+		/// <returns></returns>
 		[HttpPost("usuarios/{id}/confirmar-email")]
 		public async Task<IActionResult> ConfirmarEmail(string id)
 		{
@@ -364,6 +396,11 @@ namespace FilmWhere.Controllers
 		}
 
 		// POST: api/admin/usuarios/{id}/enviar-confirmacion
+		/// <summary>
+		/// Reenvía el email de confirmación a un usuario específico, generando un nuevo token de confirmación.
+		/// </summary>
+		/// <param name="id"></param>
+		/// <returns></returns>
 		[HttpPost("usuarios/{id}/enviar-confirmacion")]
 		public async Task<IActionResult> EnviarConfirmacionEmail(string id)
 		{
@@ -402,6 +439,12 @@ namespace FilmWhere.Controllers
 		}
 
 		// PUT: api/admin/usuarios/{id}/roles
+		/// <summary>
+		/// Actualiza los roles de un usuario específico, permitiendo agregar o eliminar roles existentes.
+		/// </summary>
+		/// <param name="id"></param>
+		/// <param name="rolesDto"></param>
+		/// <returns></returns>
 		[HttpPut("usuarios/{id}/roles")]
 		public async Task<IActionResult> UpdateUserRoles(string id, UpdateRolesDto rolesDto)
 		{
@@ -436,6 +479,12 @@ namespace FilmWhere.Controllers
 		}
 
 		// POST: api/admin/usuarios/{id}/bloquear
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="id"></param>
+		/// <param name="bloqueoDto"></param>
+		/// <returns></returns>
 		[HttpPost("usuarios/{id}/bloquear")]
 		public async Task<IActionResult> BloquearUsuario(string id, [FromBody] BloqueoDto bloqueoDto)
 		{
@@ -465,6 +514,11 @@ namespace FilmWhere.Controllers
 		}
 
 		// POST: api/admin/usuarios/{id}/desbloquear
+		/// <summary>
+		/// Desbloquea un usuario previamente bloqueado, eliminando su bloqueo actual.
+		/// </summary>
+		/// <param name="id"></param>
+		/// <returns></returns>
 		[HttpPost("usuarios/{id}/desbloquear")]
 		public async Task<IActionResult> DesbloquearUsuario(string id)
 		{
@@ -493,6 +547,10 @@ namespace FilmWhere.Controllers
 		}
 
 		// GET: api/admin/roles
+		/// <summary>
+		/// Obtiene los roles que hay en el sistema, permitiendo ver los roles disponibles para asignar a los usuarios.
+		/// </summary>
+		/// <returns></returns>
 		[HttpGet("roles")]
 		public async Task<ActionResult<IEnumerable<string>>> GetRoles()
 		{
@@ -501,6 +559,10 @@ namespace FilmWhere.Controllers
 		}
 
 		// GET: api/admin/estadisticas
+		/// <summary>
+		/// Obtiene estadísticas generales del sistema, incluyendo el total de usuarios, usuarios confirmados, bloqueados y registros en los últimos 30 días.
+		/// </summary>
+		/// <returns></returns>
 		[HttpGet("estadisticas")]
 		public async Task<ActionResult<EstadisticasDto>> GetEstadisticas()
 		{
@@ -527,6 +589,12 @@ namespace FilmWhere.Controllers
 				return BadRequest(ex.Message);
 			}
 		}
+		/// <summary>
+		/// Cambia la contraseña de un usuario específico, generando un token de restablecimiento y validando la nueva contraseña.
+		/// </summary>
+		/// <param name="id"></param>
+		/// <param name="passwordDto"></param>
+		/// <returns></returns>
 		[HttpPut("usuarios/{id}/cambiar-password")]
 		public async Task<IActionResult> CambiarPassword(string id, CambiarPasswordDto passwordDto)
 		{

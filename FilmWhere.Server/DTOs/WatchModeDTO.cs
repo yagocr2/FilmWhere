@@ -35,45 +35,5 @@ namespace FilmWhere.Server.DTOs
 				_ => "Otro"
 			};
 		}
-
-		public class WatchModePlatformSourceDTO
-		{
-			public int Id { get; set; }
-			public string Name { get; set; } = "";
-			public string Type { get; set; } = "";
-			public string Region { get; set; } = "";
-
-			[JsonPropertyName("web_url")]
-			public string? WebUrl { get; set; }
-
-			[JsonPropertyName("android_url")]
-			public string? AndroidUrl { get; set; }
-
-			[JsonPropertyName("ios_url")]
-			public string? IosUrl { get; set; }
-
-			public WatchModePlatformDetailsDTO ToDetails() => new()
-			{
-				Id = Id,
-				Name = Name,
-				Type = Type,
-				Region = Region,
-				WebUrl = WebUrl ?? "",
-				AndroidUrl = AndroidUrl ?? "",
-				IosUrl = IosUrl ?? ""
-			};
-		}
-
-		public class WatchModePlatformDetailsDTO
-		{
-			public int Id { get; set; }
-			public string Name { get; set; } = "";
-			public string Type { get; set; } = "";
-			public string Region { get; set; } = "";
-			public string WebUrl { get; set; } = "";
-			public string AndroidUrl { get; set; } = "";
-			public string IosUrl { get; set; } = "";
-			public decimal? Price { get; set; }
-		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using DotNetEnv;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 namespace FilmWhere.Server
 {
@@ -23,10 +25,28 @@ namespace FilmWhere.Server
 			Env.Load();
 			var builder = WebApplication.CreateBuilder(args);
 
-			// Add services to the container.
 			builder.Services.AddControllers();
 			builder.Services.AddEndpointsApiExplorer();
-			builder.Services.AddSwaggerGen();
+			builder.Services.AddSwaggerGen(c =>
+			{
+				c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+				{
+					Title = "FilmWhere API",
+					Version = "v1",
+					Description = "API para la aplicación FilmWhere, que permite gestionar películas y usuarios.",
+					Contact = new OpenApiContact
+					{
+						Name = "Yago Calero Roldán",
+						Email = "yagocaleroroldan02@gmail.com",
+						Url = new Uri("https://github.com/yagocr2")
+					}
+				});
+				var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+				//Obtengo el nombre completo del archivo, incluyendo su ruta
+				var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+				//Incluyo los comentarios XML que estén en el archivo
+				c.IncludeXmlComments(xmlPath);
+			});
 
 			//Configuración de la base de datos
 			builder.Services.AddDbContext<MyDbContext>(options =>
@@ -55,18 +75,18 @@ namespace FilmWhere.Server
 
 			// Configuración de CORS
 			builder.Services.AddCors(options =>
-			{
-				options.AddPolicy("ReactPolicy", policy =>
 				{
-					policy.WithOrigins(
-							"https://localhost:56839",
-							"https://localhost:7179",
-							"http://localhost:5173")
-						.AllowAnyHeader()
-						.AllowAnyMethod()
-						.AllowCredentials();
+					options.AddPolicy("ReactPolicy", policy =>
+					{
+						policy.WithOrigins(
+								"https://localhost:56839",
+								"https://localhost:7179",
+								"http://localhost:5173")
+							.AllowAnyHeader()
+							.AllowAnyMethod()
+							.AllowCredentials();
+					});
 				});
-			});
 
 			var app = builder.Build();
 

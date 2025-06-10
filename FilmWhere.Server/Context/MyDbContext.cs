@@ -91,6 +91,7 @@ namespace FilmWhere.Context
 				.HasOne(pg => pg.Genero)
 				.WithMany(g => g.Peliculas)
 				.HasForeignKey(pg => pg.GeneroId);
+
 			// Configuración de eliminación para Favorito
 			modelBuilder.Entity<Favorito>()
 				.HasOne(f => f.Usuario)

@@ -231,7 +231,7 @@ namespace FilmWhere.Server.Controllers
 							{
 								Id = pp.Plataforma.Id,
 								Name = pp.Plataforma.Nombre,
-								Type = pp.Plataforma.Tipo.ToString(),
+								Type = pp.Tipo.ToString(),
 								Price = pp.Precio,
 								Url = pp.Enlace
 							}).ToList(),
