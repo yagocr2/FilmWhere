@@ -1,4 +1,4 @@
-﻿import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+﻿import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute, AnonymousRoute, AdminRoute, RegisteredRoute } from './utils/ProtectedRoute';
@@ -50,13 +50,7 @@ function App() {
                             <Route path="/buscar" element={<Search />} />
                             <Route path="/perfil" element={<Perfil />} />
                             <Route path="/perfil/:userId" element={<Perfil />} />
-
-                            {/* Movie detail route */}
                             <Route path="/pelicula/:id" element={<DetallePeli />} />
-
-                            {/* Add more protected routes here as needed */}
-                            {/* <Route path="/favoritos" element={<Favorites />} /> */}
-                            {/* <Route path="/ver-ahora" element={<WatchNow />} /> */}
                         </Route>
 
                         {/* Special case - public access with different layout for non-registered users */}
@@ -74,12 +68,14 @@ function App() {
                                     <p className="mb-8 text-gray-600 dark:text-gray-400">
                                         La página que buscas no existe.
                                     </p>
-                                    <a
-                                        href="/"
-                                        className="rounded-lg bg-red-600 px-6 py-3 text-white transition-colors hover:bg-red-700"
-                                    >
-                                        Volver al inicio
-                                    </a>
+                                    <Link to="/">
+                                        <a
+                                            href="/"
+                                            className="rounded-lg bg-red-600 px-6 py-3 text-white transition-colors hover:bg-red-700"
+                                        >
+                                            Volver al inicio
+                                        </a>
+                                    </Link>
                                 </div>
                             </div>
                         } />

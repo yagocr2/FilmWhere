@@ -14,7 +14,6 @@ const ModalEditarPerfil = ({ isOpen, onClose, userProfile, onProfileUpdate }) =>
         fechaNacimiento: ''
     });
 
-    const [profileImage, setProfileImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
@@ -31,7 +30,6 @@ const ModalEditarPerfil = ({ isOpen, onClose, userProfile, onProfileUpdate }) =>
                 fechaNacimiento: userProfile.fechaNacimiento || ''
             });
             setOriginalUsername(userProfile.userName || '');
-            setImagePreview(userProfile.fotoPerfil || null);
             setErrors({});
             setUsernameStatus({ checking: false, available: null, message: '' });
         }
@@ -99,89 +97,6 @@ const ModalEditarPerfil = ({ isOpen, onClose, userProfile, onProfileUpdate }) =>
         }
     }, [formData.userName]);
 
-    // Manejar selección de imagen
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            // Validar tipo de archivo
-            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-            if (!allowedTypes.includes(file.type)) {
-                setErrors(prev => ({ ...prev, image: 'Solo se permiten imágenes (JPEG, PNG, GIF)' }));
-                return;
-            }
-
-            // Validar tamaño (5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                setErrors(prev => ({ ...prev, image: 'La imagen debe ser menor a 5MB' }));
-                return;
-            }
-
-            setProfileImage(file);
-
-            // Crear preview
-            const reader = new FileReader();
-            reader.onload = (e) => setImagePreview(e.target.result);
-            reader.readAsDataURL(file);
-
-            // Limpiar error de imagen
-            if (errors.image) {
-                setErrors(prev => ({ ...prev, image: '' }));
-            }
-        }
-    };
-
-    // Eliminar imagen de perfil
-    const handleDeleteImage = async () => {
-        try {
-            const response = await fetch('/api/user/delete-profile-picture', {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.ok) {
-                setImagePreview(null);
-                setProfileImage(null);
-                // Actualizar el perfil en el componente padre
-                if (onProfileUpdate) {
-                    const updatedProfile = { ...userProfile, fotoPerfil: null };
-                    onProfileUpdate(updatedProfile);
-                }
-            } else {
-                const errorData = await response.json();
-                setErrors(prev => ({ ...prev, image: errorData.Message || 'Error al eliminar imagen' }));
-            }
-        } catch (error) {
-            console.error('Error al eliminar imagen:', error);
-            setErrors(prev => ({ ...prev, image: 'Error al eliminar imagen' }));
-        }
-    };
-
-    // Subir imagen de perfil
-    const uploadProfileImage = async () => {
-        if (!profileImage) return null;
-
-        const formDataImg = new FormData();
-        formDataImg.append('file', profileImage);
-
-        const response = await fetch('/api/user/upload-profile-picture', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            },
-            body: formDataImg
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            return data.fotoPerfil;
-        } else {
-            const errorData = await response.json();
-            throw new Error(errorData.Message || 'Error al subir imagen');
-        }
-    };
-
     // Manejar submit del formulario
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -196,18 +111,6 @@ const ModalEditarPerfil = ({ isOpen, onClose, userProfile, onProfileUpdate }) =>
                 return;
             }
 
-            // Subir imagen si hay una nueva
-            let newImageUrl = imagePreview;
-            if (profileImage) {
-                try {
-                    newImageUrl = await uploadProfileImage();
-                } catch (imageError) {
-                    setErrors({ image: imageError.message });
-                    setLoading(false);
-                    return;
-                }
-            }
-
             // Actualizar perfil
             const response = await fetch('/api/user/profile', {
                 method: 'PUT',
@@ -220,10 +123,10 @@ const ModalEditarPerfil = ({ isOpen, onClose, userProfile, onProfileUpdate }) =>
 
             if (response.ok) {
                 const updatedProfile = await response.json();
-                updatedProfile.fotoPerfil = newImageUrl;
 
                 if (onProfileUpdate) {
                     onProfileUpdate(updatedProfile);
+                    location.reload();
                 }
                 onClose();
             } else {
@@ -272,44 +175,6 @@ const ModalEditarPerfil = ({ isOpen, onClose, userProfile, onProfileUpdate }) =>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Imagen de perfil */}
-                    <div className="mb-6 flex flex-col items-center">
-                        <div className="relative mb-4">
-                            {imagePreview ? (
-                                <img
-                                    src={imagePreview}
-                                    alt="Perfil"
-                                    className="border-primario h-24 w-24 rounded-full border-4 object-cover"
-                                />
-                            ) : (
-                                <div className={`w-24 h-24 rounded-full flex items-center justify-center ${theme === 'dark' ? 'bg-primario' : 'bg-primario-dark'}`}>
-                                    <User size={32} className="text-white" />
-                                </div>
-                            )}
-                            {imagePreview && (
-                                <button
-                                    type="button"
-                                    onClick={handleDeleteImage}
-                                    className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            )}
-                        </div>
-
-                        <label className={`cursor-pointer flex items-center space-x-2 px-4 py-2 rounded-lg border-2 border-dashed transition-colors ${theme === 'dark' ? 'border-gray-600 hover:border-primario' : 'border-gray-300 hover:border-primario-dark'}`}>
-                            <Upload size={20} />
-                            <span>Subir imagen</span>
-                            <input
-                                type="file"
-                                accept="image/jpeg,image/jpg,image/png,image/gif"
-                                onChange={handleImageChange}
-                                className="hidden"
-                            />
-                        </label>
-                        {errors.image && <p className="mt-1 text-sm text-red-500">{errors.image}</p>}
-                    </div>
-
                     {/* Nombre de usuario */}
                     <div>
                         <label className="mb-1 block text-sm font-medium">Nombre de usuario</label>

@@ -31,13 +31,13 @@ const AdminLayout = ({ children }) => {
 
     const navItems = [
         { name: 'Dashboard', icon: <BarChart3 size={20} />, path: '/admin' },
-        { name: 'Usuarios', icon: <Users size={20} />, path: '/admin/usuarios' },
-        { name: 'Roles', icon: <Shield size={20} />, path: '/admin/roles' },
+        { name: 'Usuarios', icon: <Users size={20} />, path: '/admin/usuarios' }
     ];
 
     const userNavItems = [
         { name: 'Buscar', icon: <Search size={20} />, path: '/buscar' },
         { name: 'Perfil', icon: <User size={20} />, path: '/perfil' },
+        { name: 'Inicio', icon: <Home size={20} />, path: '/inicio' }
     ];
 
     const isActiveRoute = (path) => {
@@ -62,7 +62,7 @@ const AdminLayout = ({ children }) => {
                         <Link to="/admin" className="flex items-center space-x-2">
                             <Crown className="text-yellow-400" size={28} />
                             <span className={`text-2xl font-extrabold ${navbarTextClass}`}>
-                                FilmWhere Admin
+                                FilmWhere
                             </span>
                         </Link>
 
@@ -100,15 +100,6 @@ const AdminLayout = ({ children }) => {
                             {/* Separador */}
                             <div className="mx-2 h-6 border-l border-red-600"></div>
 
-                            {/* Volver a la aplicación */}
-                            <Link
-                                to="/inicio"
-                                className={`${navbarTextClass} ${hoverClass} px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-1 transition-colors`}
-                            >
-                                <Home size={20} />
-                                <span>Ver App</span>
-                            </Link>
-
                             {/* Theme toggle */}
                             <button
                                 onClick={toggleTheme}
@@ -116,12 +107,6 @@ const AdminLayout = ({ children }) => {
                             >
                                 {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                             </button>
-
-                            {/* User info */}
-                            <div className="flex items-center space-x-2 rounded-md bg-red-800 px-3 py-1">
-                                <UserCircle size={20} className="text-yellow-400" />
-                                <span className="text-sm font-medium">{user?.nombre || 'Admin'}</span>
-                            </div>
 
                             {/* Logout button */}
                             <button
@@ -195,15 +180,6 @@ const AdminLayout = ({ children }) => {
 
                             {/* Other options mobile */}
                             <div className="border-t border-red-600 pt-3">
-                                <Link
-                                    to="/inicio"
-                                    className={`${navbarTextClass} ${hoverClass} block px-3 py-2 rounded-md text-base font-medium flex items-center space-x-2`}
-                                    onClick={() => setIsMenuOpen(false)}
-                                >
-                                    <Home size={20} />
-                                    <span>Ver App</span>
-                                </Link>
-
                                 <button
                                     onClick={toggleTheme}
                                     className={`${navbarTextClass} ${hoverClass} w-full block px-3 py-2 rounded-md text-base font-medium flex items-center space-x-2`}

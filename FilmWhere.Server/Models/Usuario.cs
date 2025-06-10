@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using FilmWhere.Server.Models;
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -36,6 +37,7 @@ namespace FilmWhere.Models
 		public string? FotoPerfil { get; set; }
 
 		// Propiedades de navegación
+		public ICollection<Denuncia> Denuncias { get; set; } = new List<Denuncia>();
 		public ICollection<Reseña> Reseñas { get; set; } = new List<Reseña>();
 		public ICollection<Favorito> Favoritos { get; set; } = new List<Favorito>();
 		public ICollection<UsuarioSeguidor> Seguidores { get; set; } = new List<UsuarioSeguidor>();

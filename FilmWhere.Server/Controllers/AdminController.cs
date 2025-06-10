@@ -9,6 +9,7 @@ using FilmWhere.Context;
 using FilmWhere.Server.Services;
 using System.Text.Encodings.Web;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace FilmWhere.Controllers
 {
@@ -655,6 +656,36 @@ namespace FilmWhere.Controllers
 				Roles = roles,
 				Activo = user.LockoutEnd == null || user.LockoutEnd < DateTimeOffset.UtcNow
 			};
+		}
+		[HttpGet("denuncias")]
+		public async Task<IActionResult> GetUserDenuncias()
+		{
+			try
+			{
+				var denuncias = await _context.Denuncias
+					.OrderByDescending(d => d.Fecha)
+					.Select(d => new
+					{
+						id = d.Id,
+						fecha = d.Fecha,
+						Usuario = new
+						{
+							id = d.Usuario.Id,
+							userName = d.Usuario.UserName,
+							email = d.Usuario.Email,
+							nombre = d.Usuario.Nombre,
+							apellido = d.Usuario.Apellido,
+							cantidad =  (d.Usuario.Denuncias.Count > 0) ? d.Usuario.Denuncias.Count : 0
+						}
+					})
+					.ToListAsync();
+
+				return Ok(denuncias);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, new { Message = "Error interno del servidor" });
+			}
 		}
 	}
 

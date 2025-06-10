@@ -317,9 +317,7 @@ namespace FilmWhere.Server.Controllers
 					nombre = user.Nombre,
 					apellido = user.Apellido,
 					email = user.Email,
-					fechaNacimiento = user.FechaNacimiento,
-					fechaRegistro = user.FechaRegistro,
-					fotoPerfil = user.FotoPerfil
+					fechaNacimiento = user.FechaNacimiento
 				};
 
 				return Ok(updatedProfile);
@@ -530,6 +528,20 @@ namespace FilmWhere.Server.Controllers
 				return StatusCode(500, new { Message = "Error interno del servidor", Details = ex.Message });
 			}
 		}
+		//[HttpGet("denunciar/{userId}")]
+		//[Authorize]
+		//public async Task<IActionResult> Denunciar(string userId)
+		//{
+		//	try
+		//	{
+
+		//	}
+		//	catch (Exception ex)
+		//	{
+		//		_logger.LogError(ex, "Error al verificar disponibilidad de username");
+		//		return StatusCode(500, new { Message = "Error interno del servidor", Details = ex.Message });
+		//	}
+		//}
 
 		// Método helper para obtener WebRootPath de forma robusta
 		private string GetWebRootPath()

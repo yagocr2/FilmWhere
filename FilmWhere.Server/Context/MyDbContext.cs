@@ -1,12 +1,17 @@
 ﻿using FilmWhere.Models;
+using FilmWhere.Server.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace FilmWhere.Context
 {
+	/// <summary>
+	/// Contexto de mi base de datos
+	/// </summary>
 	public class MyDbContext : IdentityDbContext<Usuario>
 	{
 		public DbSet<Usuario> Usuarios { get; set; }
+		public DbSet<Denuncia> Denuncias { get; set; }
 		public DbSet<UsuarioSeguidor> UsuarioSeguidor { get; set; }
 		public DbSet<Pelicula> Peliculas { get; set; }
 		public DbSet<Reseña> Reseñas { get; set; }
@@ -30,14 +35,14 @@ namespace FilmWhere.Context
 				.HasIndex(r => new { r.UsuarioId, r.PeliculaId })
 				.IsUnique();
 
-			// Relación Reseña → Usuario
+			// Relación Reseña -> Usuario
 			modelBuilder.Entity<Reseña>()
 				.HasOne(r => r.Usuario)
 				.WithMany(u => u.Reseñas)
 				.HasForeignKey(r => r.UsuarioId)
 				.OnDelete(DeleteBehavior.Cascade);
 
-			// Relación Reseña → Pelicula
+			// Relación Reseña -> Pelicula
 			modelBuilder.Entity<Reseña>()
 				.HasOne(r => r.Pelicula)
 				.WithMany(p => p.Reseñas)

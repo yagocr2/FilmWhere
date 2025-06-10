@@ -89,16 +89,24 @@ const Login = () => {
                 }
                 return;
             }
-            // Login exitoso
-            login(data.token, data.user);
-            if (data.user.roles[0] === "Administrador") {
-                console.log('hola admin: ', data.user);
-                navigate('/admin');
+
+            // Login exitoso - primero ejecutar login para actualizar el contexto
+            await login(data.token, data.user);
+
+            // Luego navegar según el rol
+            const isAdmin = data.user.roles && data.user.roles.includes("Administrador");
+
+            if (isAdmin) {
+                console.log('Administrador detectado:', data.user);
+                // Usar setTimeout para asegurar que el contexto se actualice
+                setTimeout(() => {
+                    navigate('/admin');
+                }, 100);
             } else {
-                console.log('hola normal: ', data.user);
+                console.log('Usuario normal:', data.user);
                 navigate('/inicio');
             }
-            
+
         } catch (err) {
             setError(err.message || 'Error al iniciar sesión');
         } finally {

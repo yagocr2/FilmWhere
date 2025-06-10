@@ -5,6 +5,7 @@ export const useAdminStats = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [denuncias, setDenuncias] = useState(null);
 
     const fetchEstadisticas = async () => {
         try {
@@ -30,11 +31,35 @@ export const useAdminStats = () => {
             setLoading(false);
         }
     };
+    const fetchDenuncias = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            const response = await fetch('/api/admin/denuncias', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (!response.ok) {
+                throw new Error('Error al cargar las denuncias');
+            }
+            const data = await response.json();
+            console.log(data);
+            setDenuncias(data);
+        } catch (err) {
+            setError(err.message);
+            console.error('Error:', err);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     useEffect(() => {
         fetchEstadisticas();
+        fetchDenuncias();
     }, []);
 
-    return { stats, loading, error, refetch: fetchEstadisticas };
+    return { stats, denuncias, loading, error, refetch: (fetchEstadisticas, fetchDenuncias) };
 };
 

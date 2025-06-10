@@ -9,9 +9,10 @@ import {
     ErrorDisplay,
     QuickActions
 } from '../../../components/Admin/AdminComponents';
+import DenunciadosCard from '../../../components/Admin/DenunciadosCard';
 
 const AdminDashboard = () => {
-    const { stats, loading, error, refetch } = useAdminStats();
+    const { stats, denuncias, loading, error, refetch } = useAdminStats();
 
     if (error) {
         return <ErrorDisplay error={error} onRetry={refetch} />;
@@ -32,13 +33,13 @@ const AdminDashboard = () => {
             hoverColor: "hover:bg-yellow-700",
             onClick: () => window.location.href = '/admin/usuarios?filter=unconfirmed'
         },
-        {
-            icon: <Shield />,
-            label: "Gestionar Roles",
-            bgColor: "bg-purple-600",
-            hoverColor: "hover:bg-purple-700",
-            onClick: () => window.location.href = '/admin/roles'
-        }
+        //{
+        //    icon: <Shield />,
+        //    label: "Gestionar Roles",
+        //    bgColor: "bg-purple-600",
+        //    hoverColor: "hover:bg-purple-700",
+        //    onClick: () => window.location.href = '/admin/roles'
+        //}
     ];
 
     return (
@@ -91,23 +92,33 @@ const AdminDashboard = () => {
             <QuickActions actions={quickActions} />
 
             {/* Recent Activity Placeholder */}
-            <RecentActivityPlaceholder />
+            <RecentActivityPlaceholder
+                denuncias={denuncias}
+                loading={loading}
+                error={error}
+            />
         </div>
     );
 };
 
-const RecentActivityPlaceholder = () => {
+const RecentActivityPlaceholder = ({ denuncias, loading, error }) => {
     const { cardBgClass, textClass, textSecondaryClass } = useAdminTheme();
 
     return (
         <div className={`${cardBgClass} rounded-lg shadow-lg p-6`}>
             <h2 className={`${textClass} text-xl font-semibold mb-6 flex items-center`}>
                 <Activity className="mr-2" size={24} />
-                Actividad Reciente
+                Denuncias
             </h2>
             <div className={`${textSecondaryClass} text-center py-8`}>
-                <Activity size={48} className="mx-auto mb-4 opacity-50" />
-                <p>La funcionalidad de actividad reciente estará disponible próximamente</p>
+                <DenunciadosCard
+                    usuarios={denuncias}
+                    loading={loading}
+                    error={error}
+                    cardBgClass={cardBgClass}
+                    textClass={textClass}
+                    textSecondaryClass={textSecondaryClass}
+                />
             </div>
         </div>
     );
