@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Star, UserPlus, UserMinus } from 'lucide-react';
+import { Star, UserPlus, UserMinus, Flag} from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useProfileData } from '../../hooks/useDatosPerfil';
@@ -133,13 +133,14 @@ const ListaReviews = ({ reviews }) => {
         );
     };
     const DenunciarButton = ({ userId }) => {
-        if (userId === userProfile?.id) {return null }
+        if (userId === userProfile?.id) { return null }
         return (
             <button
                 onClick={() => handleDenunciar(userId)}
                 className="text-sm font-medium text-red-500 hover:text-red-700"
+                title="Denunciar"
             >
-                Denunciar
+                <Flag size={16} />
             </button>
         );
     };

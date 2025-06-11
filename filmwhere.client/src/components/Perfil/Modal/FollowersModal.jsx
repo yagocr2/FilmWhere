@@ -195,63 +195,44 @@ const FollowersModal = ({
                     {users && users.length > 0 ? (
                         <div className="space-y-3">
                             {users.map((user) => (
-                                        <Link to={`/perfil/${user.id}`}>
-                                <div
-                                    key={user.id}
-                                    className={`
+                                <Link to={`/perfil/${user.id}`}>
+                                    <div
+                                        key={user.id}
+                                        className={`
                                         flex items-center justify-between p-3 rounded-lg transition-colors
                                         ${theme === 'dark'
-                                            ? 'hover:bg-gray-700'
-                                            : 'hover:bg-gray-50'
-                                        }
+                                                ? 'hover:bg-gray-700'
+                                                : 'hover:bg-gray-50'
+                                            }
                                     `}
-                                >
-                                    <div className="flex items-center space-x-3">
-                                        {/* Avatar */}
-                                        <div className={`
+                                    >
+                                        <div className="flex items-center space-x-3">
+                                            {/* Avatar */}
+                                            <div className={`
                                             w-10 h-10 rounded-full flex items-center justify-center overflow-hidden relative
                                             ${theme === 'dark' ? 'bg-primario' : 'bg-primario-dark'}
                                         `}>
-                                            {user.fotoPerfil ? (
-                                                <>
-                                                    <img
-                                                        src={getProfileImageUrl(user.fotoPerfil)}
-                                                        alt={`${user.nombre} ${user.apellido}`}
-                                                        className="h-full w-full object-cover"
-                                                        onError={handleImageError}
-                                                    />
-                                                    <div
-                                                        className="backup-icon absolute inset-0 flex h-full w-full items-center justify-center"
-                                                        style={{ display: 'none' }}
-                                                    >
-                                                        <User
-                                                            size={24}
-                                                            className={theme === 'dark' ? 'text-black' : 'text-white'}
-                                                        />
-                                                    </div>
-                                                </>
-                                            ) : (
                                                 <User
                                                     size={24}
                                                     className={theme === 'dark' ? 'text-black' : 'text-white'}
                                                 />
-                                            )}
-                                        </div>
 
-                                        {/* Información del usuario */}
-                                        <div>
-                                            <p className="font-medium">
-                                                {user.nombre} {user.apellido}
-                                            </p>
-                                            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                                                }`}>
-                                                @{user.userName}
-                                            </p>
+                                            </div>
+
+                                            {/* Información del usuario */}
+                                            <div>
+                                                <p className="font-medium">
+                                                    {user.nombre} {user.apellido}
+                                                </p>
+                                                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                                                    }`}>
+                                                    @{user.userName}
+                                                </p>
+                                            </div>
                                         </div>
+                                        <FollowButton userId={user.id} />
                                     </div>
-                                    <FollowButton userId={user.id} />
-                                </div>
-                                        </Link>
+                                </Link>
                             ))}
                         </div>
                     ) : (

@@ -102,6 +102,7 @@ const Login = () => {
                 setTimeout(() => {
                     navigate('/admin');
                 }, 100);
+                location.reload();
             } else {
                 console.log('Usuario normal:', data.user);
                 navigate('/inicio');
