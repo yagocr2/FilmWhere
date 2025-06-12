@@ -1,4 +1,4 @@
-﻿import { UserX } from 'lucide-react'; // Importa un ícono apropiadoy
+﻿import { UserX } from 'lucide-react'; 
 const DenunciadosCard = ({
     usuarios,
     loading,
@@ -71,7 +71,7 @@ const DenunciadosCard = ({
                                 </div>
                             </div>
                             <div className="rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-800 dark:bg-red-900 dark:text-red-200">
-                                {usuario.usuario.cantidad} denuncia{usuario.usuario.cantidad !== 1 ? 's' : ''}
+                                {usuario.cantidad} denuncia{usuario.cantidad !== 1 ? 's' : ''}
                             </div>
                         </div>
                     ))}

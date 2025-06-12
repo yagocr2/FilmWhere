@@ -618,36 +618,35 @@ namespace FilmWhere.Controllers
 				Activo = user.LockoutEnd == null || user.LockoutEnd < DateTimeOffset.UtcNow
 			};
 		}
-		/// <summary>
-		/// Obtiene todas las denuncias realizadas por los usuarios, ordenadas por fecha de creación.
-		/// </summary>
-		/// <returns></returns>
+		// Reemplaza el método GetUserDenuncias por la siguiente versión:
 		[HttpGet("denuncias")]
 		public async Task<IActionResult> GetUserDenuncias()
 		{
 			try
 			{
-				var denuncias = await _context.Denuncias
-					.OrderByDescending(d => d.Fecha)
-					.Select(d => new
+				var denunciasAgrupadas = await _context.Denuncias
+					.GroupBy(d => d.UsuarioDenunciadoId)
+					.Select(g => new
 					{
-						id = d.Id,
-						fecha = d.Fecha,
+						id = g.Key,
+						cantidad = g.Count(),
+						fechaUltima = g.Max(d => d.Fecha),
 						Usuario = new
 						{
-							id = d.UsuarioDenunciado.Id,
-							userName = d.UsuarioDenunciado.UserName,
-							email = d.UsuarioDenunciado.Email,
-							nombre = d.UsuarioDenunciado.Nombre,
-							apellido = d.UsuarioDenunciado.Apellido,
-							cantidad =  (d.UsuarioDenunciado.DenunciasRecibidas.Count > 0) ? d.UsuarioDenunciado.DenunciasRecibidas.Count : 0
+							id = g.First().UsuarioDenunciado.Id,
+							userName = g.First().UsuarioDenunciado.UserName,
+							email = g.First().UsuarioDenunciado.Email,
+							nombre = g.First().UsuarioDenunciado.Nombre,
+							apellido = g.First().UsuarioDenunciado.Apellido
 						}
 					})
+					.OrderByDescending(x => x.cantidad)
+					.ThenByDescending(x => x.fechaUltima)
 					.ToListAsync();
 
-				return Ok(denuncias);
+				return Ok(denunciasAgrupadas);
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				return StatusCode(500, new { Message = "Error interno del servidor" });
 			}

@@ -45,7 +45,6 @@ export const useAdminStats = () => {
                 throw new Error('Error al cargar las denuncias');
             }
             const data = await response.json();
-            console.log(data);
             setDenuncias(data);
         } catch (err) {
             setError(err.message);
