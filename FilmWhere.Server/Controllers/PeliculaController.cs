@@ -810,6 +810,7 @@ namespace FilmWhere.Server.Controllers
 			{
 				int skip = (page - 1) * cantidad;
 				bool dbAvailable = await _utilityService.IsDatabaseAvailableAsync();
+				List<PeliculaDTO> localMovies = new();
 
 				if (dbAvailable)
 				{
@@ -824,7 +825,7 @@ namespace FilmWhere.Server.Controllers
 							query = query.Where(p => p.Año == year.Value);
 						}
 
-						var topRatedMovies = await query
+						localMovies = await query
 							.Select(p => new
 							{
 								Pelicula = p,
@@ -845,9 +846,6 @@ namespace FilmWhere.Server.Controllers
 								Rating = x.PromedioCalificacion
 							})
 							.ToListAsync();
-
-						if (topRatedMovies.Any())
-							return topRatedMovies;
 					}
 					catch (Exception ex)
 					{
@@ -855,16 +853,15 @@ namespace FilmWhere.Server.Controllers
 					}
 				}
 
-				// Respaldo con TMDB - Llamar directamente al método y obtener el resultado
+				// Respaldo con TMDB
 				_logger.LogInformation("Usando respaldo TMDB para mejor valoradas");
+
+				List<TmdbSearchResult> allMovies = new();
+				int currentPage = page;
+				bool hasMorePages = true;
 
 				try
 				{
-					// Llamar directamente al servicio TMDB sin usar ActionResult
-					List<TmdbSearchResult> allMovies = new();
-					int currentPage = page;
-					bool hasMorePages = true;
-
 					while (allMovies.Count < cantidad && hasMorePages && currentPage <= 3)
 					{
 						var tmdbResponse = await _tmdbService.GetTopRatedMoviesAsync(currentPage);
@@ -880,122 +877,44 @@ namespace FilmWhere.Server.Controllers
 
 						if (currentPage > tmdbResponse.Total_Pages) hasMorePages = false;
 					}
-
-					if (!allMovies.Any())
-						return NotFound("No se encontraron películas mejor valoradas");
-
-					var tmdbMovies = allMovies
-						.Take(cantidad)
-						.Select(m => new PeliculaDTO
-						{
-							Id = m.Id.ToString(),
-							Title = m.Title,
-							PosterUrl = $"https://image.tmdb.org/t/p/w500/{m.Poster_Path}",
-							Year = m.Release_Date.Year,
-							Rating = m.Vote_Average
-						})
-						.ToList();
-
-					return tmdbMovies;
 				}
 				catch (Exception ex)
 				{
 					_logger.LogError(ex, "Error obteniendo películas mejor valoradas de TMDB");
+					// Si hay resultados locales, devolverlos aunque falle TMDB
+					if (localMovies.Any())
+						return localMovies;
 					return StatusCode(500, "Error al obtener películas mejor valoradas de TMDB");
 				}
+
+				var tmdbMovies = allMovies
+					.Select(m => new PeliculaDTO
+					{
+						Id = m.Id.ToString(),
+						Title = m.Title,
+						PosterUrl = $"https://image.tmdb.org/t/p/w500/{m.Poster_Path}",
+						Year = m.Release_Date.Year,
+						Rating = m.Vote_Average
+					})
+					.ToList();
+
+				// Concatenar y eliminar duplicados por título (ignorando mayúsculas/minúsculas)
+				var combinedMovies = localMovies
+					.Concat(tmdbMovies)
+					.GroupBy(m => m.Title.ToLower())
+					.Select(g => g.First())
+					.Take(cantidad)
+					.ToList();
+
+				if (combinedMovies.Any())
+					return combinedMovies;
+
+				return NotFound("No se encontraron películas mejor valoradas");
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, "Error al obtener películas mejor valoradas");
 				return StatusCode(500, $"Error al obtener películas mejor valoradas: {ex.Message}");
-			}
-		}
-
-		#endregion
-
-		#region Sincronización y Administración
-
-		[HttpPost("sincronizar/{year}")]
-		public async Task<ActionResult> SyncPopularMoviesByYear(int year)
-		{
-			try
-			{
-				bool dbAvailable = await _utilityService.IsDatabaseAvailableAsync();
-
-				if (!dbAvailable)
-				{
-					return BadRequest("Base de datos no disponible para sincronización");
-				}
-
-				if (year < 1900 || year > DateTime.Now.Year)
-					return BadRequest("Año inválido");
-
-				List<TmdbSearchResult> allMoviesFromYear = new();
-				int maxPages = 5;
-
-				for (int page = 1; page <= maxPages; page++)
-				{
-					var tmdbResponse = await _tmdbService.GetPopularMoviesAsync(page);
-					if (tmdbResponse == null || !tmdbResponse.Results.Any())
-						break;
-
-					var moviesFromYear = tmdbResponse.Results
-						.Where(m => m.Release_Date.Year == year)
-						.ToList();
-
-					allMoviesFromYear.AddRange(moviesFromYear);
-
-					if (allMoviesFromYear.Count >= 50 || tmdbResponse.Page >= tmdbResponse.Total_Pages)
-						break;
-				}
-
-				int syncCount = 0;
-				foreach (var movie in allMoviesFromYear)
-				{
-					await _dataSyncService.SyncMovieByTmdbIdAsync(movie.Id);
-					syncCount++;
-				}
-
-				return Ok(new { Message = $"Se sincronizaron {syncCount} películas del año {year}" });
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, "Error al sincronizar películas populares del año {Year}", year);
-				return StatusCode(500, $"Error al sincronizar películas: {ex.Message}");
-			}
-		}
-
-		[HttpDelete("limpiar/{year}")]
-		public async Task<ActionResult> PurgeMoviesByYear(int year)
-		{
-			try
-			{
-				bool dbAvailable = await _utilityService.IsDatabaseAvailableAsync();
-
-				if (!dbAvailable)
-				{
-					return BadRequest("Base de datos no disponible para operaciones de limpieza");
-				}
-
-				using var transaction = await _context.Database.BeginTransactionAsync();
-
-				var peliculasDelAño = await _context.Peliculas
-					.Where(p => p.Año == year)
-					.ToListAsync();
-
-				if (!peliculasDelAño.Any())
-					return NotFound($"No se encontraron películas del año {year}");
-
-				_context.Peliculas.RemoveRange(peliculasDelAño);
-				await _context.SaveChangesAsync();
-				await transaction.CommitAsync();
-
-				return Ok(new { Message = $"Se eliminaron {peliculasDelAño.Count} películas del año {year}" });
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, "Error al purgar películas del año {Year}", year);
-				return StatusCode(500, $"Error al purgar películas: {ex.Message}");
 			}
 		}
 
