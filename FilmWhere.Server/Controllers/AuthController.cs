@@ -14,8 +14,12 @@ using Sprache;
 
 namespace FilmWhere.Server.Controllers
 {
+	/// <summary>
+	/// Controlador para la gestión de autenticación y autorización de usuarios
+	/// </summary>
 	[ApiController]
 	[Route("api/[controller]")]
+	[Produces("application/json")]
 	public class AuthController : ControllerBase
 	{
 		private readonly UserManager<Usuario> _userManager;
@@ -32,7 +36,18 @@ namespace FilmWhere.Server.Controllers
 			_emailSender = emailSender;
 		}
 
+		/// <summary>
+		/// Registra un nuevo usuario en el sistema
+		/// </summary>
+		/// <param name="model">Datos del usuario a registrar</param>
+		/// <returns>Resultado del registro con mensaje de confirmación</returns>
+		/// <response code="200">Usuario registrado exitosamente</response>
+		/// <response code="400">Datos de registro inválidos o usuario ya existe</response>
+		/// <response code="500">Error interno del servidor</response>
 		[HttpPost("register")]
+		[ProducesResponseType(typeof(object), 200)]
+		[ProducesResponseType(typeof(object), 400)]
+		[ProducesResponseType(500)]
 		public async Task<IActionResult> Register([FromBody] RegisterModel model)
 		{
 			try
@@ -102,7 +117,15 @@ namespace FilmWhere.Server.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Confirma el email de un usuario mediante un token de confirmación
+		/// </summary>
+		/// <param name="userId">ID del usuario</param>
+		/// <param name="token">Token de confirmación de email</param>
+		/// <returns>Redirecciona a una página de confirmación con el estado del resultado</returns>
+		/// <response code="302">Redirección a página de confirmación</response>
 		[HttpGet("confirm-email")]
+		[ProducesResponseType(302)]
 		public async Task<IActionResult> ConfirmEmail(string userId, string token)
 		{
 			if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
@@ -133,7 +156,16 @@ namespace FilmWhere.Server.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Reenvía el email de confirmación a un usuario
+		/// </summary>
+		/// <param name="model">Email del usuario</param>
+		/// <returns>Mensaje de confirmación del reenvío</returns>
+		/// <response code="200">Email de confirmación reenviado</response>
+		/// <response code="400">Email requerido o ya confirmado</response>
 		[HttpPost("resend-confirmation")]
+		[ProducesResponseType(typeof(object), 200)]
+		[ProducesResponseType(typeof(object), 400)]
 		public async Task<IActionResult> ResendConfirmationEmail([FromBody] ResendConfirmationModel model)
 		{
 			if (!ModelState.IsValid)
@@ -167,7 +199,16 @@ namespace FilmWhere.Server.Controllers
 			return Ok(new { Message = "Si el email existe en nuestro sistema, se ha enviado un nuevo enlace de confirmación." });
 		}
 
+		/// <summary>
+		/// Autentica un usuario en el sistema
+		/// </summary>
+		/// <param name="model">Credenciales de login (email/username y contraseña)</param>
+		/// <returns>Token JWT y datos del usuario si la autenticación es exitosa</returns>
+		/// <response code="200">Login exitoso con token JWT</response>
+		/// <response code="401">Credenciales inválidas, cuenta bloqueada o email no confirmado</response>
 		[HttpPost("login")]
+		[ProducesResponseType(typeof(object), 200)]
+		[ProducesResponseType(typeof(object), 401)]
 		public async Task<IActionResult> Login([FromBody] LoginModel model)
 		{
 			bool isEmail = model.Identifier.Contains("@");
@@ -311,46 +352,91 @@ namespace FilmWhere.Server.Controllers
 		}
 	}
 
+	/// <summary>
+	/// Modelo para el registro de nuevos usuarios
+	/// </summary>
 	public class RegisterModel
 	{
-		[Required]
-		[MinLength(2)]
-		[MaxLength(20)]
+		/// <summary>
+		/// Nombre de usuario único (2-20 caracteres)
+		/// </summary>
+		/// <example>juan_perez</example>
+		[Required(ErrorMessage = "El nombre de usuario es requerido")]
+		[MinLength(2, ErrorMessage = "El nombre de usuario debe tener al menos 2 caracteres")]
+		[MaxLength(20, ErrorMessage = "El nombre de usuario no puede tener más de 20 caracteres")]
 		public string UserName { get; set; }
 
-		[Required]
+		/// <summary>
+		/// Nombre del usuario
+		/// </summary>
+		/// <example>Juan</example>
+		[Required(ErrorMessage = "El nombre es requerido")]
 		public string Nombre { get; set; } = string.Empty;
 
-		[Required]
+		/// <summary>
+		/// Apellidos del usuario
+		/// </summary>
+		/// <example>Pérez García</example>
+		[Required(ErrorMessage = "Los apellidos son requeridos")]
 		public string Apellidos { get; set; } = string.Empty;
 
-		[Required]
-		[EmailAddress]
+		/// <summary>
+		/// Dirección de correo electrónico del usuario
+		/// </summary>
+		/// <example>juan.perez@email.com</example>
+		[Required(ErrorMessage = "El email es requerido")]
+		[EmailAddress(ErrorMessage = "El formato del email no es válido")]
 		public string Email { get; set; }
 
-		[Required]
+		/// <summary>
+		/// Fecha de nacimiento del usuario
+		/// </summary>
+		/// <example>1990-05-15</example>
+		[Required(ErrorMessage = "La fecha de nacimiento es requerida")]
 		[DataType(DataType.Date)]
 		public DateOnly FechaNacimiento { get; set; }
 
-		[Required]
+		/// <summary>
+		/// Contraseña del usuario (mínimo 8 caracteres, debe incluir mayúsculas, minúsculas, números y caracteres especiales)
+		/// </summary>
+		/// <example>MiContraseña123!</example>
+		[Required(ErrorMessage = "La contraseña es requerida")]
 		[DataType(DataType.Password)]
 		public string Password { get; set; }
 	}
 
+	/// <summary>
+	/// Modelo para el login de usuarios
+	/// </summary>
 	public class LoginModel
 	{
-		[Required]
+		/// <summary>
+		/// Email o nombre de usuario para el login
+		/// </summary>
+		/// <example>juan.perez@email.com</example>
+		[Required(ErrorMessage = "El email o nombre de usuario es requerido")]
 		public string Identifier { get; set; }
 
-		[Required]
+		/// <summary>
+		/// Contraseña del usuario
+		/// </summary>
+		/// <example>MiContraseña123!</example>
+		[Required(ErrorMessage = "La contraseña es requerida")]
 		[DataType(DataType.Password)]
 		public string Password { get; set; }
 	}
 
+	/// <summary>
+	/// Modelo para reenviar email de confirmación
+	/// </summary>
 	public class ResendConfirmationModel
 	{
-		[Required]
-		[EmailAddress]
+		/// <summary>
+		/// Email del usuario para reenviar confirmación
+		/// </summary>
+		/// <example>juan.perez@email.com</example>
+		[Required(ErrorMessage = "El email es requerido")]
+		[EmailAddress(ErrorMessage = "El formato del email no es válido")]
 		public string Email { get; set; }
 	}
 }

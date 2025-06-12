@@ -143,14 +143,11 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
             let url, method;
 
             if (isEditing && existingReview) {
-                // Update existing review
                 url = `/api/reviews/${existingReview.id}`;
                 method = 'PUT';
-                // For PUT, we don't need peliculaId and tituloPelicula
                 delete reviewData.peliculaId;
                 delete reviewData.tituloPelicula;
             } else {
-                // Create new review
                 url = '/api/reviews';
                 method = 'POST';
             }
@@ -191,7 +188,6 @@ const ReviewModal = ({ isOpen, onClose, currentMovie }) => {
     };
 
     const handleClose = () => {
-        // Don't reset search state on close, only form state
         setRating(0);
         setHoverRating(0);
         setComment('');

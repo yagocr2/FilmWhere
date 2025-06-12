@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-
 using global::FilmWhere.Context;
 using global::FilmWhere.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -9,18 +8,20 @@ using FilmWhere.Services;
 
 namespace FilmWhere.Server.Controllers
 {
-
 	namespace FilmWhere.Server.Controllers
 	{
+		/// <summary>
+		/// Controlador para la gestión de películas favoritas de usuarios
+		/// </summary>
 		[ApiController]
 		[Route("api/[controller]")]
 		[Authorize]
+		[Produces("application/json")]
 		public class FavoritosController : ControllerBase
 		{
 			private readonly MyDbContext _context;
 			private readonly ILogger<FavoritosController> _logger;
 			private readonly DataSyncService _dataSyncService;
-
 
 			public FavoritosController(MyDbContext context, ILogger<FavoritosController> logger, DataSyncService dataSyncService)
 			{
@@ -29,7 +30,22 @@ namespace FilmWhere.Server.Controllers
 				_dataSyncService = dataSyncService;
 			}
 
+			/// <summary>
+			/// Añade una película a la lista de favoritos del usuario autenticado
+			/// </summary>
+			/// <param name="peliculaId">ID de la película a añadir a favoritos</param>
+			/// <returns>Confirmación de que la película fue añadida a favoritos</returns>
+			/// <response code="200">Película añadida exitosamente a favoritos</response>
+			/// <response code="400">La película ya está en favoritos o ID inválido</response>
+			/// <response code="401">Usuario no autenticado</response>
+			/// <response code="404">Película no encontrada</response>
+			/// <response code="500">Error interno del servidor</response>
 			[HttpPost("{peliculaId}")]
+			[ProducesResponseType(typeof(object), 200)]
+			[ProducesResponseType(typeof(object), 400)]
+			[ProducesResponseType(typeof(object), 401)]
+			[ProducesResponseType(typeof(object), 404)]
+			[ProducesResponseType(typeof(object), 500)]
 			public async Task<IActionResult> AddToFavorites(string peliculaId)
 			{
 				try
@@ -99,7 +115,20 @@ namespace FilmWhere.Server.Controllers
 				}
 			}
 
+			/// <summary>
+			/// Elimina una película de la lista de favoritos del usuario autenticado
+			/// </summary>
+			/// <param name="peliculaId">ID de la película a eliminar de favoritos</param>
+			/// <returns>Confirmación de que la película fue eliminada de favoritos</returns>
+			/// <response code="200">Película eliminada exitosamente de favoritos</response>
+			/// <response code="401">Usuario no autenticado</response>
+			/// <response code="404">La película no está en favoritos</response>
+			/// <response code="500">Error interno del servidor</response>
 			[HttpDelete("{peliculaId}")]
+			[ProducesResponseType(typeof(object), 200)]
+			[ProducesResponseType(typeof(object), 401)]
+			[ProducesResponseType(typeof(object), 404)]
+			[ProducesResponseType(typeof(object), 500)]
 			public async Task<IActionResult> RemoveFromFavorites(string peliculaId)
 			{
 				try
@@ -130,7 +159,18 @@ namespace FilmWhere.Server.Controllers
 				}
 			}
 
+			/// <summary>
+			/// Verifica si una película está en la lista de favoritos del usuario autenticado
+			/// </summary>
+			/// <param name="peliculaId">ID de la película a verificar</param>
+			/// <returns>Estado de favorito de la película</returns>
+			/// <response code="200">Estado de favorito verificado</response>
+			/// <response code="401">Usuario no autenticado</response>
+			/// <response code="500">Error interno del servidor</response>
 			[HttpGet("check/{peliculaId}")]
+			[ProducesResponseType(typeof(object), 200)]
+			[ProducesResponseType(typeof(object), 401)]
+			[ProducesResponseType(typeof(object), 500)]
 			public async Task<IActionResult> CheckIfFavorite(string peliculaId)
 			{
 				try
@@ -153,7 +193,19 @@ namespace FilmWhere.Server.Controllers
 				}
 			}
 
+			/// <summary>
+			/// Obtiene la lista paginada de películas favoritas del usuario autenticado
+			/// </summary>
+			/// <param name="page">Número de página (por defecto: 1)</param>
+			/// <param name="pageSize">Tamaño de página (por defecto: 20)</param>
+			/// <returns>Lista paginada de películas favoritas con información detallada</returns>
+			/// <response code="200">Lista de favoritos obtenida exitosamente</response>
+			/// <response code="401">Usuario no autenticado</response>
+			/// <response code="500">Error interno del servidor</response>
 			[HttpGet]
+			[ProducesResponseType(typeof(object), 200)]
+			[ProducesResponseType(typeof(object), 401)]
+			[ProducesResponseType(typeof(object), 500)]
 			public async Task<IActionResult> GetUserFavorites([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
 			{
 				try
@@ -219,7 +271,17 @@ namespace FilmWhere.Server.Controllers
 				}
 			}
 
+			/// <summary>
+			/// Obtiene el número total de películas favoritas del usuario autenticado
+			/// </summary>
+			/// <returns>Contador de películas favoritas</returns>
+			/// <response code="200">Contador obtenido exitosamente</response>
+			/// <response code="401">Usuario no autenticado</response>
+			/// <response code="500">Error interno del servidor</response>
 			[HttpGet("count")]
+			[ProducesResponseType(typeof(object), 200)]
+			[ProducesResponseType(typeof(object), 401)]
+			[ProducesResponseType(typeof(object), 500)]
 			public async Task<IActionResult> GetFavoritesCount()
 			{
 				try

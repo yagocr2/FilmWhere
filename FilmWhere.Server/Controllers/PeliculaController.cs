@@ -9,8 +9,12 @@ using static FilmWhere.Server.DTOs.TmdbDTO;
 
 namespace FilmWhere.Server.Controllers
 {
+	/// <summary>
+	/// Controlador para la gestión de películas
+	/// </summary>
 	[ApiController]
 	[Route("api/[controller]")]
+	[Produces("application/json")]
 	public class PeliculaController : ControllerBase
 	{
 		private readonly TmdbService _tmdbService;
@@ -19,7 +23,6 @@ namespace FilmWhere.Server.Controllers
 		private readonly MyDbContext _context;
 		private readonly ILogger<PeliculaController> _logger;
 		private readonly PeliculasUtilityService _utilityService;
-
 
 		public PeliculaController(
 			TmdbService tmdbService,
@@ -39,8 +42,18 @@ namespace FilmWhere.Server.Controllers
 
 		#region Obtener Película por ID
 
-		// Obtener película específica por ID
+		/// <summary>
+		/// Obtiene los detalles de una película específica por su ID
+		/// </summary>
+		/// <param name="id">ID de la película (puede ser ID local o ID de TMDB)</param>
+		/// <returns>Detalles completos de la película incluyendo géneros, plataformas y reseñas</returns>
+		/// <response code="200">Película encontrada exitosamente</response>
+		/// <response code="404">No se encontró ninguna película con el ID especificado</response>
+		/// <response code="500">Error interno del servidor</response>
 		[HttpGet("{id}")]
+		[ProducesResponseType(typeof(PeliculaDTO), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 		public async Task<ActionResult<PeliculaDTO>> GetMovieById(string id)
 		{
 			try
@@ -106,9 +119,7 @@ namespace FilmWhere.Server.Controllers
 				//Si no está en BD local, buscar en TMDB usando GetMovieDetailsAsync
 				if (int.TryParse(id, out int tmdbId))
 				{
-					// Replace the problematic line with the following code to fix the CS0815 error:
-					var plataformas = await _watchModeService.GetStreamingSourcesAsync(tmdbId); // Correctly await the asynchronous method
-																								// Usar el método correcto para obtener detalles específicos
+					var plataformas = await _watchModeService.GetStreamingSourcesAsync(tmdbId);
 					var movieDetails = await _tmdbService.GetMovieDetailsAsync(tmdbId);
 					_logger.BeginScope("Obteniendo detalles de película TMDB ID: {TmdbId}", plataformas);
 
@@ -121,10 +132,10 @@ namespace FilmWhere.Server.Controllers
 							PosterUrl = $"https://image.tmdb.org/t/p/w500/{movieDetails.Poster_Path}",
 							Overview = movieDetails.Overview,
 							Year = movieDetails.GetReleaseDate()?.Year ?? 0,
-							Rating = movieDetails.Vote_Average, // TMDB no devuelve rating en detalles
+							Rating = movieDetails.Vote_Average,
 							Genres = movieDetails.Genres.Select(g => g.Name).ToList(),
 							Platforms = plataformas,
-							Reviews = new List<ReviewDTO>(), // No hay reviews locales
+							Reviews = new List<ReviewDTO>(),
 							ReviewCount = 0,
 							TmdbId = movieDetails.Id
 						};
@@ -146,7 +157,21 @@ namespace FilmWhere.Server.Controllers
 
 		#region Búsquedas
 
+		/// <summary>
+		/// Busca películas por título
+		/// </summary>
+		/// <param name="query">Término de búsqueda para el título de la película</param>
+		/// <param name="page">Número de página para paginación (por defecto: 1)</param>
+		/// <returns>Lista de películas que coinciden con el término de búsqueda</returns>
+		/// <response code="200">Búsqueda realizada exitosamente</response>
+		/// <response code="400">El término de búsqueda está vacío</response>
+		/// <response code="404">No se encontraron películas</response>
+		/// <response code="500">Error interno del servidor</response>
 		[HttpGet("buscar")]
+		[ProducesResponseType(typeof(List<PeliculaDTO>), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 		public async Task<ActionResult<List<PeliculaDTO>>> SearchMovies(
 		   [FromQuery] string query,
 		   [FromQuery] int page = 1)
@@ -245,7 +270,16 @@ namespace FilmWhere.Server.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Obtiene sugerencias de títulos de películas basadas en el término de búsqueda
+		/// </summary>
+		/// <param name="query">Término de búsqueda parcial (mínimo 2 caracteres)</param>
+		/// <returns>Lista de sugerencias de títulos de películas</returns>
+		/// <response code="200">Sugerencias obtenidas exitosamente</response>
+		/// <response code="500">Error interno del servidor</response>
 		[HttpGet("sugerencias")]
+		[ProducesResponseType(typeof(List<string>), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 		public async Task<ActionResult<List<string>>> GetSearchSuggestions([FromQuery] string query)
 		{
 			try
@@ -301,7 +335,21 @@ namespace FilmWhere.Server.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Realiza una búsqueda avanzada de películas con múltiples filtros
+		/// </summary>
+		/// <param name="title">Filtro por título (opcional)</param>
+		/// <param name="year">Filtro por año de lanzamiento (opcional)</param>
+		/// <param name="genre">Filtro por género (opcional)</param>
+		/// <param name="page">Número de página para paginación (por defecto: 1)</param>
+		/// <returns>Lista de películas que coinciden con los filtros especificados</returns>
+		/// <response code="200">Búsqueda realizada exitosamente</response>
+		/// <response code="404">No se encontraron películas con los filtros especificados</response>
+		/// <response code="500">Error interno del servidor</response>
 		[HttpGet("busqueda-avanzada")]
+		[ProducesResponseType(typeof(List<PeliculaDTO>), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 		public async Task<ActionResult<List<PeliculaDTO>>> AdvancedSearch(
 			[FromQuery] string? title,
 			[FromQuery] int? year,
@@ -310,7 +358,6 @@ namespace FilmWhere.Server.Controllers
 		{
 			try
 			{
-
 				bool dbAvailable = await _utilityService.IsDatabaseAvailableAsync();
 
 				if (dbAvailable)
@@ -375,7 +422,19 @@ namespace FilmWhere.Server.Controllers
 
 		#region Películas por Género
 
+		/// <summary>
+		/// Obtiene películas filtradas por género específico
+		/// </summary>
+		/// <param name="genreName">Nombre del género (ej: "Acción", "Comedia", "Drama")</param>
+		/// <param name="cantidad">Número máximo de películas a devolver (por defecto: 15)</param>
+		/// <returns>Lista de películas del género especificado</returns>
+		/// <response code="200">Películas del género obtenidas exitosamente</response>
+		/// <response code="404">No se encontraron películas del género especificado</response>
+		/// <response code="500">Error interno del servidor</response>
 		[HttpGet("genero/{genreName}")]
+		[ProducesResponseType(typeof(List<PeliculaDTO>), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 		public async Task<ActionResult<List<PeliculaDTO>>> GetMoviesByGenre(string genreName, int cantidad = 15)
 		{
 			try
@@ -419,7 +478,7 @@ namespace FilmWhere.Server.Controllers
 					}
 				}
 
-				// Respaldo completo con TMDB - similar a GetTopRatedOnlyTmdbAsync
+				// Respaldo completo con TMDB
 				return await _utilityService.GetMoviesByGenreOnlyTmdbAsync(genreName, cantidad);
 			}
 			catch (Exception ex)
@@ -429,7 +488,15 @@ namespace FilmWhere.Server.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Obtiene la lista de géneros disponibles en el sistema
+		/// </summary>
+		/// <returns>Lista de todos los géneros disponibles con sus IDs y nombres</returns>
+		/// <response code="200">Lista de géneros obtenida exitosamente</response>
+		/// <response code="500">Error interno del servidor</response>
 		[HttpGet("generos")]
+		[ProducesResponseType(typeof(List<GeneroDTO>), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 		public async Task<ActionResult<List<GeneroDTO>>> GetAvailableGenres()
 		{
 			try
@@ -494,7 +561,19 @@ namespace FilmWhere.Server.Controllers
 
 		#region Estrenos y populares
 
+		/// <summary>
+		/// Obtiene las películas de estreno recientes para un año específico
+		/// </summary>
+		/// <param name="año">Año de los estrenos (por defecto: año actual)</param>
+		/// <param name="cantidad">Número máximo de películas a devolver (por defecto: 15)</param>
+		/// <returns>Lista de películas estrenadas en el año especificado</returns>
+		/// <response code="200">Estrenos obtenidos exitosamente</response>
+		/// <response code="404">No se encontraron estrenos para el año especificado</response>
+		/// <response code="500">Error interno del servidor</response>
 		[HttpGet("estrenos")]
+		[ProducesResponseType(typeof(List<PeliculaDTO>), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 		public async Task<ActionResult<List<PeliculaDTO>>> GetRecentReleases(int año = 0, int cantidad = 15)
 		{
 			try
@@ -575,7 +654,20 @@ namespace FilmWhere.Server.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Obtiene las películas más populares
+		/// </summary>
+		/// <param name="page">Número de página para paginación (por defecto: 1)</param>
+		/// <param name="year">Filtro por año específico (opcional)</param>
+		/// <param name="cantidad">Número máximo de películas a devolver (por defecto: 50, máximo: 100)</param>
+		/// <returns>Lista de películas populares ordenadas por popularidad</returns>
+		/// <response code="200">Películas populares obtenidas exitosamente</response>
+		/// <response code="404">No se encontraron películas populares</response>
+		/// <response code="500">Error interno del servidor</response>
 		[HttpGet("populares")]
+		[ProducesResponseType(typeof(List<PeliculaDTO>), StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 		public async Task<ActionResult<List<PeliculaDTO>>> GetPopularMovies(int page = 1, int year = 0, int cantidad = 50)
 		{
 			try
@@ -627,7 +719,6 @@ namespace FilmWhere.Server.Controllers
 				return StatusCode(500, "Error al obtener películas populares");
 			}
 		}
-		// Reemplaza el método GetTopRatedMovies en PeliculaController.cs
 
 		[HttpGet("mejor-valoradas")]
 		public async Task<ActionResult<List<PeliculaDTO>>> GetTopRatedMovies(

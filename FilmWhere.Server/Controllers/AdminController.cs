@@ -632,8 +632,11 @@ namespace FilmWhere.Controllers
 				return BadRequest(new { message = $"Error al cambiar contraseña: {ex.Message}" });
 			}
 		}
-
-		// Método auxiliar para obtener DTO del usuario
+		/// <summary>
+		///		
+		/// </summary>
+		/// <param name="userId"></param>
+		/// <returns></returns>
 		private async Task<UsuarioAdminDto> GetUsuarioDto(string userId)
 		{
 			var user = await _userManager.FindByIdAsync(userId);
@@ -657,6 +660,10 @@ namespace FilmWhere.Controllers
 				Activo = user.LockoutEnd == null || user.LockoutEnd < DateTimeOffset.UtcNow
 			};
 		}
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <returns></returns>
 		[HttpGet("denuncias")]
 		public async Task<IActionResult> GetUserDenuncias()
 		{
@@ -689,7 +696,9 @@ namespace FilmWhere.Controllers
 		}
 	}
 
-
+	/// <summary>
+	/// 
+	/// </summary>
 	public class CambiarPasswordDto
 	{
 		[Required(ErrorMessage = "La nueva contraseña es obligatoria")]
@@ -700,7 +709,9 @@ namespace FilmWhere.Controllers
 		[Compare("NuevaPassword", ErrorMessage = "Las contraseñas no coinciden")]
 		public string ConfirmarPassword { get; set; }
 	}
-	// DTOs
+	/// <summary>
+	/// 
+	/// </summary>
 	public class UsuarioAdminDto
 	{
 		public string Id { get; set; }
@@ -716,7 +727,9 @@ namespace FilmWhere.Controllers
 		public IList<string> Roles { get; set; } = new List<string>();
 		public bool Activo { get; set; }
 	}
-
+	/// <summary>
+	/// 
+	/// </summary>
 	public class CreateUsuarioDto
 	{
 		[Required(ErrorMessage = "El nombre de usuario es obligatorio")]
@@ -753,7 +766,9 @@ namespace FilmWhere.Controllers
 
 		public List<string>? Roles { get; set; }
 	}
-
+	/// <summary>
+	/// 
+	/// </summary>
 	public class UpdateUsuarioDto
 	{
 		[MinLength(2)]
@@ -774,7 +789,9 @@ namespace FilmWhere.Controllers
 		public DateOnly? FechaNacimiento { get; set; }
 		public bool? EmailConfirmed { get; set; }
 	}
-
+	/// <summary>
+	/// 
+	/// </summary>
 	public class UpdateRolesDto
 	{
 		public List<string> Roles { get; set; } = new List<string>();
@@ -784,7 +801,11 @@ namespace FilmWhere.Controllers
 	{
 		public DateTimeOffset? HastaCuando { get; set; }
 	}
-
+	/// <summary>
+	/// Represents statistical data related to user accounts and recent registrations.
+	/// </summary>
+	/// <remarks>This data transfer object provides aggregated statistics, including the total number of users, 
+	/// confirmed users, blocked users, and the number of registrations within the last 30 days.</remarks>
 	public class EstadisticasDto
 	{
 		public int TotalUsuarios { get; set; }
