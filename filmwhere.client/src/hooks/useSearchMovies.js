@@ -31,6 +31,7 @@ const useSearchMovies = () => {
                 const genreName = selectedGenres[0]; // Por simplicidad, usar el primer género
                 url = `/api/pelicula/genero/${encodeURIComponent(genreName)}`;
                 searchParams.append('cantidad', '48');
+                searchParams.append('page', page.toString());
             } else if (query.trim() && selectedGenres.length === 0) {
                 // Solo búsqueda por texto
                 url = '/api/pelicula/buscar';
@@ -50,7 +51,6 @@ const useSearchMovies = () => {
             }
 
             const fullUrl = `${url}?${searchParams.toString()}`;
-            console.log('Fetching movies from:', fullUrl);
 
             const response = await fetch(fullUrl);
 
@@ -65,7 +65,6 @@ const useSearchMovies = () => {
             }
 
             const data = await response.json();
-            console.log('Movies data received:', data);
 
             // Manejar diferentes formatos de respuesta
             let moviesData = [];
@@ -83,6 +82,9 @@ const useSearchMovies = () => {
                 // Otro formato posible
                 moviesData = data.movies;
                 totalPagesData = data.totalPages || 1;
+            } else if (data.data && Array.isArray(data.data)) {
+                moviesData = data.data; // Asumiendo que data.data contiene los
+                totalPagesData = data.totalPages
             }
 
             // Filtrar películas duplicadas por ID
@@ -110,7 +112,7 @@ const useSearchMovies = () => {
         setIsSearching(true);
 
         try {
-            const response = await fetch(`/api/pelicula/genero/${encodeURIComponent(genreName)}?cantidad=${cantidad}`);
+            const response = await fetch(`/api/pelicula/genero/${encodeURIComponent(genreName)}?page=1&cantidad=${cantidad}`);
 
             if (!response.ok) {
                 if (response.status === 404) {
@@ -122,7 +124,8 @@ const useSearchMovies = () => {
             }
 
             const data = await response.json();
-            const moviesData = Array.isArray(data) ? data : [];
+            console.log(data.data);
+            const moviesData = Array.isArray(data.data) ? data.data : [];
 
             setMovies(moviesData);
             setTotalPages(1); // Para búsqueda por género, por simplicidad usar 1 página

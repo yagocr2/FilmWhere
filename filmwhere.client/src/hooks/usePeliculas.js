@@ -38,9 +38,7 @@ export const usePeliculas = () => {
             const res = await fetch(endpoint);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const responseData = await res.json();
-            console.log('Response Data: ',responseData);
             const data = responseData.data || responseData;
-            console.log('Data: ',data);
             const formattedData = data.map(m => ({
                 id: m.id,
                 title: m.title,

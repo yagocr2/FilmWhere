@@ -1,5 +1,5 @@
 ﻿// src/components/Register.jsx
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import LiquidChrome from '../../Backgrounds/LiquidChrome/LiquidChrome';
 import FadeContent from '../../Animations/FadeContent/FadeContent';
@@ -8,6 +8,36 @@ import ScrollVelocity from '../../TextAnimations/ScrollVelocity/ScrollVelocity';
 import { useTheme } from '../../context/ThemeContext';
 import { Eye, EyeOff } from 'lucide-react';
 
+// Componente memoizado para el título animado
+const AnimatedTitle = ({ theme }) => {
+    return (
+        <div className="mb-6 text-center">
+            <ScrollVelocity
+                className="text-shadow text-texto text-4xl font-extrabold dark:text-texto-dark"
+                texts={['FilmWhere', 'Iniciar Sesión']}
+                velocity={15}
+            />
+        </div>
+    );
+};
+
+// Memoizar el componente para evitar re-renders innecesarios
+const MemoizedAnimatedTitle = React.memo(AnimatedTitle);
+
+// Componente para el fondo memoizado
+const BackgroundComponent = ({ theme }) => {
+    return (
+        <div className="fixed inset-0 z-0">
+            <LiquidChrome
+                baseColor={theme === 'dark' ? [0.05, 0.02, 0.15] : [0.9, 0.8, 1]}
+                amplitude={0.3}
+                speed={0.15}
+            />
+        </div>
+    );
+};
+
+const MemoizedBackground = React.memo(BackgroundComponent);
 
 const Register = () => {
     const { theme } = useTheme();
@@ -127,23 +157,12 @@ const Register = () => {
     return (
         <div className="relative h-screen w-screen overflow-hidden">
             {/* Background */}
-            <div className="fixed inset-0 z-0">
-                <LiquidChrome
-                    baseColor={theme === 'dark' ? [0.05, 0.02, 0.15] : [0.9, 0.8, 1]}
-                    amplitude={0.3}
-                    speed={0.15}
-                />
-            </div>
+            <MemoizedBackground theme={theme} />
 
             <FadeContent duration={1200} className="relative z-10 flex h-full w-full items-center justify-center">
                 <div className={`w-full max-w-md rounded-2xl ${primaryColorClass} p-8 shadow-2xl backdrop-blur-lg`}>
-                    <div className="div-titulo mb-6 text-center">
-                        <ScrollVelocity
-                            className="text-shadow text-texto text-4xl font-extrabold dark:text-texto-dark"
-                            texts={['FilmWhere', 'Crear Cuenta']}
-                            velocity={15}
-                        />
-                    </div>
+
+                    <MemoizedAnimatedTitle theme={theme} />
 
                     {error && (
                         <div className="mb-4 rounded-lg bg-red-500 bg-opacity-20 p-3 text-red-700 backdrop-blur-sm">

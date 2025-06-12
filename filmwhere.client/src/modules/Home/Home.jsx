@@ -17,9 +17,10 @@ const Home = () => {
     useEffect(() => {
         const fetchPopular = async () => {
             try {
-                const res = await fetch("/api/pelicula/populares?page=2&cantidad=28");
+                const res = await fetch("/api/Pelicula/populares?page=1&&cantidad=50");
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
+                console.log(data);
                 const items = data.map(m => m.posterUrl);
                 setMovies(items);
             } catch (err) {

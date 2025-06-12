@@ -14,7 +14,6 @@ const ModalEditarPerfil = ({ isOpen, onClose, userProfile, onProfileUpdate }) =>
         fechaNacimiento: ''
     });
 
-    const [imagePreview, setImagePreview] = useState(null);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [usernameStatus, setUsernameStatus] = useState({ checking: false, available: null, message: '' });
@@ -276,7 +275,7 @@ const ModalEditarPerfil = ({ isOpen, onClose, userProfile, onProfileUpdate }) =>
                         <button
                             type="submit"
                             disabled={loading || (formData.userName !== originalUsername && usernameStatus.available !== true)}
-                            className={`flex-1 py-3 rounded-lg bg-primario text-white hover:bg-primario-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${loading ? 'opacity-50' : ''}`}
+                            className={`flex-1 py-3 rounded-lg border transition-colors ${theme === 'dark' ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-50'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             {loading ? 'Guardando...' : 'Guardar'}
                         </button>

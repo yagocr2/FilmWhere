@@ -448,6 +448,9 @@ namespace FilmWhere.Server.Controllers
 				if (cantidad < 1 || cantidad > 100) cantidad = 15;
 
 				bool dbAvailable = await _utilityService.IsDatabaseAvailableAsync();
+				List<PeliculaDTO> localMovies = new();
+				int totalMovies = 0;
+				int totalPages = 0;
 
 				if (dbAvailable)
 				{
@@ -458,17 +461,16 @@ namespace FilmWhere.Server.Controllers
 
 						if (genre != null)
 						{
-							// Contar total de películas para calcular páginas
-							var totalMovies = await _context.PeliculaGeneros
+							totalMovies = await _context.PeliculaGeneros
 								.Where(pg => pg.GeneroId == genre.Id)
 								.CountAsync();
 
 							if (totalMovies > 0)
 							{
-								var totalPages = (int)Math.Ceiling((double)totalMovies / cantidad);
+								totalPages = (int)Math.Ceiling((double)totalMovies / cantidad);
 								var skip = (page - 1) * cantidad;
 
-								var movies = await _context.PeliculaGeneros
+								localMovies = await _context.PeliculaGeneros
 									.Where(pg => pg.GeneroId == genre.Id)
 									.Include(pg => pg.Pelicula)
 									.ThenInclude(p => p.Reseñas)
@@ -487,20 +489,6 @@ namespace FilmWhere.Server.Controllers
 											: null
 									})
 									.ToListAsync();
-
-								if (movies.Any())
-								{
-									return new PaginatedResponse<PeliculaDTO>
-									{
-										Data = movies,
-										CurrentPage = page,
-										TotalPages = totalPages,
-										TotalItems = totalMovies,
-										ItemsPerPage = cantidad,
-										HasNextPage = page < totalPages,
-										HasPreviousPage = page > 1
-									};
-								}
 							}
 						}
 					}
@@ -510,8 +498,48 @@ namespace FilmWhere.Server.Controllers
 					}
 				}
 
-				// Respaldo completo con TMDB (también con paginación)
-				return await _utilityService.GetMoviesByGenreOnlyTmdbAsync(genreName, page, cantidad);
+				// Obtener resultados externos (TMDB)
+				var tmdbResult = await _utilityService.GetMoviesByGenreOnlyTmdbAsync(genreName, page, cantidad);
+				List<PeliculaDTO> tmdbMovies = new();
+				int tmdbTotalPages = 0;
+				int tmdbTotalItems = 0;
+
+				if (tmdbResult.Result is OkObjectResult okResult && okResult.Value is PaginatedResponse<PeliculaDTO> tmdbResponse)
+				{
+					tmdbMovies = tmdbResponse.Data ?? new List<PeliculaDTO>();
+					tmdbTotalPages = tmdbResponse.TotalPages;
+					tmdbTotalItems = tmdbResponse.TotalItems;
+				}
+
+				// Concatenar y eliminar duplicados por título (ignorando mayúsculas/minúsculas)
+				var combinedMovies = localMovies
+					.Concat(tmdbMovies)
+					.GroupBy(m => m.Title.ToLower())
+					.Select(g => g.First())
+					.OrderByDescending(m => m.Rating)
+					.Take(cantidad)
+					.ToList();
+
+				// Calcular totales combinados
+				int combinedTotalItems = totalMovies + tmdbTotalItems;
+				int combinedTotalPages = (int)Math.Ceiling((double)combinedTotalItems / cantidad);
+
+				if (combinedMovies.Any())
+				{
+					var response = new PaginatedResponse<PeliculaDTO>
+					{
+						Data = combinedMovies,
+						CurrentPage = page,
+						TotalPages = combinedTotalPages > 0 ? combinedTotalPages : 1,
+						TotalItems = combinedTotalItems,
+						ItemsPerPage = cantidad,
+						HasNextPage = page < (combinedTotalPages > 0 ? combinedTotalPages : 1),
+						HasPreviousPage = page > 1
+					};
+					return Ok(response);
+				}
+
+				return NotFound("No se encontraron películas del género especificado");
 			}
 			catch (Exception ex)
 			{
@@ -710,6 +738,7 @@ namespace FilmWhere.Server.Controllers
 				if (cantidad > 100) cantidad = 100; // Limitar máximo por rendimiento
 
 				bool dbAvailable = await _utilityService.IsDatabaseAvailableAsync();
+				List<PeliculaDTO> localMovies = new();
 
 				// Si se solicita un año específico, buscar en la base de datos
 				if (year > 0 && dbAvailable)
@@ -718,7 +747,7 @@ namespace FilmWhere.Server.Controllers
 					{
 						int skip = (page - 1) * cantidad;
 
-						var storedMovies = await _context.Peliculas
+						localMovies = await _context.Peliculas
 							.Where(p => p.Año == year)
 							.OrderByDescending(p => p.Reseñas.Count)
 							.ThenByDescending(p => p.Id)
@@ -732,9 +761,6 @@ namespace FilmWhere.Server.Controllers
 								Year = p.Año ?? 0
 							})
 							.ToListAsync();
-
-						if (storedMovies.Any())
-							return storedMovies;
 					}
 					catch (Exception ex)
 					{
@@ -742,8 +768,30 @@ namespace FilmWhere.Server.Controllers
 					}
 				}
 
-				// Usar TMDB como fuente principal o respaldo
-				return await _utilityService.GetPopularOnlyTmdbAsync(page, cantidad);
+				// Obtener resultados externos (TMDB)
+				var tmdbResult = await _utilityService.GetPopularOnlyTmdbAsync(page, cantidad);
+				List<PeliculaDTO> tmdbMovies = new();
+				if (tmdbResult.Result is OkObjectResult okResult && okResult.Value is List<PeliculaDTO> tmdbList)
+				{
+					tmdbMovies = tmdbList;
+				}
+				else if (tmdbResult.Value is List<PeliculaDTO> tmdbList2)
+				{
+					tmdbMovies = tmdbList2;
+				}
+
+				// Mezclar y eliminar duplicados por título (ignorando mayúsculas/minúsculas)
+				var combinedMovies = localMovies
+					.Concat(tmdbMovies)
+					.GroupBy(m => m.Title.ToLower())
+					.Select(g => g.First())
+					.Take(cantidad)
+					.ToList();
+
+				if (combinedMovies.Any())
+					return combinedMovies;
+
+				return NotFound("No se encontraron películas populares");
 			}
 			catch (Exception ex)
 			{
