@@ -42,11 +42,11 @@ namespace FilmWhere.Controllers
 
 		// GET: api/admin/usuarios
 		/// <summary>
-		/// 
+		/// Obtiene todos los usuarios registrados en el sistema.
 		/// </summary>
-		/// <param name="page"></param>
-		/// <param name="pageSize"></param>
-		/// <param name="search"></param>
+		/// <param name="page">Paginación en caso de ser necesario</param>
+		/// <param name="pageSize">Cantidad de usuarios por página</param>
+		/// <param name="search">Término de búsqueda</param>
 		/// <returns></returns>
 		[HttpGet("usuarios")]
 		public async Task<ActionResult<IEnumerable<UsuarioAdminDto>>> GetUsuarios(
@@ -109,10 +109,10 @@ namespace FilmWhere.Controllers
 
 		// GET: api/admin/usuarios/{id}
 		/// <summary>
-		/// 
+		/// Buscar un usuario por su ID.
 		/// </summary>
-		/// <param name="id"></param>
-		/// <returns></returns>
+		/// <param name="id">identificador del usuario</param>
+		/// <returns> Devuelve los detalles del usuario incluyendo roles y estado de bloqueo.</returns>
 		[HttpGet("usuarios/{id}")]
 		public async Task<ActionResult<UsuarioAdminDto>> GetUsuario(string id)
 		{
@@ -481,10 +481,10 @@ namespace FilmWhere.Controllers
 
 		// POST: api/admin/usuarios/{id}/bloquear
 		/// <summary>
-		/// 
+		/// Bloquea un usuario específico, impidiendo su acceso al sistema hasta una fecha determinada.
 		/// </summary>
-		/// <param name="id"></param>
-		/// <param name="bloqueoDto"></param>
+		/// <param name="id">Identificador del usuario</param>
+		/// <param name="bloqueoDto">Requisitos de bloqueo</param>
 		/// <returns></returns>
 		[HttpPost("usuarios/{id}/bloquear")]
 		public async Task<IActionResult> BloquearUsuario(string id, [FromBody] BloqueoDto bloqueoDto)
@@ -591,49 +591,7 @@ namespace FilmWhere.Controllers
 			}
 		}
 		/// <summary>
-		/// Cambia la contraseña de un usuario específico, generando un token de restablecimiento y validando la nueva contraseña.
-		/// </summary>
-		/// <param name="id"></param>
-		/// <param name="passwordDto"></param>
-		/// <returns></returns>
-		[HttpPut("usuarios/{id}/cambiar-password")]
-		public async Task<IActionResult> CambiarPassword(string id, CambiarPasswordDto passwordDto)
-		{
-			if (!ModelState.IsValid)
-			{
-				return BadRequest(ModelState);
-			}
-
-			try
-			{
-				var user = await _userManager.FindByIdAsync(id);
-				if (user == null)
-				{
-					return NotFound(new { message = "Usuario no encontrado" });
-				}
-
-				// Generar token para cambio de contraseña
-				var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-				var result = await _userManager.ResetPasswordAsync(user, token, passwordDto.NuevaPassword);
-
-				if (!result.Succeeded)
-				{
-					foreach (var error in result.Errors)
-					{
-						ModelState.AddModelError(string.Empty, error.Description);
-					}
-					return BadRequest(ModelState);
-				}
-
-				return Ok(new { message = "Contraseña cambiada exitosamente" });
-			}
-			catch (Exception ex)
-			{
-				return BadRequest(new { message = $"Error al cambiar contraseña: {ex.Message}" });
-			}
-		}
-		/// <summary>
-		///		
+		///	Obtiene un objeto UsuarioAdminDto con los detalles de un usuario específico, incluyendo roles y estado de bloqueo.
 		/// </summary>
 		/// <param name="userId"></param>
 		/// <returns></returns>
@@ -661,7 +619,7 @@ namespace FilmWhere.Controllers
 			};
 		}
 		/// <summary>
-		/// 
+		/// Obtiene todas las denuncias realizadas por los usuarios, ordenadas por fecha de creación.
 		/// </summary>
 		/// <returns></returns>
 		[HttpGet("denuncias")]
@@ -694,20 +652,6 @@ namespace FilmWhere.Controllers
 				return StatusCode(500, new { Message = "Error interno del servidor" });
 			}
 		}
-	}
-
-	/// <summary>
-	/// 
-	/// </summary>
-	public class CambiarPasswordDto
-	{
-		[Required(ErrorMessage = "La nueva contraseña es obligatoria")]
-		[MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
-		public string NuevaPassword { get; set; }
-
-		[Required(ErrorMessage = "La confirmación de contraseña es obligatoria")]
-		[Compare("NuevaPassword", ErrorMessage = "Las contraseñas no coinciden")]
-		public string ConfirmarPassword { get; set; }
 	}
 	/// <summary>
 	/// 

@@ -29,16 +29,17 @@ namespace FilmWhere.Server
 			builder.Services.AddEndpointsApiExplorer();
 			builder.Services.AddSwaggerGen(c =>
 			{
-				c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+				c.SwaggerDoc("v1", new OpenApiInfo
 				{
 					Title = "FilmWhere API",
 					Version = "v1",
 					Description = "API para la aplicación FilmWhere, que permite gestionar películas y usuarios.",
 					Contact = new OpenApiContact
 					{
-						Name = "Yago Calero Roldán",
+						Name = "GitHub: Yago Calderón Roldán",
 						Email = "yagocaleroroldan02@gmail.com",
 						Url = new Uri("https://github.com/yagocr2")
+						
 					}
 				});
 				var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
