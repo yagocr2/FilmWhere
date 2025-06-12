@@ -157,42 +157,76 @@ namespace FilmWhere.Server.Services.Local
 		}
 
 		/// <summary>
-		/// Obtiene películas por género utilizando únicamente la API de TMDB.
+		/// Obtiene películas por género utilizando únicamente la API de TMDB con paginación.
 		/// Utiliza múltiples estrategias: búsqueda por ID de género, búsqueda por palabra clave y películas populares recientes.
 		/// </summary>
 		/// <param name="genreName">Nombre del género a buscar</param>
-		/// <param name="cantidad">Cantidad de películas a obtener</param>
-		/// <returns>Lista de películas del género especificado o mensaje de error</returns>
-		public async Task<ActionResult<List<PeliculaDTO>>> GetMoviesByGenreOnlyTmdbAsync(string genreName, int cantidad)
+		/// <param name="page">Número de página (por defecto: 1)</param>
+		/// <param name="cantidad">Cantidad de películas por página</param>
+		/// <returns>Respuesta paginada con películas del género especificado o mensaje de error</returns>
+		public async Task<ActionResult<PaginatedResponse<PeliculaDTO>>> GetMoviesByGenreOnlyTmdbAsync(
+			string genreName,
+			int page = 1,
+			int cantidad = 15)
 		{
 			try
 			{
-				_logger.LogInformation("Usando respaldo TMDB completo para género {GenreName}", genreName);
+				_logger.LogInformation("Usando respaldo TMDB completo para género {GenreName}, página {Page}", genreName, page);
 
 				var allMovies = new List<TmdbSearchResult>();
 
+				// Obtener más películas para tener suficientes para paginar
+				var totalToFetch = page * cantidad + cantidad; // Obtener hasta la página siguiente también
+
 				// Estrategia 1: Búsqueda por ID de género
-				await GetMoviesByGenreId(allMovies, genreName, cantidad);
+				await GetMoviesByGenreId(allMovies, genreName, totalToFetch);
 
 				// Estrategia 2: Búsqueda por palabra clave si no hay suficientes
-				await SupplementWithKeywordSearch(allMovies, genreName, cantidad);
+				await SupplementWithKeywordSearch(allMovies, genreName, totalToFetch);
 
 				// Estrategia 3: Películas populares recientes como último recurso
-				await SupplementWithRecentPopular(allMovies, cantidad);
+				await SupplementWithRecentPopular(allMovies, totalToFetch);
 
 				if (!allMovies.Any())
 				{
 					return new NotFoundObjectResult($"No se encontraron películas para el género '{genreName}'");
 				}
 
-				var movies = ConvertToMovieListWithOverview(allMovies.Take(cantidad));
-				_logger.LogInformation("Devolviendo {Count} películas de TMDB para género {GenreName}", movies.Count, genreName);
+				// Eliminar duplicados y aplicar paginación
+				var uniqueMovies = allMovies
+					.GroupBy(m => m.Id)
+					.Select(g => g.First())
+					.ToList();
 
-				return new OkObjectResult(movies);
+				var totalItems = uniqueMovies.Count;
+				var totalPages = (int)Math.Ceiling((double)totalItems / cantidad);
+				var skip = (page - 1) * cantidad;
+
+				var paginatedMovies = uniqueMovies
+					.Skip(skip)
+					.Take(cantidad)
+					.Select(ConvertToMovieDTOWithOverview)
+					.ToList();
+
+				var response = new PaginatedResponse<PeliculaDTO>
+				{
+					Data = paginatedMovies,
+					CurrentPage = page,
+					TotalPages = totalPages,
+					TotalItems = totalItems,
+					ItemsPerPage = cantidad,
+					HasNextPage = page < totalPages,
+					HasPreviousPage = page > 1
+				};
+
+				_logger.LogInformation("Devolviendo {Count} películas de TMDB para género {GenreName}, página {Page}/{TotalPages}",
+					paginatedMovies.Count, genreName, page, totalPages);
+
+				return new OkObjectResult(response);
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "Error obteniendo películas por género de TMDB: {GenreName}", genreName);
+				_logger.LogError(ex, "Error obteniendo películas por género de TMDB: {GenreName}, página {Page}", genreName, page);
 				return CreateErrorResult("Error al obtener películas por género de TMDB");
 			}
 		}

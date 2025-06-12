@@ -37,8 +37,10 @@ export const usePeliculas = () => {
         try {
             const res = await fetch(endpoint);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-
+            const responseData = await res.json();
+            console.log('Response Data: ',responseData);
+            const data = responseData.data || responseData;
+            console.log('Data: ',data);
             const formattedData = data.map(m => ({
                 id: m.id,
                 title: m.title,
@@ -60,10 +62,10 @@ export const usePeliculas = () => {
     // Configuración de endpoints
     const endpoints = {
         popular: "api/Pelicula/populares?page=1&year=0&cantidad=15",
-        action: "api/Pelicula/genero/accion?cantidad=15",
-        fantasia: "/api/Pelicula/genero/fantasia?cantidad=15",
-        animacion: "/api/Pelicula/genero/animacion?cantidad=15",
-        horror: "/api/pelicula/genero/Terror?&cantidad=15",
+        action: "/api/Pelicula/genero/accion?page=1&cantidad=15",
+        fantasia: "/api/Pelicula/genero/fantasia?page=1&cantidad=15",
+        animacion: "/api/Pelicula/genero/animacion?page=1&cantidad=15",
+        horror: "api/pelicula/genero/Terror?page=1&cantidad=15",
         newReleases: `/api/pelicula/estrenos?year=${new Date().getFullYear()}&cantidad=15`,
         topRated: "/api/pelicula/mejor-valoradas?page=1&cantidad=15",
 

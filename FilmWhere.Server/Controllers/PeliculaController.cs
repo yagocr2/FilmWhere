@@ -423,22 +423,30 @@ namespace FilmWhere.Server.Controllers
 		#region Películas por Género
 
 		/// <summary>
-		/// Obtiene películas filtradas por género específico
+		/// Obtiene películas filtradas por género específico con paginación
 		/// </summary>
 		/// <param name="genreName">Nombre del género (ej: "Acción", "Comedia", "Drama")</param>
-		/// <param name="cantidad">Número máximo de películas a devolver (por defecto: 15)</param>
-		/// <returns>Lista de películas del género especificado</returns>
+		/// <param name="page">Número de página (por defecto: 1)</param>
+		/// <param name="cantidad">Número máximo de películas por página (por defecto: 15)</param>
+		/// <returns>Lista paginada de películas del género especificado</returns>
 		/// <response code="200">Películas del género obtenidas exitosamente</response>
 		/// <response code="404">No se encontraron películas del género especificado</response>
 		/// <response code="500">Error interno del servidor</response>
 		[HttpGet("genero/{genreName}")]
-		[ProducesResponseType(typeof(List<PeliculaDTO>), StatusCodes.Status200OK)]
+		[ProducesResponseType(typeof(PaginatedResponse<PeliculaDTO>), StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
-		public async Task<ActionResult<List<PeliculaDTO>>> GetMoviesByGenre(string genreName, int cantidad = 15)
+		public async Task<ActionResult<PaginatedResponse<PeliculaDTO>>> GetMoviesByGenre(
+			string genreName,
+			int page = 1,
+			int cantidad = 15)
 		{
 			try
 			{
+				// Validar parámetros de paginación
+				if (page < 1) page = 1;
+				if (cantidad < 1 || cantidad > 100) cantidad = 15;
+
 				bool dbAvailable = await _utilityService.IsDatabaseAvailableAsync();
 
 				if (dbAvailable)
@@ -450,26 +458,50 @@ namespace FilmWhere.Server.Controllers
 
 						if (genre != null)
 						{
-							var movies = await _context.PeliculaGeneros
+							// Contar total de películas para calcular páginas
+							var totalMovies = await _context.PeliculaGeneros
 								.Where(pg => pg.GeneroId == genre.Id)
-								.Include(pg => pg.Pelicula)
-								.Select(pg => pg.Pelicula)
-								.OrderByDescending(p => p.Reseñas.Count)
-								.Take(cantidad)
-								.Select(p => new PeliculaDTO
-								{
-									Id = p.Id,
-									Title = p.Titulo,
-									PosterUrl = $"https://image.tmdb.org/t/p/w500/{p.PosterUrl}",
-									Year = p.Año ?? 0,
-									Rating = p.Reseñas.Any()
-										? Math.Round(p.Reseñas.Average(r => r.Calificacion), 1)
-										: null
-								})
-								.ToListAsync();
+								.CountAsync();
 
-							if (movies.Any() && movies.Count >= Math.Min(cantidad, 10))
-								return movies;
+							if (totalMovies > 0)
+							{
+								var totalPages = (int)Math.Ceiling((double)totalMovies / cantidad);
+								var skip = (page - 1) * cantidad;
+
+								var movies = await _context.PeliculaGeneros
+									.Where(pg => pg.GeneroId == genre.Id)
+									.Include(pg => pg.Pelicula)
+									.ThenInclude(p => p.Reseñas)
+									.Select(pg => pg.Pelicula)
+									.OrderByDescending(p => p.Reseñas.Count)
+									.Skip(skip)
+									.Take(cantidad)
+									.Select(p => new PeliculaDTO
+									{
+										Id = p.Id,
+										Title = p.Titulo,
+										PosterUrl = $"https://image.tmdb.org/t/p/w500/{p.PosterUrl}",
+										Year = p.Año ?? 0,
+										Rating = p.Reseñas.Any()
+											? Math.Round(p.Reseñas.Average(r => r.Calificacion), 1)
+											: null
+									})
+									.ToListAsync();
+
+								if (movies.Any())
+								{
+									return new PaginatedResponse<PeliculaDTO>
+									{
+										Data = movies,
+										CurrentPage = page,
+										TotalPages = totalPages,
+										TotalItems = totalMovies,
+										ItemsPerPage = cantidad,
+										HasNextPage = page < totalPages,
+										HasPreviousPage = page > 1
+									};
+								}
+							}
 						}
 					}
 					catch (Exception ex)
@@ -478,12 +510,12 @@ namespace FilmWhere.Server.Controllers
 					}
 				}
 
-				// Respaldo completo con TMDB
-				return await _utilityService.GetMoviesByGenreOnlyTmdbAsync(genreName, cantidad);
+				// Respaldo completo con TMDB (también con paginación)
+				return await _utilityService.GetMoviesByGenreOnlyTmdbAsync(genreName, page, cantidad);
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "Error al obtener películas por género {GenreName}", genreName);
+				_logger.LogError(ex, "Error al obtener películas por género {GenreName}, página {Page}", genreName, page);
 				return StatusCode(500, $"Error al obtener películas: {ex.Message}");
 			}
 		}
