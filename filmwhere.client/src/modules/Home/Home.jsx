@@ -20,11 +20,9 @@ const Home = () => {
                 const res = await fetch("/api/Pelicula/populares?page=1&&cantidad=50");
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
-                console.log(data);
                 const items = data.map(m => m.posterUrl);
                 setMovies(items);
             } catch (err) {
-                console.error(err);
                 setError("No se pudieron cargar las películas.");
             } finally {
                 setLoading(false);
@@ -64,7 +62,7 @@ const Home = () => {
             py-3 text-2xl font-extrabold transition-all
             duration-300 hover:bg-primario-dark
 
-            hover:text-texto-dark hover:shadow-lg hover:scale-105 dark:text-texto-dark dark:bg-primario-dark dark:hover:bg-primario dark:hover:text-texto">
+            hover:text-texto-dark hover:scale-105 hover:shadow-lg dark:text-texto-dark dark:bg-primario-dark dark:hover:bg-primario dark:hover:text-texto">
                             Entrar sin cuenta
                         </button>
                         </Link>

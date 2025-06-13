@@ -52,7 +52,6 @@ const Perfil = () => {
 
     // Función para manejar la edición de reseñas
     const handleEditReview = (movieData) => {
-        console.log('Editando reseña para película:', movieData);
         setSelectedMovieForReview(movieData);
         setIsReviewModalOpen(true);
     };

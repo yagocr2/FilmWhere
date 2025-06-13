@@ -166,13 +166,11 @@ const Login = () => {
             const isAdmin = data.user.roles && data.user.roles.includes("Administrador");
 
             if (isAdmin) {
-                console.log('Administrador detectado:', data.user);
                 setTimeout(() => {
                     navigate('/admin');
                 }, 100);
                 location.reload();
             } else {
-                console.log('Usuario normal:', data.user);
                 navigate('/inicio');
             }
 

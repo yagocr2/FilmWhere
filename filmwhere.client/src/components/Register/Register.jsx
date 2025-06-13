@@ -144,7 +144,6 @@ const Register = () => {
             // Registro exitoso, redirigir a inicio de sesión
             navigate('/login', { state: { message: 'Registro exitoso. Ahora puedes iniciar sesión.' } });
         } catch (err) {
-            console.log('Response status: ', err);
             setErrors(['Error de conexión. Por favor intente más tarde.']);
         } finally {
             setIsLoading(false);

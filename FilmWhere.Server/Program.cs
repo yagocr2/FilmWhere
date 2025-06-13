@@ -39,7 +39,7 @@ namespace FilmWhere.Server
 						Name = "GitHub: Yago Calderón Roldán",
 						Email = "yagocaleroroldan02@gmail.com",
 						Url = new Uri("https://github.com/yagocr2")
-						
+
 					}
 				});
 				var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
@@ -262,6 +262,9 @@ namespace FilmWhere.Server
 				app.UseSwagger();
 				app.UseSwaggerUI();
 			}
+			app.UseSwagger();
+			app.UseSwaggerUI();
+
 			ConfigurarArchivoEstaticos(app);
 
 			app.UseHttpsRedirection();

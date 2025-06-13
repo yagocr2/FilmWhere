@@ -45,7 +45,7 @@ export default defineConfig({
     server: {
         proxy: {
             '/api': {
-                target: 'https://localhost:7179',
+                target: 'http://filmwhere.somee.com',
                 changeOrigin: true,
                 secure: false
             }

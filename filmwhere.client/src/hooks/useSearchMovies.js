@@ -124,7 +124,6 @@ const useSearchMovies = () => {
             }
 
             const data = await response.json();
-            console.log(data.data);
             const moviesData = Array.isArray(data.data) ? data.data : [];
 
             setMovies(moviesData);

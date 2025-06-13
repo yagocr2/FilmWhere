@@ -62,8 +62,6 @@ const AdminUsuarios = () => {
 
     const handleEditUser = async (userId, formData) => {
         try {
-            // Debug: Log the data being sent
-            console.log('handleEditUser called with:', { userId, formData });
 
             // Validate userId
             if (!userId || userId === 'undefined') {
@@ -74,12 +72,10 @@ const AdminUsuarios = () => {
             const { roles, ...userBasicData } = formData;
 
             // Actualizar datos básicos del usuario
-            console.log('Updating basic user data:', userBasicData);
             await editUser(userId, userBasicData);
 
             // Actualizar roles si han cambiado
             if (roles && Array.isArray(roles)) {
-                console.log('Updating user roles:', roles);
                 // Make sure you have the updateUserRoles function available
                 await updateUserRoles(userId, { roles });
             }

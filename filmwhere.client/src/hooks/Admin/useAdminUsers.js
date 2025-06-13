@@ -50,7 +50,6 @@ export const useAdminUsers = () => {
                     'Content-Type': 'application/json',
                 },
             });
-            console.log('Respuesta', response.json());
             return await response.json();
         } catch (error) {
             console.log('Error al cargar roles')
@@ -114,8 +113,6 @@ export const useAdminUsers = () => {
                 throw new Error('ID de usuario es requerido');
             }
 
-            console.log('Editing user:', { userId, userData }); // Debug log
-
             const response = await fetch(`/api/admin/usuarios/${userId}`, {
                 method: 'PUT',
                 headers: {
@@ -154,8 +151,6 @@ export const useAdminUsers = () => {
             if (!userId || userId === 'undefined') {
                 throw new Error('ID de usuario es requerido');
             }
-
-            console.log('Updating user roles:', { userId, rolesData });
 
             const response = await fetch(`/api/admin/usuarios/${userId}/roles`, {
                 method: 'PUT',
@@ -231,17 +226,12 @@ export const useAdminUsers = () => {
 
             const result = await response.json();
 
-            // Mostrar notificación de éxito (puedes usar tu sistema de notificaciones)
-            console.log('Email reenviado exitosamente:', result.message);
-
-            // Opcional: Mostrar toast o notificación
-            // showSuccessToast('Email de confirmación reenviado exitosamente');
+            //Toast
 
             return result;
         } catch (error) {
             console.error('Error al reenviar email:', error);
-            // Opcional: Mostrar toast de error
-            // showErrorToast(error.message);
+            //ToastError
             throw error;
         } finally {
             setResendingEmails(prev => {

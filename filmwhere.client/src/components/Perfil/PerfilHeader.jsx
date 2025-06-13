@@ -43,14 +43,12 @@ const PerfilHeader = ({
         // Para rutas que empiezan con '/', usar directamente con el origin
         if (fotoPerfil.startsWith('/')) {
             const fullUrl = `${window.location.origin}${fotoPerfil}`;
-            console.log('URL construida:', fullUrl); // Debug
             return fullUrl;
         }
 
         // Si es una ruta relativa sin '/', añadir la barra
         const baseUrl = window.location.origin;
         const fullUrl = `${baseUrl}/${fotoPerfil}`;
-        console.log('URL construida:', fullUrl); // Debug
         return fullUrl;
     };
 
@@ -65,9 +63,6 @@ const PerfilHeader = ({
         }
     };
 
-    const handleImageLoad = (e) => {
-        console.log('Imagen cargada exitosamente:', e.target.src);
-    };
 
     const openFollowersModal = () => {
         setModalState({
@@ -186,7 +181,6 @@ const PerfilHeader = ({
                                     alt={`${userProfile.nombre} ${userProfile.apellido}`}
                                     className="h-full w-full object-cover"
                                     onError={handleImageError}
-                                    onLoad={handleImageLoad}
                                 />
                                 {/* Icono de respaldo */}
                                 <div
