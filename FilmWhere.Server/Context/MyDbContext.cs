@@ -35,7 +35,7 @@ namespace FilmWhere.Context
 				.HasIndex(r => new { r.UsuarioId, r.PeliculaId })
 				.IsUnique();
 
-			// Relación Reseña -> Usuario
+			// Relación Reseña -> Usuario (CASCADE: se borran reseñas al borrar usuario)
 			modelBuilder.Entity<Reseña>()
 				.HasOne(r => r.Usuario)
 				.WithMany(u => u.Reseñas)
@@ -53,21 +53,51 @@ namespace FilmWhere.Context
 			modelBuilder.Entity<Favorito>()
 				.HasKey(f => new { f.UsuarioId, f.PeliculaId });
 
+			// Configuración de eliminación para Favorito (CASCADE: se borran favoritos al borrar usuario)
+			modelBuilder.Entity<Favorito>()
+				.HasOne(f => f.Usuario)
+				.WithMany(u => u.Favoritos)
+				.HasForeignKey(f => f.UsuarioId)
+				.OnDelete(DeleteBehavior.Cascade);
+
+			modelBuilder.Entity<Favorito>()
+				.HasOne(f => f.Pelicula)
+				.WithMany(p => p.Favoritos)
+				.HasForeignKey(f => f.PeliculaId)
+				.OnDelete(DeleteBehavior.Restrict);
+
 			// ---- Configuración de UsuarioSeguidor ----
 			modelBuilder.Entity<UsuarioSeguidor>()
 				.HasKey(us => new { us.SeguidorId, us.SeguidoId });
 
+			// CASCADE: se borran relaciones de seguimiento al borrar usuario (como seguidor)
 			modelBuilder.Entity<UsuarioSeguidor>()
 				.HasOne(us => us.Seguidor)
 				.WithMany(u => u.Seguidos)
 				.HasForeignKey(us => us.SeguidorId)
-				.OnDelete(DeleteBehavior.Restrict);
+				.OnDelete(DeleteBehavior.Cascade);
 
+			// CASCADE: se borran relaciones de seguimiento al borrar usuario (como seguido)
 			modelBuilder.Entity<UsuarioSeguidor>()
 				.HasOne(us => us.Seguido)
 				.WithMany(u => u.Seguidores)
 				.HasForeignKey(us => us.SeguidoId)
-				.OnDelete(DeleteBehavior.Restrict);
+				.OnDelete(DeleteBehavior.Cascade);
+
+			// ---- Configuración de Denuncias ----
+			// CASCADE: se borran denuncias recibidas al borrar usuario denunciado
+			modelBuilder.Entity<Denuncia>()
+				.HasOne(d => d.UsuarioDenunciado)
+				.WithMany(u => u.DenunciasRecibidas)
+				.HasForeignKey(d => d.UsuarioDenunciadoId)
+				.OnDelete(DeleteBehavior.Cascade);
+
+			// CASCADE: se borran denuncias realizadas al borrar usuario denunciante
+			modelBuilder.Entity<Denuncia>()
+				.HasOne(d => d.UsuarioDenunciante)
+				.WithMany(u => u.DenunciasRealizadas)
+				.HasForeignKey(d => d.UsuarioDenuncianteId)
+				.OnDelete(DeleteBehavior.Cascade);
 
 			// ---- Configuración de PeliculaPlataforma ----
 			modelBuilder.Entity<PeliculaPlataforma>()
@@ -96,32 +126,6 @@ namespace FilmWhere.Context
 				.HasOne(pg => pg.Genero)
 				.WithMany(g => g.Peliculas)
 				.HasForeignKey(pg => pg.GeneroId);
-
-			// ---- Configuración de Denuncias ----
-			modelBuilder.Entity<Denuncia>()
-				.HasOne(d => d.UsuarioDenunciado)
-				.WithMany(u => u.DenunciasRecibidas)
-				.HasForeignKey(d => d.UsuarioDenunciadoId)
-				.OnDelete(DeleteBehavior.Restrict);
-
-			modelBuilder.Entity<Denuncia>()
-				.HasOne(d => d.UsuarioDenunciante)
-				.WithMany(u => u.DenunciasRealizadas)
-				.HasForeignKey(d => d.UsuarioDenuncianteId)
-				.OnDelete(DeleteBehavior.Restrict);
-
-			// Configuración de eliminación para Favorito
-			modelBuilder.Entity<Favorito>()
-				.HasOne(f => f.Usuario)
-				.WithMany(u => u.Favoritos)
-				.HasForeignKey(f => f.UsuarioId)
-				.OnDelete(DeleteBehavior.Cascade);
-
-			modelBuilder.Entity<Favorito>()
-				.HasOne(f => f.Pelicula)
-				.WithMany(p => p.Favoritos)
-				.HasForeignKey(f => f.PeliculaId)
-				.OnDelete(DeleteBehavior.Restrict);
 		}
 	}
 }
